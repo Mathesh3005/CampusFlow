@@ -150,4 +150,7 @@ public class Student {
         return updatedAt;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

@@ -123,4 +123,7 @@ public class PlacementOfficer {
         return updatedAt;
     }
 
+    public void setUser(User user) {
+
+    }
 }

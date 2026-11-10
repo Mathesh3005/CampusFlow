@@ -107,6 +107,10 @@ public class Job {
         this.status = JobStatus.DRAFT;
     }
 
+    public void setStatus(JobStatus status) {
+        this.status = status;
+    }
+
     public Long getId() {
         return id;
     }

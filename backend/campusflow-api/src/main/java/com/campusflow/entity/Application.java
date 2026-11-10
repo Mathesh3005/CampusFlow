@@ -90,6 +90,10 @@ public class Application {
         return status;
     }
 
+    public void setStatus(ApplicationStatus status) {
+        this.status = status;
+    }
+
     public String getCoverLetter() {
         return coverLetter;
     }
