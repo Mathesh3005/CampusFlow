@@ -3,7 +3,6 @@ package com.campusflow.entity;
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
-import jakarta.persistence.PrePersist;
 import java.time.ZoneOffset;
 
 @Entity
@@ -36,15 +35,17 @@ public class Resume {
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private OffsetDateTime uploadedAt;
 
+    // Automatically sets upload timestamp
     @PrePersist
     protected void onCreate() {
         uploadedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
+    // Required by JPA
     protected Resume() {
-        // Required by JPA
     }
 
+    // Parameterized constructor
     public Resume(
             Student student,
             String fileName,
@@ -58,6 +59,8 @@ public class Resume {
         this.contentType = "application/pdf";
         this.isActive = true;
     }
+
+    // Getters
 
     public Long getId() {
         return id;
@@ -91,6 +94,8 @@ public class Resume {
         return uploadedAt;
     }
 
+    // Setters
+
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
@@ -98,5 +103,4 @@ public class Resume {
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
-
 }
