@@ -1,0 +1,22 @@
+<section class="panel" aria-labelledby="applications-title" [attr.aria-busy]="loading()">
+  <header class="panel-header">
+    <div><h2 id="applications-title">Recent applications</h2><p>Your latest submitted applications</p></div>
+    <a routerLink="/student/applications">View all</a>
+  </header>
+  @if (loading()) {
+    <p class="panel-state" role="status">Loading applications…</p>
+  } @else if (error()) {
+    <p class="panel-state error-state" role="alert">{{ error() }}</p>
+  } @else if (applications().length === 0) {
+    <p class="panel-state">You have not applied to any jobs yet.</p>
+  } @else {
+    <ul class="item-list">
+      @for (application of applications(); track application.id) {
+        <li class="list-item">
+          <div class="item-main"><strong>{{ application.jobTitle }}</strong><span>{{ application.companyName }}</span></div>
+          <div class="item-meta"><span class="status-chip">{{ application.status.replace('_', ' ') }}</span><time [attr.datetime]="application.appliedAt">{{ application.appliedAt | date:'mediumDate':'UTC' }}</time></div>
+        </li>
+      }
+    </ul>
+  }
+</section>

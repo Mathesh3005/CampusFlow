@@ -1,0 +1,81 @@
+<div class="jobs-page">
+  @let currentState = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">STUDENT WORKSPACE</p>
+      <h1>Browse jobs</h1>
+      <p class="intro">Published opportunities that match your eligibility.</p>
+    </div>
+    <button class="secondary-button" type="button" (click)="retry()" [disabled]="currentState.status === 'loading'">Refresh</button>
+  </header>
+
+  <form class="filter-panel" [formGroup]="filters" aria-label="Filter jobs">
+    <label>
+      <span>Location</span>
+      <input type="search" formControlName="location" placeholder="Filter by location" autocomplete="off" />
+    </label>
+    <label>
+      <span>Employment type</span>
+      <select formControlName="employmentType">
+        <option value="">All employment types</option>
+        @for (type of employmentTypes; track type) { <option [value]="type">{{ type.replace('_', ' ') }}</option> }
+      </select>
+    </label>
+    <label>
+      <span>Work mode</span>
+      <select formControlName="workMode">
+        <option value="">All work modes</option>
+        @for (mode of workModes; track mode) { <option [value]="mode">{{ mode }}</option> }
+      </select>
+    </label>
+    <button class="text-button clear-button" type="button" (click)="clearFilters()">Clear filters</button>
+  </form>
+
+  <section class="results-panel" aria-label="Job results" [attr.aria-busy]="currentState.status === 'loading'">
+    @if (currentState.status === 'loading') {
+      <p class="state-message" role="status">Loading jobs…</p>
+    } @else if (currentState.status === 'error') {
+      <div class="state-message error-message" role="alert">
+        <p>{{ currentState.message }}</p>
+        <button class="text-button" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (currentState.status === 'ready' && currentState.page.content.length === 0) {
+      <div class="state-message empty-message">
+        <h2>No matching jobs</h2>
+        <p>There are no published jobs matching these filters.</p>
+      </div>
+    } @else {
+      <div class="results-summary" aria-live="polite">{{ currentState.page.totalElements }} published jobs</div>
+      <div class="job-list">
+        @for (job of currentState.page.content; track job.id) {
+          <article class="job-card">
+            <div class="job-main">
+              <div class="job-title-row">
+                <h2><a [routerLink]="[job.id]">{{ job.jobTitle }}</a></h2>
+                <span class="status-chip">{{ job.status }}</span>
+              </div>
+              <p class="company">{{ job.companyName }}</p>
+              <p class="description-preview">{{ job.jobDescription }}</p>
+              <div class="job-tags">
+                <span>{{ job.employmentType.replace('_', ' ') }}</span>
+                <span>{{ job.workMode }}</span>
+                @if (job.location) { <span>{{ job.location }}</span> }
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="deadline-label">Application deadline</span>
+              <time [attr.datetime]="job.applicationDeadline">{{ job.applicationDeadline | date:'mediumDate':'UTC' }} UTC</time>
+              <a class="details-link" [routerLink]="[job.id]">View details</a>
+            </div>
+          </article>
+        }
+      </div>
+
+      <nav class="pagination" aria-label="Job result pages">
+        <button class="secondary-button" type="button" (click)="changePage(pageIndex() - 1)" [disabled]="!currentState.page.hasPrevious">Previous</button>
+        <span>Page {{ currentState.page.page + 1 }} of {{ currentState.page.totalPages }}</span>
+        <button class="secondary-button" type="button" (click)="changePage(pageIndex() + 1)" [disabled]="!currentState.page.hasNext">Next</button>
+      </nav>
+    }
+  </section>
+</div>

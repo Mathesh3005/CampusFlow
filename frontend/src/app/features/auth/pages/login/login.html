@@ -1,0 +1,126 @@
+<div class="login-page">
+  <section class="login-brand">
+    <div class="brand-content">
+      <div class="brand-logo">C</div>
+      <h1>CampusFlow</h1>
+      <p class="tagline">Your career journey starts here.</p>
+
+      <div class="brand-message">
+        <h2>Connect. Prepare. Succeed.</h2>
+        <p>
+          One platform to connect students, placement officers,
+          and opportunities.
+        </p>
+      </div>
+
+      <div class="brand-footer">© 2026 CampusFlow</div>
+    </div>
+  </section>
+
+  <main class="login-content">
+    <div class="login-container">
+      <div class="mobile-brand">
+        <div class="brand-logo">C</div>
+        <span>CampusFlow</span>
+      </div>
+
+      <div class="welcome-text">
+        <span class="eyebrow">WELCOME BACK</span>
+        <h2>Sign in to your account</h2>
+        <p>Enter your credentials to access your dashboard.</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        @if (errorMessage()) {
+          <p class="login-error" role="alert">{{ errorMessage() }}</p>
+        }
+        @if (successMessage()) {
+          <p class="login-success" role="status">{{ successMessage() }}</p>
+        }
+        <mat-form-field appearance="outline">
+          <mat-label>Email address</mat-label>
+          <input
+            matInput
+            type="email"
+            placeholder="you@college.edu"
+            formControlName="email"
+          />
+          <mat-icon matPrefix>mail_outline</mat-icon>
+
+          @if (loginForm.controls.email.hasError('required') &&
+          loginForm.controls.email.touched) {
+            <mat-error>Email is required.</mat-error>
+          }
+
+          @if (loginForm.controls.email.hasError('email') &&
+          loginForm.controls.email.touched) {
+            <mat-error>Enter a valid email address.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="hidePassword() ? 'password' : 'text'"
+            formControlName="password"
+          />
+          <mat-icon matPrefix>lock_outline</mat-icon>
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword.set(!hidePassword())"
+            [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+          >
+            <mat-icon>
+              {{ hidePassword() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+
+          @if (loginForm.controls.password.hasError('required') &&
+          loginForm.controls.password.touched) {
+            <mat-error>Password is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="form-options">
+          <label class="remember-option">
+            <input type="checkbox" />
+            <span>Remember me</span>
+          </label>
+
+          <span class="forgot-unavailable">
+            Password reset is unavailable. Contact the placement office.
+          </span>
+        </div>
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="sign-in-button"
+          type="submit"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? 'Signing in…' : successMessage() ? 'Signed in' : 'Sign in' }}
+          <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+        </button>
+      </form>
+
+      <div class="login-divider">
+        <span>SECURE ACCESS</span>
+      </div>
+
+      <p class="security-note">
+        <mat-icon>verified_user</mat-icon>
+        Your account is protected with secure authentication.
+      </p>
+
+      <p class="register-text">
+        Don't have an account?
+        <a href="#">Contact your placement office</a>
+      </p>
+    </div>
+  </main>
+</div>

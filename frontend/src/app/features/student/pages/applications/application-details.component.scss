@@ -1,0 +1,19 @@
+.application-page { display: grid; gap: 16px; }
+.back-link, .jobs-link { width: fit-content; color: #2563eb; font-size: 13px; font-weight: 600; text-decoration: none; }
+.back-link:hover, .jobs-link:hover { text-decoration: underline; }
+.application-card { padding: clamp(20px, 4vw, 36px); border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgb(15 23 42 / 5%); }
+.eyebrow { margin: 0 0 8px; color: #2563eb; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(23px, 4vw, 31px); }
+.company-name { margin: 8px 0 20px; color: #475569; font-size: 14px; font-weight: 600; }
+.status-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px; border-radius: 8px; background: #eff6ff; color: #1d4ed8; font-size: 13px; }
+.application-metadata { display: grid; gap: 0; margin: 16px 0; }
+.application-metadata > div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+.application-metadata dt { color: #64748b; }
+.application-metadata dd { margin: 0; color: #334155; text-align: right; }
+.cover-letter { margin: 20px 0; }
+.cover-letter h2 { margin: 0 0 8px; color: #0f172a; font-size: 15px; }
+.cover-letter p { margin: 0; color: #475569; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+.state-card { display: grid; min-height: 200px; align-content: center; justify-items: center; text-align: center; }
+.state-card h1 { font-size: 22px; }
+.state-card p { color: #64748b; font-size: 14px; }
+.error-state h1, .error-state p { color: #b91c1c; }

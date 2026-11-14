@@ -1,0 +1,22 @@
+<section class="panel" aria-labelledby="notifications-title" [attr.aria-busy]="loading()">
+  <header class="panel-header">
+    <div><h2 id="notifications-title">Recent notifications</h2><p>Updates from your placement office</p></div>
+    <a routerLink="/student/notifications">View all</a>
+  </header>
+  @if (loading()) {
+    <p class="panel-state" role="status">Loading notifications…</p>
+  } @else if (error()) {
+    <p class="panel-state error-state" role="alert">{{ error() }}</p>
+  } @else if (notifications().length === 0) {
+    <p class="panel-state">You have no notifications yet.</p>
+  } @else {
+    <ul class="item-list">
+      @for (notification of notifications(); track notification.id) {
+        <li class="list-item notification-item" [class.unread]="!notification.isRead">
+          <div class="item-main"><strong>{{ notification.title }}</strong><span>{{ notification.message }}</span></div>
+          <div class="item-meta"><span class="read-state">{{ notification.isRead ? 'Read' : 'Unread' }}</span><time [attr.datetime]="notification.createdAt">{{ notification.createdAt | date:'mediumDate':'UTC' }}</time></div>
+        </li>
+      }
+    </ul>
+  }
+</section>

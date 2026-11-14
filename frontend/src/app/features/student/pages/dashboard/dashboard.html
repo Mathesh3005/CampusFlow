@@ -1,0 +1,29 @@
+<div class="dashboard-page">
+  <header class="welcome-section">
+    <div>
+      <p class="eyebrow">STUDENT WORKSPACE</p>
+      <h1>Welcome back</h1>
+      <p class="welcome-meta">{{ user()?.email }} <span aria-hidden="true">·</span> {{ today }} UTC</p>
+    </div>
+    <button class="refresh-button" type="button" [disabled]="loading()" (click)="load()">{{ loading() ? 'Refreshing…' : 'Refresh' }}</button>
+  </header>
+
+  @if (state().status === 'error') {
+    <section class="page-error" role="alert">
+      <p>{{ state().error }}</p>
+      <button type="button" (click)="load()">Try again</button>
+    </section>
+  } @else {
+    <section class="stats-grid" aria-label="Overview">
+      <app-overview-stat-card label="Applications" icon="description" caption="All submitted applications" [value]="applicationsCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Available jobs" icon="work_outline" caption="Published and eligible for you" [value]="jobsCount()" [loading]="loading()" />
+    </section>
+
+    <section class="dashboard-grid" aria-label="Dashboard details">
+      <app-recent-applications [applications]="applications()" [error]="data()?.applications.error ?? null" [loading]="loading()" />
+      <app-available-jobs [jobs]="jobs()" [error]="data()?.jobs.error ?? null" [loading]="loading()" />
+      <app-upcoming-interviews [interviews]="interviews()" [error]="data()?.interviews.error ?? null" [partialResults]="data()?.interviews.partialResults ?? false" [loading]="loading()" />
+      <app-recent-notifications [notifications]="notifications()" [error]="data()?.notifications.error ?? null" [loading]="loading()" />
+    </section>
+  }
+</div>

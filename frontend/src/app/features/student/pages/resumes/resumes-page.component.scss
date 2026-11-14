@@ -1,0 +1,55 @@
+.resumes-page { display: grid; gap: 22px; }
+.page-heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.page-heading > div, .section-heading > div { min-width: 0; }
+.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); letter-spacing: -.5px; }
+h2 { margin: 0; color: #0f172a; font-size: 17px; }
+.intro, .section-heading p { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+.upload-panel, .resume-panel { display: grid; gap: 16px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
+.upload-panel > div:first-child p { margin: 7px 0 0; color: #64748b; font-size: 13px; line-height: 1.5; }
+.primary-button, .secondary-button, .delete-button, .text-button { min-height: 38px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.primary-button { padding: 0 15px; border: 1px solid #2563eb; background: #2563eb; color: #fff; }
+.primary-button:hover:not(:disabled) { background: #1d4ed8; }
+.secondary-button { padding: 0 13px; border: 1px solid #bfdbfe; background: #fff; color: #1d4ed8; }
+.delete-button { padding: 0 13px; border: 1px solid #fecaca; background: #fff; color: #b91c1c; }
+.primary-button:disabled, .secondary-button:disabled, .delete-button:disabled, .text-button:disabled { cursor: default; opacity: .55; }
+.text-button { padding: 0 8px; border: 0; background: transparent; color: #2563eb; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; }
+.file-prompt { margin: 0; color: #64748b; font-size: 13px; }
+.selected-file { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff; }
+.selected-file > div { display: grid; min-width: 0; gap: 4px; }
+.selected-file strong { overflow-wrap: anywhere; color: #0f172a; font-size: 13px; }
+.selected-file span { color: #64748b; font-size: 12px; }
+.upload-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.upload-progress { display: grid; gap: 8px; color: #1d4ed8; font-size: 12px; }
+.progress-track { height: 5px; overflow: hidden; border-radius: 999px; background: #dbeafe; }
+.progress-track span { display: block; width: 35%; height: 100%; border-radius: inherit; background: #2563eb; animation: upload-progress 1.2s ease-in-out infinite alternate; }
+@keyframes upload-progress { from { transform: translateX(0); } to { transform: translateX(185%); } }
+.feedback { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 8px; font-size: 13px; }
+.feedback p { margin: 0; }
+.success-message { border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; }
+.error-message { border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c; }
+.error-message a { color: #1d4ed8; font-weight: 600; }
+.resume-panel { min-width: 0; }
+.resume-list { display: grid; }
+.resume-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 19px 4px; border-top: 1px solid #e2e8f0; }
+.resume-info { display: grid; min-width: 0; gap: 7px; }
+.resume-info h3 { margin: 0; overflow-wrap: anywhere; color: #0f172a; font-size: 15px; }
+.resume-info p { margin: 0; color: #64748b; font-size: 12px; }
+.status-chip { width: fit-content; padding: 5px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 10px; font-weight: 700; }
+.inactive-chip { background: #f1f5f9; color: #475569; }
+.resume-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 9px; }
+.state-message { display: grid; min-height: 150px; align-content: center; justify-items: center; gap: 10px; margin: 0; color: #64748b; font-size: 14px; text-align: center; }
+.state-message h3, .state-message p { margin: 0; }
+.state-message h3 { color: #0f172a; font-size: 16px; }
+.state-message.error-message { border: 0; background: transparent; color: #b91c1c; }
+
+@media (max-width: 600px) {
+  .resumes-page { gap: 16px; }
+  .upload-panel, .resume-panel { padding: 16px; }
+  .page-heading { align-items: flex-start; }
+  .resume-card { align-items: flex-start; flex-direction: column; gap: 13px; }
+  .resume-actions { width: 100%; }
+  .upload-actions { justify-content: flex-start; }
+  .upload-actions > button { flex: 1 1 145px; }
+}

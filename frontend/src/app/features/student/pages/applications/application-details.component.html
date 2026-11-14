@@ -1,0 +1,36 @@
+<div class="application-page">
+  @let current = state();
+  <a class="back-link" routerLink="/student/applications">← Back to applications</a>
+
+  @if (current.status === 'loading') {
+    <section class="application-card" aria-busy="true"><p role="status">Loading application…</p></section>
+  } @else if (current.status === 'invalid') {
+    <section class="application-card state-card" role="alert"><h1>Invalid application link</h1><p>The application ID in this link is invalid.</p></section>
+  } @else if (current.status === 'notFound') {
+    <section class="application-card state-card" role="status"><h1>Application not found</h1><p>This application may not exist or may not belong to your account.</p></section>
+  } @else if (current.status === 'unauthorized') {
+    <section class="application-card state-card error-state" role="alert">
+      <h1>Session expired</h1>
+      <p>Your session has expired. Sign in again to view this application.</p>
+      <a class="jobs-link" routerLink="/login">Sign in</a>
+    </section>
+  } @else if (current.status === 'error') {
+    <section class="application-card state-card error-state" role="alert"><h1>Could not load application</h1><p>Please try again later.</p></section>
+  } @else {
+    <article class="application-card">
+      <p class="eyebrow">APPLICATION #{{ current.application.id }}</p>
+      <h1>{{ current.application.jobTitle }}</h1>
+      <p class="company-name">{{ current.application.companyName }}</p>
+      <div class="status-line"><span>Status</span><strong>{{ current.application.status }}</strong></div>
+      <dl class="application-metadata">
+        <div><dt>Applied</dt><dd><time [attr.datetime]="current.application.appliedAt">{{ current.application.appliedAt | date:'medium':'UTC' }} UTC</time></dd></div>
+        <div><dt>Last updated</dt><dd><time [attr.datetime]="current.application.updatedAt">{{ current.application.updatedAt | date:'medium':'UTC' }} UTC</time></dd></div>
+        @if (current.application.resumeId !== null) { <div><dt>Resume</dt><dd>Resume #{{ current.application.resumeId }}</dd></div> }
+      </dl>
+      @if (current.application.coverLetter) {
+        <section class="cover-letter"><h2>Cover letter</h2><p>{{ current.application.coverLetter }}</p></section>
+      }
+      <a class="jobs-link" routerLink="/student/jobs">Browse more jobs</a>
+    </article>
+  }
+</div>

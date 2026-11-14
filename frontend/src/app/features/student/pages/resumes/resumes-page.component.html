@@ -1,0 +1,111 @@
+<div class="resumes-page">
+  @let current = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">STUDENT WORKSPACE</p>
+      <h1>My Resumes</h1>
+      <p class="intro">Manage the PDF resumes you can attach to placement applications.</p>
+    </div>
+    <button class="primary-button" type="button" (click)="filePicker.click()" [disabled]="uploading() || operation() !== null">Upload Resume</button>
+    <input #filePicker id="resume-file" class="visually-hidden" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF resume" (change)="onFileSelected($event)" />
+  </header>
+
+  @if (successMessage(); as message) {
+    <p class="feedback success-message" role="status">{{ message }}</p>
+  }
+  @if (operationError(); as message) {
+    <div class="feedback error-message" role="alert">
+      <p>{{ message }}</p>
+      @if (needsLogin()) { <a routerLink="/login">Sign in</a> }
+    </div>
+  }
+
+  <section class="upload-panel" aria-labelledby="upload-title">
+    <div>
+      <h2 id="upload-title">Add a resume</h2>
+      <p>PDF only, up to 5 MiB. Client checks help catch common mistakes; the server also verifies the file signature.</p>
+    </div>
+    @if (selectedFile(); as file) {
+      <div class="selected-file">
+        <div>
+          <strong>{{ file.name }}</strong>
+          <span>{{ formatFileSize(file.size) }}</span>
+        </div>
+        <button class="text-button" type="button" (click)="clearSelectedFile()" [disabled]="uploading()">Remove</button>
+      </div>
+    } @else {
+      <p class="file-prompt">Choose a PDF file to upload.</p>
+    }
+    @if (fileError(); as message) {
+      <div class="feedback error-message" role="alert">
+        <p>{{ message }}</p>
+        @if (needsLogin()) { <a routerLink="/login">Sign in</a> }
+      </div>
+    }
+    @if (uploading()) {
+      <div class="upload-progress" role="status" aria-live="polite">
+        <span class="progress-track" aria-hidden="true"><span></span></span>
+        <span>Uploading and validating PDF…</span>
+      </div>
+    }
+    <div class="upload-actions">
+      <button class="secondary-button" type="button" (click)="filePicker.click()" [disabled]="uploading() || operation() !== null">Choose file</button>
+      <button class="primary-button upload-submit" type="button" (click)="upload()" [disabled]="!selectedFile() || uploading() || operation() !== null">
+        {{ uploading() ? 'Uploading…' : 'Upload selected PDF' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="resume-panel" aria-labelledby="resume-list-title" [attr.aria-busy]="current.status === 'loading'">
+    <header class="section-heading">
+      <div>
+        <h2 id="resume-list-title">Your resumes</h2>
+        <p>More than one resume can be active at a time.</p>
+      </div>
+      <button class="secondary-button" type="button" (click)="retry()" [disabled]="current.status === 'loading' || uploading() || operation() !== null">Refresh</button>
+    </header>
+
+    @if (current.status === 'loading') {
+      <p class="state-message" role="status">Loading your resumes…</p>
+    } @else if (current.status === 'error') {
+      <div class="state-message error-message" role="alert">
+        <p>{{ current.message }}</p>
+        @if (current.requiresLogin) { <a routerLink="/login">Sign in</a> }
+        <button class="text-button" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (current.resumes.length === 0) {
+      <div class="state-message empty-message">
+        <h3>No resumes uploaded</h3>
+        <p>Upload a PDF resume to attach it when applying for a job.</p>
+      </div>
+    } @else {
+      <div class="resume-list">
+        @for (resume of current.resumes; track resume.id) {
+          <article class="resume-card">
+            <div class="resume-info">
+              <h3>{{ resume.fileName }}</h3>
+              <p>{{ formatFileSize(resume.fileSize) }} <span aria-hidden="true">·</span> Uploaded
+                <time [attr.datetime]="resume.uploadedAt">{{ resume.uploadedAt | date:'mediumDate':'UTC' }} UTC</time>
+              </p>
+              <span class="status-chip" [class.inactive-chip]="!resume.isActive">{{ resume.isActive ? 'Active' : 'Inactive' }}</span>
+            </div>
+            <div class="resume-actions">
+              @if (resume.isActive) {
+                <button class="secondary-button" type="button" (click)="deactivate(resume)" [disabled]="operation() !== null || uploading()">
+                  {{ operation()?.resumeId === resume.id && operation()?.action === 'deactivate' ? 'Deactivating…' : 'Deactivate' }}
+                </button>
+              } @else {
+                <button class="secondary-button" type="button" (click)="activate(resume)" [disabled]="operation() !== null || uploading()">
+                  {{ operation()?.resumeId === resume.id && operation()?.action === 'activate' ? 'Activating…' : 'Activate' }}
+                </button>
+              }
+              <button class="delete-button" type="button" (click)="confirmDelete(resume)" [disabled]="operation() !== null || uploading()">
+                {{ operation()?.resumeId === resume.id && operation()?.action === 'delete' ? 'Deleting…' : 'Delete' }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</div>

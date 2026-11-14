@@ -1,0 +1,51 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+:root {
+  --cf-primary: #2563eb;
+  --cf-primary-dark: #1d4ed8;
+  --cf-background: #f8fafc;
+  --cf-surface: #ffffff;
+  --cf-text-primary: #0f172a;
+  --cf-text-secondary: #64748b;
+  --cf-border: #e2e8f0;
+  --cf-success: #16a34a;
+  --cf-warning: #d97706;
+  --cf-danger: #dc2626;
+
+  --cf-radius-sm: 6px;
+  --cf-radius-md: 10px;
+  --cf-radius-lg: 16px;
+
+  --cf-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --cf-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, sans-serif;
+  background: var(--cf-background);
+  color: var(--cf-text-primary);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

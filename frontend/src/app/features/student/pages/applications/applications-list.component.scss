@@ -1,0 +1,43 @@
+.applications-page { display: grid; gap: 22px; }
+.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); letter-spacing: -.5px; }
+.intro { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+.results-panel { padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
+.secondary-button, .withdraw-button, .text-button { min-height: 38px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.secondary-button { padding: 0 13px; border: 1px solid #bfdbfe; background: #fff; color: #1d4ed8; }
+.secondary-button:disabled, .withdraw-button:disabled { cursor: default; opacity: .55; }
+.text-button { padding: 0 8px; border: 0; background: transparent; color: #2563eb; }
+.state-message { display: grid; min-height: 180px; align-content: center; justify-items: center; gap: 10px; margin: 0; color: #64748b; font-size: 14px; text-align: center; }
+.state-message h2, .state-message p, .feedback p { margin: 0; }
+.state-message h2 { color: #0f172a; font-size: 17px; }
+.error-message { color: #b91c1c; }
+.error-message a { color: #1d4ed8; font-weight: 600; }
+.feedback { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 8px; font-size: 13px; }
+.success-message { border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; }
+.feedback.error-message { border: 1px solid #fecaca; background: #fef2f2; }
+.results-summary { margin-bottom: 6px; color: #64748b; font-size: 12px; }
+.application-list { display: grid; }
+.application-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 4px; border-top: 1px solid #e2e8f0; }
+.application-main { min-width: 0; }
+.application-main .eyebrow { margin-bottom: 6px; }
+.application-main h2 { margin: 0; font-size: 17px; }
+.application-main h2 a { color: #0f172a; text-decoration: none; }
+.application-main h2 a:hover { color: #2563eb; text-decoration: underline; }
+.company { margin: 7px 0 12px; color: #475569; font-size: 13px; font-weight: 600; }
+.application-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 14px; color: #64748b; font-size: 12px; }
+.status-chip { padding: 5px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 700; }
+.application-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 14px; }
+.details-link { color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none; }
+.details-link:hover { text-decoration: underline; }
+.withdraw-button { padding: 0 13px; border: 1px solid #fecaca; background: #fff; color: #b91c1c; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 20px; padding-top: 17px; border-top: 1px solid #e2e8f0; color: #475569; font-size: 12px; }
+
+@media (max-width: 600px) {
+  .applications-page { gap: 16px; }
+  .results-panel { padding: 16px; }
+  .application-card { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .application-actions { width: 100%; justify-content: space-between; }
+  .page-heading { align-items: flex-start; }
+  .pagination { gap: 10px; justify-content: space-between; }
+}

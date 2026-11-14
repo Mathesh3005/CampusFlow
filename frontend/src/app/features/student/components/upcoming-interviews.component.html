@@ -1,0 +1,25 @@
+<section class="panel" aria-labelledby="interviews-title" [attr.aria-busy]="loading()">
+  <header class="panel-header">
+    <div><h2 id="interviews-title">Upcoming interviews</h2><p>Your next scheduled conversations</p></div>
+    <a routerLink="/student/interviews">View all</a>
+  </header>
+  @if (partialResults() && !loading() && !error()) {
+    <p class="panel-state" role="status">Showing a partial list. More interview records are available; refresh to try loading further results.</p>
+  }
+  @if (loading()) {
+    <p class="panel-state" role="status">Loading interviews…</p>
+  } @else if (error()) {
+    <p class="panel-state error-state" role="alert">{{ error() }}</p>
+  } @else if (upcoming().length === 0) {
+    <p class="panel-state">You have no upcoming interviews.</p>
+  } @else {
+    <ul class="item-list">
+      @for (interview of upcoming(); track interview.id) {
+        <li class="list-item">
+          <div class="item-main"><strong>Application #{{ interview.applicationId }}</strong><span>{{ interview.interviewMode }} · {{ interview.status }}</span></div>
+          <div class="item-meta"><time [attr.datetime]="interview.scheduledAt">{{ interview.scheduledAt | date:'medium':'UTC' }} UTC</time>@if (interview.locationOrLink) { <span class="location-text">{{ interview.locationOrLink }}</span> }</div>
+        </li>
+      }
+    </ul>
+  }
+</section>

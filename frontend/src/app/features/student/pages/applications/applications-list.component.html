@@ -1,0 +1,78 @@
+<div class="applications-page">
+  @let current = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">STUDENT WORKSPACE</p>
+      <h1>My applications</h1>
+      <p class="intro">Track the status of your placement applications.</p>
+    </div>
+    <button class="secondary-button" type="button" (click)="retry()" [disabled]="current.status === 'loading'">Refresh</button>
+  </header>
+
+  @if (successMessage(); as message) {
+    <p class="feedback success-message" role="status">{{ message }}</p>
+  }
+  @if (actionError(); as message) {
+    <div class="feedback error-message" role="alert">
+      <p>{{ message }}</p>
+      @if (needsLogin()) { <a routerLink="/login">Sign in</a> }
+    </div>
+  }
+
+  <section class="results-panel" aria-label="Your applications" [attr.aria-busy]="current.status === 'loading'">
+    @if (current.status === 'loading') {
+      <p class="state-message" role="status">Loading applications…</p>
+    } @else if (current.status === 'error') {
+      <div class="state-message error-message" role="alert">
+        <p>{{ current.message }}</p>
+        @if (needsLogin()) { <a routerLink="/login">Sign in</a> }
+        <button class="text-button" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (current.page.content.length === 0) {
+      <div class="state-message empty-message">
+        <h2>No applications yet</h2>
+        <p>Applications you submit will appear here.</p>
+        <a class="details-link" routerLink="/student/jobs">Browse jobs</a>
+      </div>
+    } @else {
+      <div class="results-summary" aria-live="polite">{{ current.page.totalElements }} application{{ current.page.totalElements === 1 ? '' : 's' }}</div>
+      <div class="application-list">
+        @for (application of current.page.content; track application.id) {
+          <article class="application-card">
+            <div class="application-main">
+              <p class="eyebrow">APPLICATION #{{ application.id }}</p>
+              <h2><a [routerLink]="['/student/applications', application.id]">{{ application.jobTitle }}</a></h2>
+              <p class="company">{{ application.companyName }}</p>
+              <div class="application-meta">
+                <span class="status-chip">{{ application.status.replace('_', ' ') }}</span>
+                <span>Applied <time [attr.datetime]="application.appliedAt">{{ application.appliedAt | date:'mediumDate':'UTC' }} UTC</time></span>
+              </div>
+            </div>
+            <div class="application-actions">
+              <a class="details-link" [routerLink]="['/student/applications', application.id]">View details</a>
+              @if (canWithdraw(application)) {
+                <button
+                  class="withdraw-button"
+                  type="button"
+                  [attr.data-application-id]="application.id"
+                  [disabled]="withdrawingId() !== null"
+                  (click)="confirmWithdrawal(application)"
+                >
+                  {{ withdrawingId() === application.id ? 'Withdrawing…' : 'Withdraw' }}
+                </button>
+              }
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (current.page.totalPages > 1) {
+        <nav class="pagination" aria-label="Application pages">
+          <button class="secondary-button" type="button" (click)="changePage(pageIndex() - 1)" [disabled]="!current.page.hasPrevious">Previous</button>
+          <span>Page {{ current.page.page + 1 }} of {{ current.page.totalPages }}</span>
+          <button class="secondary-button" type="button" (click)="changePage(pageIndex() + 1)" [disabled]="!current.page.hasNext">Next</button>
+        </nav>
+      }
+    }
+  </section>
+</div>

@@ -1,0 +1,138 @@
+<div class="details-page">
+  @let current = state();
+  <a class="back-link" routerLink="/student/jobs">← Back to jobs</a>
+
+  @if (current.status === 'loading') {
+    <section class="details-card" aria-busy="true"><p class="state-message" role="status">Loading job details…</p></section>
+  } @else if (current.status === 'invalid') {
+    <section class="details-card state-card" role="alert">
+      <h1>Invalid job link</h1>
+      <p>The job ID in this link is invalid.</p>
+    </section>
+  } @else if (current.status === 'notFound') {
+    <section class="details-card state-card" role="status">
+      <h1>Job not available</h1>
+      <p>This job may have been removed, unpublished, or may not be available for your eligibility.</p>
+    </section>
+  } @else if (current.status === 'error') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Could not load job</h1>
+      <p>{{ current.message }}</p>
+    </section>
+  } @else {
+    <article class="details-card">
+      <header class="job-heading">
+        <div>
+          <p class="eyebrow">{{ current.job.companyName }}</p>
+          <h1>{{ current.job.jobTitle }}</h1>
+          <div class="job-tags">
+            <span>{{ current.job.employmentType.replace('_', ' ') }}</span>
+            <span>{{ current.job.workMode }}</span>
+            @if (current.job.location) { <span>{{ current.job.location }}</span> }
+          </div>
+        </div>
+        <span class="status-chip">{{ current.job.status }}</span>
+      </header>
+
+      <section class="detail-section" aria-labelledby="description-heading">
+        <h2 id="description-heading">Job description</h2>
+        <p class="description">{{ current.job.jobDescription }}</p>
+      </section>
+
+      <section class="detail-section" aria-labelledby="eligibility-heading">
+        <h2 id="eligibility-heading">Eligibility</h2>
+        @if (current.job.minimumCgpa !== null) {
+          <p>Minimum CGPA: {{ current.job.minimumCgpa }}</p>
+        } @else {
+          <p>No minimum CGPA requirement is specified.</p>
+        }
+      </section>
+
+      @if (current.job.salaryMin !== null || current.job.salaryMax !== null) {
+        <section class="detail-section" aria-labelledby="salary-heading">
+          <h2 id="salary-heading">Salary information</h2>
+          <div class="salary-values">
+            @if (current.job.salaryMin !== null) { <span>Minimum: {{ current.job.salaryMin | number:'1.0-2' }}</span> }
+            @if (current.job.salaryMax !== null) { <span>Maximum: {{ current.job.salaryMax | number:'1.0-2' }}</span> }
+          </div>
+        </section>
+      }
+
+      <section class="detail-section deadline-section" aria-labelledby="deadline-heading">
+        <h2 id="deadline-heading">Application deadline</h2>
+        <time [attr.datetime]="current.job.applicationDeadline">{{ current.job.applicationDeadline | date:'medium':'UTC' }} UTC</time>
+      </section>
+
+      <section class="application-section" aria-labelledby="apply-heading" [attr.aria-busy]="submitting()">
+        @let resumeState = resumesState();
+        @if (submittedApplication(); as application) {
+          <div class="application-success" role="status">
+            <p class="eyebrow">APPLICATION SUBMITTED</p>
+            <h2 id="apply-heading">Your application was received</h2>
+            <p>Application #{{ application.id }} · Status: {{ application.status }}</p>
+            <a class="application-link" [routerLink]="['/student/applications', application.id]">View application details</a>
+          </div>
+        } @else {
+          <header class="application-heading">
+            <p class="eyebrow">APPLY</p>
+            <h2 id="apply-heading">Apply to {{ current.job.jobTitle }}</h2>
+            <p>{{ current.job.companyName }}</p>
+          </header>
+
+          <div class="eligibility-note">
+            @if (current.job.minimumCgpa !== null) {
+              <p><strong>Minimum CGPA:</strong> {{ current.job.minimumCgpa }}</p>
+            } @else {
+              <p>No minimum CGPA requirement is specified for this job.</p>
+            }
+            <p>The backend verifies eligibility, job status, and application deadline when you submit.</p>
+          </div>
+
+          <fieldset class="resume-picker">
+            <legend>Select a resume <span>(optional)</span></legend>
+            <p class="resume-help">You may attach one of your active resumes, or apply without a resume.</p>
+            @if (resumeState.status === 'loading') {
+              <p class="inline-state" role="status">Loading your resumes…</p>
+            } @else if (resumeState.status === 'error') {
+              <p class="inline-state error-state" role="alert">Your resumes could not be loaded. You can still apply without attaching one.</p>
+            } @else if (resumeState.resumes.length === 0) {
+              <p class="inline-state">You have no resumes yet. Resume attachment is optional.</p>
+            } @else {
+              <div class="resume-list">
+                @for (resume of resumeState.resumes; track resume.id) {
+                  <label class="resume-option" [class.resume-inactive]="!resume.isActive">
+                    <input
+                      type="radio"
+                      name="applicationResume"
+                      [value]="resume.id"
+                      [checked]="selectedResumeId() === resume.id"
+                      [disabled]="!resume.isActive || submitting()"
+                      (change)="selectResume(resume.id)"
+                    />
+                    <span class="resume-option-content">
+                      <strong>{{ resume.fileName }}</strong>
+                      <span>{{ (resume.fileSize / 1024) | number:'1.0-0' }} KB · Uploaded {{ resume.uploadedAt | date:'mediumDate':'UTC' }} UTC</span>
+                    </span>
+                    <span class="resume-status" [class.inactive-status]="!resume.isActive">{{ resume.isActive ? 'Active' : 'Inactive' }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </fieldset>
+
+          <label class="cover-letter-field">
+            <span>Cover letter <span class="optional-label">(optional)</span></span>
+            <textarea [formControl]="coverLetter" rows="5" placeholder="Add a short note with your application"></textarea>
+          </label>
+
+          @if (submissionError()) {
+            <p class="submission-error" role="alert">{{ submissionError() }}</p>
+          }
+          <button class="submit-application" type="button" [disabled]="submitting()" (click)="submitApplication(current.job)">
+            {{ submitting() ? 'Submitting…' : 'Submit application' }}
+          </button>
+        }
+      </section>
+    </article>
+  }
+</div>
