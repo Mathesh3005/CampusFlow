@@ -1,0 +1,136 @@
+<div class="details-page">
+  @let current = state();
+  <a class="back-link" routerLink="/officer/jobs">← Back to jobs</a>
+
+  @if (actionSuccess(); as message) {
+    <p class="feedback success-message" role="status">{{ message }}</p>
+  }
+  @if (actionError(); as message) {
+    <p class="feedback error-message" role="alert">{{ message }}</p>
+  }
+
+  @if (current.status === 'loading') {
+    <section class="details-card" aria-busy="true">
+      <p class="state-message" role="status">Loading job details…</p>
+    </section>
+  } @else if (current.status === 'invalid') {
+    <section class="details-card state-card" role="alert">
+      <h1>Invalid job link</h1>
+      <p>The job ID in this link is invalid.</p>
+    </section>
+  } @else if (current.status === 'notFound') {
+    <section class="details-card state-card" role="status">
+      <h1>Job unavailable</h1>
+      <p>This job was not found or is not available to your account.</p>
+    </section>
+  } @else if (current.status === 'error') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Could not load job</h1>
+      <p>{{ current.message }}</p>
+      <button class="primary-button" type="button" (click)="retry()">Retry</button>
+    </section>
+  } @else {
+    <article class="details-card">
+      <header class="job-heading">
+        <div>
+          <p class="eyebrow">{{ current.job.companyName }}</p>
+          <h1>{{ current.job.jobTitle }}</h1>
+          <div class="job-tags">
+            @if (current.job.location) {
+              <span>{{ current.job.location }}</span>
+            }
+            <span>{{ current.job.employmentType.replace('_', ' ') }}</span>
+            <span>{{ current.job.workMode }}</span>
+          </div>
+        </div>
+        <div class="status-actions">
+          <span class="status-chip">{{ current.job.status.replace('_', ' ') }}</span>
+          @if (canPublish(current.job)) {
+            <button
+              class="status-action-button publish-button"
+              type="button"
+              [disabled]="actionPending() || deletePending()"
+              (click)="confirmStatusAction(current.job, 'publish')">
+              {{ actionPending() ? 'Publishing…' : 'Publish' }}
+            </button>
+          }
+          @if (canClose(current.job)) {
+            <button
+              class="status-action-button close-button"
+              type="button"
+              [disabled]="actionPending() || deletePending()"
+              (click)="confirmStatusAction(current.job, 'close')">
+              {{ actionPending() ? 'Closing…' : 'Close' }}
+            </button>
+          }
+          @if (canDelete(current.job)) {
+            <button
+              class="status-action-button delete-button"
+              type="button"
+              [disabled]="actionPending() || deletePending()"
+              (click)="confirmDelete(current.job)">
+              {{ deletePending() ? 'Deleting…' : 'Delete' }}
+            </button>
+          }
+        </div>
+      </header>
+
+      <section class="detail-section" aria-labelledby="description-heading">
+        <h2 id="description-heading">Job description</h2>
+        <p class="description">{{ current.job.jobDescription }}</p>
+      </section>
+
+      <section class="detail-section" aria-labelledby="job-information-heading">
+        <h2 id="job-information-heading">Job information</h2>
+        <dl class="job-information">
+          <div>
+            <dt>Location</dt>
+            <dd>{{ current.job.location || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Employment type</dt>
+            <dd>{{ current.job.employmentType.replace('_', ' ') }}</dd>
+          </div>
+          <div>
+            <dt>Work mode</dt>
+            <dd>{{ current.job.workMode }}</dd>
+          </div>
+          <div>
+            <dt>Job status</dt>
+            <dd>{{ current.job.status.replace('_', ' ') }}</dd>
+          </div>
+          <div>
+            <dt>Minimum CGPA</dt>
+            <dd>{{ current.job.minimumCgpa === null ? 'Not specified' : current.job.minimumCgpa }}</dd>
+          </div>
+          <div>
+            <dt>Application deadline</dt>
+            <dd>
+              <time [attr.datetime]="current.job.applicationDeadline">
+                {{ current.job.applicationDeadline | date:'medium':'UTC' }} UTC
+              </time>
+            </dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd><time [attr.datetime]="current.job.createdAt">{{ current.job.createdAt | date:'mediumDate':'UTC' }} UTC</time></dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (current.job.salaryMin !== null || current.job.salaryMax !== null) {
+        <section class="detail-section salary-section" aria-labelledby="salary-heading">
+          <h2 id="salary-heading">Salary</h2>
+          <div class="salary-values">
+            @if (current.job.salaryMin !== null) {
+              <span>Minimum: {{ current.job.salaryMin | number:'1.0-2' }}</span>
+            }
+            @if (current.job.salaryMax !== null) {
+              <span>Maximum: {{ current.job.salaryMax | number:'1.0-2' }}</span>
+            }
+          </div>
+        </section>
+      }
+    </article>
+  }
+</div>

@@ -1,0 +1,58 @@
+.applications-page { display: grid; gap: 22px; }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); letter-spacing: -.5px; }
+.intro { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+.heading-actions { display: flex; align-items: center; gap: 14px; }
+.total-applications { display: grid; gap: 2px; min-width: 100px; }
+.total-label { color: #64748b; font-size: 11px; }
+.total-applications strong { color: #0f172a; font-size: 20px; line-height: 1.2; }
+.total-applications .unavailable-count { color: #94a3b8; }
+.metric-skeleton { width: 42px; height: 20px; border-radius: 5px; background: #e2e8f0; animation: pulse 1.4s ease-in-out infinite; }
+.applications-panel { min-height: 220px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
+.secondary-button, .primary-button { min-height: 38px; padding: 0 14px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.secondary-button { border: 1px solid #bfdbfe; background: #fff; color: #1d4ed8; }
+.primary-button { border: 1px solid #2563eb; background: #2563eb; color: #fff; }
+.secondary-button:disabled { cursor: default; opacity: .55; }
+.loading-state, .state-message { display: grid; min-height: 220px; align-content: center; justify-items: center; gap: 12px; color: #64748b; font-size: 14px; text-align: center; }
+.loading-indicator { width: 25px; height: 25px; border: 3px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; animation: spin .8s linear infinite; }
+.state-message h2, .state-message p { margin: 0; }
+.state-message h2 { color: #0f172a; font-size: 17px; }
+.error-state p { max-width: 520px; color: #b91c1c; }
+.empty-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #eff6ff; color: #2563eb; font-size: 18px; font-weight: 700; }
+.results-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 2px 2px 16px; }
+.results-heading h2 { margin: 0; color: #0f172a; font-size: 15px; }
+.results-heading span { color: #64748b; font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: .35px; text-transform: uppercase; }
+td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 12px; white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+.status-chip { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 700; }
+.details-link { color: #1d4ed8; font-size: 12px; font-weight: 600; text-decoration: none; }
+.details-link:hover { text-decoration: underline; }
+.details-link:focus-visible, .secondary-button:focus-visible, .primary-button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.details-unavailable { color: #94a3b8; font-size: 11px; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 20px; padding-top: 17px; border-top: 1px solid #e2e8f0; color: #475569; font-size: 12px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator, .metric-skeleton { animation: none; }
+}
+@media (max-width: 700px) {
+  .page-heading { align-items: flex-start; flex-direction: column; }
+  .heading-actions { width: 100%; justify-content: space-between; }
+  .applications-panel { padding: 16px; }
+  .table-wrap { overflow: visible; }
+  table, tbody { display: block; width: 100%; }
+  thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+  tbody { display: grid; gap: 12px; }
+  tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 9px; }
+  td { display: grid; gap: 5px; padding: 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  td::before { content: attr(data-label); color: #64748b; font-size: 10px; font-weight: 600; }
+  td.details-cell { align-content: end; }
+  td.details-cell::before { content: none; }
+  .pagination { justify-content: space-between; gap: 10px; }
+}

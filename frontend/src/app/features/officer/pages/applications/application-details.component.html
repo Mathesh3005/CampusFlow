@@ -1,0 +1,101 @@
+<div class="details-page">
+  @let current = state();
+  <a class="back-link" routerLink="/officer/applications">← Back to applications</a>
+
+  @if (current.status === 'loading') {
+    <section class="details-card" aria-busy="true">
+      <p class="state-message" role="status">Loading application details…</p>
+    </section>
+  } @else if (current.status === 'invalid') {
+    <section class="details-card state-card" role="alert">
+      <h1>Invalid application link</h1>
+      <p>The application ID in this link is invalid.</p>
+    </section>
+  } @else if (current.status === 'unauthorized') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Sign-in required</h1>
+      <p>Your session has expired. Sign in again to view this application.</p>
+    </section>
+  } @else if (current.status === 'forbidden') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Application unavailable</h1>
+      <p>You do not have permission to view this application.</p>
+    </section>
+  } @else if (current.status === 'notFound') {
+    <section class="details-card state-card" role="status">
+      <h1>Application unavailable</h1>
+      <p>This application was not found or is not available to your account.</p>
+    </section>
+  } @else if (current.status === 'error') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Could not load application</h1>
+      <p>{{ current.message }}</p>
+      <button class="primary-button" type="button" (click)="retry()">Retry</button>
+    </section>
+  } @else {
+    <article class="details-card">
+      <header class="application-heading">
+        <div>
+          <p class="eyebrow">APPLICATION DETAILS</p>
+          <h1>Application #{{ current.application.id }}</h1>
+        </div>
+        <span class="status-chip">{{ current.application.status.replace('_', ' ') }}</span>
+      </header>
+
+      <section class="detail-section" aria-labelledby="application-information-heading">
+        <h2 id="application-information-heading">Application information</h2>
+        <dl class="application-information">
+          <div>
+            <dt>Application ID</dt>
+            <dd>{{ current.application.id }}</dd>
+          </div>
+          <div>
+            <dt>Student ID</dt>
+            <dd>{{ current.application.studentId }}</dd>
+          </div>
+          <div>
+            <dt>Job ID</dt>
+            <dd>{{ current.application.jobId }}</dd>
+          </div>
+          <div>
+            <dt>Current status</dt>
+            <dd>{{ current.application.status.replace('_', ' ') }}</dd>
+          </div>
+          <div>
+            <dt>Applied</dt>
+            <dd>
+              <time [attr.datetime]="current.application.appliedAt">
+                {{ current.application.appliedAt | date:'medium':'UTC' }} UTC
+              </time>
+            </dd>
+          </div>
+          @if (current.application.resumeId !== null) {
+            <div>
+              <dt>Resume ID</dt>
+              <dd>{{ current.application.resumeId }}</dd>
+            </div>
+          } @else {
+            <div>
+              <dt>Resume</dt>
+              <dd>No resume attached</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      @if (current.application.coverLetter) {
+        <section class="detail-section" aria-labelledby="cover-letter-heading">
+          <h2 id="cover-letter-heading">Cover letter</h2>
+          <p class="cover-letter">{{ current.application.coverLetter }}</p>
+        </section>
+      }
+
+      <section class="review-section" aria-labelledby="review-heading">
+        <div>
+          <h2 id="review-heading">Status review</h2>
+          <p>Status review actions are not available yet.</p>
+        </div>
+      </section>
+    </article>
+  }
+</div>

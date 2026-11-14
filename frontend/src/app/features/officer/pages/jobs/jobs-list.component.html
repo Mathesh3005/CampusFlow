@@ -1,0 +1,149 @@
+<div class="jobs-page">
+  @let currentState = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+      <h1>Job Management</h1>
+      <p class="intro">Manage and monitor your placement opportunities.</p>
+    </div>
+    <div class="heading-actions">
+      <div class="total-jobs" aria-live="polite">
+        <span class="total-label">Total jobs</span>
+        @if (currentState.status === 'ready') {
+          <strong>{{ currentState.page.totalElements }}</strong>
+        } @else if (currentState.status === 'loading') {
+          <span class="metric-skeleton" aria-label="Loading total jobs"></span>
+        } @else {
+          <strong class="unavailable-count" aria-label="Total jobs unavailable">—</strong>
+        }
+      </div>
+      <button class="secondary-button" type="button" (click)="retry()" [disabled]="currentState.status === 'loading' || actingOnJobId() !== null || deletingJobId() !== null">
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  @if (actionSuccess(); as message) {
+    <p class="feedback success-message" role="status">{{ message }}</p>
+  }
+  @if (actionError(); as message) {
+    <p class="feedback" role="alert">{{ message }}</p>
+  }
+
+  <section class="jobs-panel" aria-label="Your placement jobs" [attr.aria-busy]="currentState.status === 'loading'">
+    @if (currentState.status === 'loading') {
+      <div class="loading-state" role="status">
+        <span class="loading-indicator" aria-hidden="true"></span>
+        <span>Loading jobs…</span>
+      </div>
+    } @else if (currentState.status === 'error') {
+      <div class="state-message error-state" role="alert">
+        <h2>Jobs could not be loaded</h2>
+        <p>{{ currentState.message }}</p>
+        <button class="primary-button" type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (currentState.page.content.length === 0) {
+      <div class="state-message empty-state">
+        <span class="empty-icon" aria-hidden="true">J</span>
+        <h2>No jobs to display</h2>
+        <p>There are no placement opportunities on this page.</p>
+      </div>
+    } @else {
+      <div class="results-heading">
+        <h2>Your placement opportunities</h2>
+        <span>{{ currentState.page.totalElements }} total</span>
+      </div>
+      <div class="job-list">
+        @for (job of currentState.page.content; track job.id) {
+          <article class="job-card">
+            <header class="job-heading">
+              <div class="job-identity">
+                <h3>{{ job.jobTitle }}</h3>
+                <p>{{ job.companyName }}</p>
+              </div>
+              <span class="status-chip">{{ job.status.replace('_', ' ') }}</span>
+            </header>
+            <dl class="job-details">
+              <div>
+                <dt>Location</dt>
+                <dd>{{ job.location || '—' }}</dd>
+              </div>
+              <div>
+                <dt>Employment type</dt>
+                <dd>{{ job.employmentType.replace('_', ' ') }}</dd>
+              </div>
+              <div>
+                <dt>Work mode</dt>
+                <dd>{{ job.workMode }}</dd>
+              </div>
+              <div>
+                <dt>Application deadline</dt>
+                <dd><time [attr.datetime]="job.applicationDeadline">{{ job.applicationDeadline | date:'mediumDate':'UTC' }} UTC</time></dd>
+              </div>
+              <div>
+                <dt>Created</dt>
+                <dd><time [attr.datetime]="job.createdAt">{{ job.createdAt | date:'mediumDate':'UTC' }} UTC</time></dd>
+              </div>
+            </dl>
+            @if (canPublish(job) || canClose(job) || canDelete(job)) {
+              <div class="job-actions">
+                @if (canPublish(job)) {
+                  <button
+                    class="status-action-button publish-button"
+                    type="button"
+                    [attr.data-job-id]="job.id"
+                    [disabled]="actingOnJobId() !== null || deletingJobId() !== null"
+                    (click)="confirmStatusAction(job, 'publish')">
+                    {{ actingOnJobId() === job.id ? 'Publishing…' : 'Publish' }}
+                  </button>
+                }
+                @if (canClose(job)) {
+                  <button
+                    class="status-action-button close-button"
+                    type="button"
+                    [attr.data-job-id]="job.id"
+                    [disabled]="actingOnJobId() !== null || deletingJobId() !== null"
+                    (click)="confirmStatusAction(job, 'close')">
+                    {{ actingOnJobId() === job.id ? 'Closing…' : 'Close' }}
+                  </button>
+                }
+                @if (canDelete(job)) {
+                  <button
+                    class="status-action-button delete-button"
+                    type="button"
+                    [attr.data-job-id]="job.id"
+                    [disabled]="actingOnJobId() !== null || deletingJobId() !== null"
+                    (click)="confirmDelete(job)">
+                    {{ deletingJobId() === job.id ? 'Deleting…' : 'Delete' }}
+                  </button>
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
+
+      @if (currentState.page.totalPages > 0) {
+        <nav class="pagination" aria-label="Job pages">
+          <button
+            class="secondary-button"
+            type="button"
+            aria-label="Previous page"
+            (click)="changePage(pageIndex() - 1)"
+            [disabled]="!currentState.page.hasPrevious">
+            Previous
+          </button>
+          <span>Page {{ currentState.page.page + 1 }} of {{ currentState.page.totalPages }}</span>
+          <button
+            class="secondary-button"
+            type="button"
+            aria-label="Next page"
+            (click)="changePage(pageIndex() + 1)"
+            [disabled]="!currentState.page.hasNext">
+            Next
+          </button>
+        </nav>
+      }
+    }
+  </section>
+</div>

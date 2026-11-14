@@ -1,0 +1,120 @@
+<div class="applications-page">
+  @let currentState = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+      <h1>Application Management</h1>
+      <p class="intro">Review applications received for your placement opportunities.</p>
+    </div>
+    <div class="heading-actions">
+      <div class="total-applications" aria-live="polite">
+        <span class="total-label">Total applications</span>
+        @if (currentState.status === 'ready') {
+          <strong>{{ currentState.page.totalElements }}</strong>
+        } @else if (currentState.status === 'loading') {
+          <span class="metric-skeleton" aria-label="Loading total applications"></span>
+        } @else {
+          <strong class="unavailable-count" aria-label="Total applications unavailable">—</strong>
+        }
+      </div>
+      <button
+        class="secondary-button"
+        type="button"
+        (click)="retry()"
+        [disabled]="currentState.status === 'loading'">
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <section
+    class="applications-panel"
+    aria-label="Applications received for your jobs"
+    [attr.aria-busy]="currentState.status === 'loading'">
+    @if (currentState.status === 'loading') {
+      <div class="loading-state" role="status">
+        <span class="loading-indicator" aria-hidden="true"></span>
+        <span>Loading applications…</span>
+      </div>
+    } @else if (currentState.status === 'error') {
+      <div class="state-message error-state" role="alert">
+        <h2>Applications could not be loaded</h2>
+        <p>{{ currentState.message }}</p>
+        <button class="primary-button" type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (currentState.page.content.length === 0) {
+      <div class="state-message empty-state">
+        <span class="empty-icon" aria-hidden="true">A</span>
+        <h2>No applications to display</h2>
+        <p>There are no applications on this page.</p>
+      </div>
+    } @else {
+      <div class="results-heading">
+        <h2>Applications</h2>
+        <span>{{ currentState.page.totalElements }} total</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Application ID</th>
+              <th scope="col">Student ID</th>
+              <th scope="col">Job ID</th>
+              <th scope="col">Status</th>
+              <th scope="col">Applied</th>
+              <th scope="col"><span class="visually-hidden">Details</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (application of currentState.page.content; track application.id) {
+              <tr>
+                <td data-label="Application ID">{{ application.id }}</td>
+                <td data-label="Student ID">{{ application.studentId }}</td>
+                <td data-label="Job ID">{{ application.jobId }}</td>
+                <td data-label="Status">
+                  <span class="status-chip">{{ application.status.replace('_', ' ') }}</span>
+                </td>
+                <td data-label="Applied">
+                  <time [attr.datetime]="application.appliedAt">
+                    {{ application.appliedAt | date:'mediumDate':'UTC' }} UTC
+                  </time>
+                </td>
+                <td class="details-cell">
+                  @if (isValidApplicationId(application.id)) {
+                    <a class="details-link" [routerLink]="['/officer/applications', application.id]">
+                      View details<span class="visually-hidden"> for application {{ application.id }}</span>
+                    </a>
+                  } @else {
+                    <span class="details-unavailable">Details unavailable</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (currentState.page.totalPages > 0) {
+        <nav class="pagination" aria-label="Application pages">
+          <button
+            class="secondary-button"
+            type="button"
+            aria-label="Previous page"
+            (click)="changePage(pageIndex() - 1)"
+            [disabled]="!currentState.page.hasPrevious">
+            Previous
+          </button>
+          <span>Page {{ currentState.page.page + 1 }} of {{ currentState.page.totalPages }}</span>
+          <button
+            class="secondary-button"
+            type="button"
+            aria-label="Next page"
+            (click)="changePage(pageIndex() + 1)"
+            [disabled]="!currentState.page.hasNext">
+            Next
+          </button>
+        </nav>
+      }
+    }
+  </section>
+</div>

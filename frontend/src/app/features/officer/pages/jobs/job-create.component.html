@@ -1,0 +1,190 @@
+<div class="create-page">
+  <a class="back-link" [routerLink]="cancelLink()">
+    ← {{ isEditMode() ? 'Back to job' : 'Back to jobs' }}
+  </a>
+
+  @if (loadState() === 'loading') {
+    <section class="form-card state-card" aria-busy="true">
+      <p class="state-message" role="status">Loading job details…</p>
+    </section>
+  } @else if (loadState() === 'invalid') {
+    <section class="form-card state-card" role="alert">
+      <h1>Invalid job link</h1>
+      <p>The job ID in this link is invalid.</p>
+    </section>
+  } @else if (loadState() === 'notFound') {
+    <section class="form-card state-card" role="status">
+      <h1>Job not found</h1>
+      <p>This job was not found or is not available to your account.</p>
+    </section>
+  } @else if (loadState() === 'closed') {
+    <section class="form-card state-card" role="status">
+      <h1>Job cannot be edited</h1>
+      <p>Closed jobs cannot be updated.</p>
+      <a class="cancel-button" [routerLink]="cancelLink()">View job details</a>
+    </section>
+  } @else if (loadState() === 'error') {
+    <section class="form-card state-card error-state" role="alert">
+      <h1>Could not load job</h1>
+      <p>{{ loadErrorMessage() }}</p>
+      <button class="submit-button" type="button" (click)="retryLoad()">Retry</button>
+    </section>
+  } @else {
+    <section class="form-card">
+      <header class="page-heading">
+        <div>
+          <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+          <h1>{{ isEditMode() ? 'Edit job' : 'Create a job' }}</h1>
+          <p class="intro">
+            {{ isEditMode()
+              ? 'Update the details for this placement opportunity.'
+              : 'Add the details for a new placement opportunity. It will be saved as a draft.' }}
+          </p>
+        </div>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="job-title">Job title <span aria-hidden="true">*</span></label>
+            <input id="job-title" type="text" formControlName="jobTitle" maxlength="150" autocomplete="off" />
+            @if (shouldShowError(form.controls.jobTitle)) {
+              <p class="field-error" id="job-title-error">
+                @if (form.controls.jobTitle.hasError('required')) {
+                  Job title is required.
+                } @else if (form.controls.jobTitle.hasError('maxlength')) {
+                  Job title must be 150 characters or fewer.
+                }
+              </p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="company-name">Company <span aria-hidden="true">*</span></label>
+            <input id="company-name" type="text" formControlName="companyName" maxlength="150" autocomplete="organization" />
+            @if (shouldShowError(form.controls.companyName)) {
+              <p class="field-error" id="company-name-error">
+                @if (form.controls.companyName.hasError('required')) {
+                  Company is required.
+                } @else if (form.controls.companyName.hasError('maxlength')) {
+                  Company must be 150 characters or fewer.
+                }
+              </p>
+            }
+          </div>
+
+          <div class="field full-width">
+            <label for="job-description">Description <span aria-hidden="true">*</span></label>
+            <textarea id="job-description" formControlName="jobDescription" rows="6"></textarea>
+            @if (shouldShowError(form.controls.jobDescription)) {
+              <p class="field-error" id="job-description-error">Job description is required.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="job-location">Location</label>
+            <input id="job-location" type="text" formControlName="location" maxlength="150" autocomplete="off" />
+            @if (shouldShowError(form.controls.location)) {
+              <p class="field-error" id="job-location-error">Location must be 150 characters or fewer.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="employment-type">Employment type <span aria-hidden="true">*</span></label>
+            <select id="employment-type" formControlName="employmentType">
+              <option [ngValue]="null">Select employment type</option>
+              @for (type of employmentTypes; track type) {
+                <option [ngValue]="type">{{ type.replace('_', ' ') }}</option>
+              }
+            </select>
+            @if (shouldShowError(form.controls.employmentType)) {
+              <p class="field-error" id="employment-type-error">Employment type is required.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="work-mode">Work mode <span aria-hidden="true">*</span></label>
+            <select id="work-mode" formControlName="workMode">
+              <option [ngValue]="null">Select work mode</option>
+              @for (mode of workModes; track mode) {
+                <option [ngValue]="mode">{{ mode }}</option>
+              }
+            </select>
+            @if (shouldShowError(form.controls.workMode)) {
+              <p class="field-error" id="work-mode-error">Work mode is required.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="minimum-cgpa">Minimum CGPA</label>
+            <input id="minimum-cgpa" type="number" min="0" max="10" step="any" formControlName="minimumCgpa" />
+            @if (shouldShowError(form.controls.minimumCgpa)) {
+              <p class="field-error" id="minimum-cgpa-error">Minimum CGPA must be between 0 and 10.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="salary-min">Minimum salary</label>
+            <input id="salary-min" type="number" min="0" step="any" formControlName="salaryMin" />
+            @if (shouldShowError(form.controls.salaryMin)) {
+              <p class="field-error" id="salary-min-error">Salary must be zero or greater.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="salary-max">Maximum salary</label>
+            <input id="salary-max" type="number" min="0" step="any" formControlName="salaryMax" />
+            @if (shouldShowError(form.controls.salaryMax)) {
+              <p class="field-error" id="salary-max-error">
+                @if (form.controls.salaryMax.hasError('min')) {
+                  Salary must be zero or greater.
+                }
+              </p>
+            }
+            @if (form.hasError('salaryRange') && (form.controls.salaryMin.touched || form.controls.salaryMax.touched || submitted())) {
+              <p class="field-error" id="salary-range-error">Maximum salary must be greater than or equal to minimum salary.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="application-deadline">Application deadline <span aria-hidden="true">*</span></label>
+            <input id="application-deadline" type="datetime-local" formControlName="applicationDeadline" />
+            @if (shouldShowError(form.controls.applicationDeadline)) {
+              <p class="field-error" id="application-deadline-error">
+                @if (form.controls.applicationDeadline.hasError('required')) {
+                  Application deadline is required.
+                } @else if (form.controls.applicationDeadline.hasError('future')) {
+                  Application deadline must be in the future.
+                }
+              </p>
+            }
+          </div>
+        </div>
+
+        @if (successMessage()) {
+          <p class="success-message" role="status">{{ successMessage() }}</p>
+        }
+
+        @if (errorMessage()) {
+          <div class="api-error" role="alert">
+            <strong>{{ isEditMode() ? 'Changes not saved' : 'Draft not saved' }}</strong>
+            <p>{{ errorMessage() }}</p>
+          </div>
+        }
+
+        @if (submitting()) {
+          <p class="saving-status" role="status">
+            {{ isEditMode() ? 'Saving job changes…' : 'Saving job as a draft…' }}
+          </p>
+        }
+
+        <div class="form-actions">
+          <a class="cancel-button" [routerLink]="cancelLink()">Cancel</a>
+          <button class="submit-button" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : isEditMode() ? 'Save changes' : 'Save as draft' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+</div>

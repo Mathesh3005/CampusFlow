@@ -1,0 +1,34 @@
+.details-page { display: grid; gap: 16px; }
+.back-link { width: fit-content; color: #2563eb; font-size: 13px; font-weight: 600; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+.details-card { padding: clamp(20px, 4vw, 36px); border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgb(15 23 42 / 5%); }
+.application-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid #e2e8f0; }
+.eyebrow { margin: 0 0 8px; color: #2563eb; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 4vw, 32px); letter-spacing: -.5px; overflow-wrap: anywhere; }
+.status-chip { flex: 0 0 auto; padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; }
+.detail-section { padding: 22px 0; border-bottom: 1px solid #e2e8f0; }
+.detail-section h2, .review-section h2 { margin: 0 0 14px; color: #0f172a; font-size: 15px; }
+.application-information { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 22px; margin: 0; }
+.application-information div { min-width: 0; }
+.application-information dt { margin-bottom: 5px; color: #64748b; font-size: 11px; font-weight: 600; }
+.application-information dd { margin: 0; color: #475569; font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
+.cover-letter { margin: 0; color: #475569; font-size: 14px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-section { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; border: 1px solid #dbeafe; border-radius: 9px; background: #f8fbff; }
+.review-section h2 { margin-bottom: 5px; }
+.review-section p { margin: 0; color: #64748b; font-size: 13px; line-height: 1.5; }
+.state-card { display: grid; min-height: 210px; align-content: center; justify-items: center; gap: 10px; text-align: center; }
+.state-card h1 { font-size: 22px; }
+.state-card p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.55; }
+.state-message { margin: 0; color: #64748b; font-size: 14px; }
+.error-state p { color: #b91c1c; }
+.primary-button { min-height: 40px; margin-top: 4px; padding: 0 17px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.primary-button:hover { background: #1d4ed8; }
+.primary-button:focus-visible, .back-link:focus-visible { outline: 3px solid rgb(37 99 235 / 25%); outline-offset: 3px; }
+@media (max-width: 720px) {
+  .application-information { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+@media (max-width: 480px) {
+  .details-card { padding: 20px 16px; }
+  .application-heading { flex-direction: column; gap: 12px; }
+  .application-information { grid-template-columns: 1fr; }
+}
