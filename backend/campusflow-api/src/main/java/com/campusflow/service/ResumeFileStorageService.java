@@ -110,15 +110,28 @@ public class ResumeFileStorageService {
                     .toAbsolutePath()
                     .normalize();
 
-            if (!filePath.startsWith(storageDirectory)) {
+            // Allow deletion only of direct children of storage directory.
+            if (!storageDirectory.equals(filePath.getParent())) {
                 throw new IllegalArgumentException(
                         "Invalid resume storage path"
+                );
+            }
+
+            // Only allow UUID-based PDF filenames.
+            String fileName = filePath.getFileName().toString();
+
+            if (!fileName.matches(
+                    "^[0-9a-fA-F-]{36}\\.pdf$")) {
+
+                throw new IllegalArgumentException(
+                        "Invalid resume filename"
                 );
             }
 
             Files.deleteIfExists(filePath);
 
         } catch (IOException exception) {
+
             throw new IllegalStateException(
                     "Could not delete resume file",
                     exception

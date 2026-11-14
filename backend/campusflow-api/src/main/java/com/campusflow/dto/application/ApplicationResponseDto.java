@@ -9,6 +9,7 @@ public class ApplicationResponseDto {
     private Long resumeId;
     private String companyName;
     private String jobTitle;
+    private String coverLetter;
     private ApplicationStatus status;
     private OffsetDateTime appliedAt;
     private OffsetDateTime updatedAt;
@@ -60,6 +61,9 @@ public class ApplicationResponseDto {
     public void setJobTitle(String jobTitle) {
         this.jobTitle = jobTitle;
     }
+
+    public String getCoverLetter() { return coverLetter; }
+    public void setCoverLetter(String coverLetter) { this.coverLetter = coverLetter; }
 
     public ApplicationStatus getStatus() {
         return status;

@@ -5,21 +5,37 @@ import com.campusflow.entity.WorkMode;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public class JobRequestDto {
 
+    @NotBlank @Size(max = 150)
     private String companyName;
+    @NotBlank @Size(max = 150)
     private String jobTitle;
+    @NotBlank
     private String jobDescription;
+    @Size(max = 150)
     private String location;
 
+    @NotNull
     private EmploymentType employmentType;
+    @NotNull
     private WorkMode workMode;
 
+    @DecimalMin("0.00") @DecimalMax("10.00")
     private BigDecimal minimumCgpa;
+    @DecimalMin("0.00")
     private BigDecimal salaryMin;
+    @DecimalMin("0.00")
     private BigDecimal salaryMax;
 
+    @NotNull @Future
     private OffsetDateTime applicationDeadline;
 
     public String getCompanyName() {

@@ -12,6 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.campusflow.entity.EmploymentType;
+import com.campusflow.entity.WorkMode;
+import com.campusflow.exception.JobNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @Transactional
@@ -19,12 +26,15 @@ public class JobService {
 
     private final JobRepository jobRepository;
     private final PlacementOfficerRepository placementOfficerRepository;
+    private final NotificationService notificationService;
 
     public JobService(
             JobRepository jobRepository,
-            PlacementOfficerRepository placementOfficerRepository) {
+            PlacementOfficerRepository placementOfficerRepository,
+            NotificationService notificationService) {
         this.jobRepository = jobRepository;
         this.placementOfficerRepository = placementOfficerRepository;
+        this.notificationService = notificationService;
     }
 
     public Job createJob(Job job) {
@@ -54,26 +64,120 @@ public class JobService {
                     "Application deadline must be in the future");
         }
 
+        validateSalary(job.getSalaryMin(), job.getSalaryMax());
+
         job.setStatus(JobStatus.DRAFT);
 
         // Use the persisted officer, not an unverified client-supplied entity.
-        return jobRepository.save(
-                new Job(
-                        officer,
-                        job.getCompanyName(),
-                        job.getJobTitle(),
-                        job.getJobDescription(),
-                        job.getEmploymentType(),
-                        job.getWorkMode(),
-                        job.getApplicationDeadline()
-                )
-        );
+        Job created = new Job(officer, job.getCompanyName(), job.getJobTitle(),
+                job.getJobDescription(), job.getEmploymentType(), job.getWorkMode(),
+                job.getApplicationDeadline());
+        created.setLocation(job.getLocation());
+        created.setMinimumCgpa(job.getMinimumCgpa());
+        created.setSalaryMin(job.getSalaryMin());
+        created.setSalaryMax(job.getSalaryMax());
+        return jobRepository.save(created);
     }
 
     @Transactional(readOnly = true)
     public Optional<Job> getJobById(Long jobId) {
         return jobRepository.findById(jobId);
     }
+
+    @Transactional(readOnly = true)
+    public Page<Job> getOfficerJobs(Long userId, Pageable pageable) {
+        return jobRepository.findByCreatedByUserId(userId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Job> searchPublishedJobs(String location, EmploymentType employmentType,
+                                         WorkMode workMode, BigDecimal studentCgpa, Pageable pageable) {
+        return jobRepository.search(JobStatus.PUBLISHED, normalizeFilter(location), employmentType,
+                workMode, studentCgpa, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Job getPublishedJob(Long jobId, BigDecimal studentCgpa) {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new JobNotFoundException(jobId));
+        if (job.getStatus() != JobStatus.PUBLISHED
+                || (job.getMinimumCgpa() != null
+                && (studentCgpa == null || studentCgpa.compareTo(job.getMinimumCgpa()) < 0))) {
+            throw new JobNotFoundException(jobId);
+        }
+        return job;
+    }
+
+    public Job createJobForOfficer(Long userId, Job job, String location, BigDecimal minimumCgpa,
+                                   BigDecimal salaryMin, BigDecimal salaryMax) {
+        PlacementOfficer officer = placementOfficerRepository.findByUserId(userId)
+                .orElseThrow(() -> new AccessDeniedException("No placement officer profile for authenticated user"));
+        Job created = new Job(officer, job.getCompanyName(), job.getJobTitle(), job.getJobDescription(),
+                job.getEmploymentType(), job.getWorkMode(), job.getApplicationDeadline());
+        created.setLocation(location);
+        created.setMinimumCgpa(minimumCgpa);
+        created.setSalaryMin(salaryMin);
+        created.setSalaryMax(salaryMax);
+        return createJob(created);
+    }
+
+    public Job updateJobForOfficer(Long officerId, Long jobId, Job updatedJob) {
+        Job existing = ownedJob(officerId, jobId);
+        if (existing.getStatus() == JobStatus.CLOSED) {
+            throw new IllegalStateException("Closed jobs cannot be updated");
+        }
+        if (updatedJob.getApplicationDeadline() == null
+                || !updatedJob.getApplicationDeadline().isAfter(OffsetDateTime.now())) {
+            throw new IllegalArgumentException("Application deadline must be in the future");
+        }
+        validateSalary(updatedJob.getSalaryMin(), updatedJob.getSalaryMax());
+        existing.setCompanyName(updatedJob.getCompanyName());
+        existing.setJobTitle(updatedJob.getJobTitle());
+        existing.setJobDescription(updatedJob.getJobDescription());
+        existing.setLocation(updatedJob.getLocation());
+        existing.setEmploymentType(updatedJob.getEmploymentType());
+        existing.setWorkMode(updatedJob.getWorkMode());
+        existing.setMinimumCgpa(updatedJob.getMinimumCgpa());
+        existing.setSalaryMin(updatedJob.getSalaryMin());
+        existing.setSalaryMax(updatedJob.getSalaryMax());
+        existing.setApplicationDeadline(updatedJob.getApplicationDeadline());
+        return jobRepository.save(existing);
+    }
+
+    public Job publishJobForOfficer(Long officerId, Long jobId) {
+        ownedJob(officerId, jobId);
+        return publishJob(jobId);
+    }
+
+    public Job closeJobForOfficer(Long officerId, Long jobId) {
+        ownedJob(officerId, jobId);
+        return closeJob(jobId);
+    }
+
+    public void deleteJobForOfficer(Long officerId, Long jobId) {
+        ownedJob(officerId, jobId);
+        deleteJob(jobId);
+    }
+
+    public Job getOfficerJob(Long officerId, Long jobId) { return ownedJob(officerId, jobId); }
+
+    private Job ownedJob(Long officerId, Long jobId) {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new JobNotFoundException(jobId));
+        if (!job.getCreatedBy().getId().equals(officerId)) {
+            throw new AccessDeniedException("Job is managed by another placement officer");
+        }
+        return job;
+    }
+
+    private static String normalizeFilter(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static void validateSalary(BigDecimal minimum, BigDecimal maximum) {
+        if (minimum != null && maximum != null && maximum.compareTo(minimum) < 0) {
+            throw new IllegalArgumentException("Maximum salary must be greater than or equal to minimum salary");
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public List<Job> getAllJobs() {
@@ -145,8 +249,9 @@ public class JobService {
         }
 
         job.setStatus(JobStatus.PUBLISHED);
-
-        return jobRepository.save(job);
+        Job published = jobRepository.save(job);
+        notificationService.jobPublished(published);
+        return published;
     }
 
     public Job closeJob(Long jobId) {

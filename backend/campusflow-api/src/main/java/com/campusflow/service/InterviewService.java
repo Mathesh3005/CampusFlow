@@ -8,6 +8,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import com.campusflow.exception.ApplicationNotFoundException;
+import com.campusflow.exception.InterviewNotFoundException;
+import com.campusflow.exception.InvalidInterviewOperationException;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -15,13 +23,16 @@ public class InterviewService {
 
     private final InterviewRepository interviewRepository;
     private final ApplicationRepository applicationRepository;
+    private final NotificationService notificationService;
 
     public InterviewService(
             InterviewRepository interviewRepository,
-            ApplicationRepository applicationRepository) {
+            ApplicationRepository applicationRepository,
+            NotificationService notificationService) {
 
         this.interviewRepository = interviewRepository;
         this.applicationRepository = applicationRepository;
+        this.notificationService = notificationService;
     }
 
     // Schedule an interview
@@ -33,10 +44,10 @@ public class InterviewService {
             String notes) {
 
         Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new RuntimeException("Application not found"));
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
 
         if (application.getStatus() != ApplicationStatus.SHORTLISTED) {
-            throw new RuntimeException(
+            throw new InvalidInterviewOperationException(
                     "Only shortlisted applicants can be scheduled for interviews");
         }
 
@@ -63,7 +74,9 @@ public class InterviewService {
         interview.setLocationOrLink(locationOrLink.trim());
         interview.setNotes(notes);
 
-        return interviewRepository.save(interview);
+        Interview saved = interviewRepository.save(interview);
+        notificationService.interviewScheduled(saved);
+        return saved;
     }
 
     // Get interview by ID
@@ -71,7 +84,7 @@ public class InterviewService {
     public Interview getInterviewById(Long interviewId) {
 
         return interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new RuntimeException("Interview not found"));
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
     }
 
     // Get all interviews for an application
@@ -79,7 +92,7 @@ public class InterviewService {
     public List<Interview> getInterviewsByApplication(Long applicationId) {
 
         if (!applicationRepository.existsById(applicationId)) {
-            throw new RuntimeException("Application not found");
+            throw new ApplicationNotFoundException(applicationId);
         }
 
         return interviewRepository.findByApplicationId(applicationId);
@@ -105,7 +118,7 @@ public class InterviewService {
         Interview interview = getInterviewById(interviewId);
 
         if (interview.getStatus() != InterviewStatus.SCHEDULED) {
-            throw new RuntimeException(
+            throw new InvalidInterviewOperationException(
                     "Only scheduled interviews can be rescheduled");
         }
 
@@ -120,10 +133,13 @@ public class InterviewService {
                     "Interview location or meeting link is required");
         }
 
+        boolean changed = !Objects.equals(interview.getScheduledAt(), newScheduledAt)
+                || !Objects.equals(interview.getLocationOrLink(), newLocationOrLink.trim());
         interview.setScheduledAt(newScheduledAt);
         interview.setLocationOrLink(newLocationOrLink.trim());
-
-        return interviewRepository.save(interview);
+        Interview saved = interviewRepository.save(interview);
+        if (changed) notificationService.interviewUpdated(saved);
+        return saved;
     }
 
     // Mark interview as completed
@@ -132,7 +148,7 @@ public class InterviewService {
         Interview interview = getInterviewById(interviewId);
 
         if (interview.getStatus() != InterviewStatus.SCHEDULED) {
-            throw new RuntimeException(
+            throw new InvalidInterviewOperationException(
                     "Only scheduled interviews can be completed");
         }
 
@@ -147,12 +163,108 @@ public class InterviewService {
         Interview interview = getInterviewById(interviewId);
 
         if (interview.getStatus() != InterviewStatus.SCHEDULED) {
-            throw new RuntimeException(
+            throw new InvalidInterviewOperationException(
                     "Only scheduled interviews can be cancelled");
         }
 
         interview.setStatus(InterviewStatus.CANCELLED);
+        Interview saved = interviewRepository.save(interview);
+        notificationService.interviewCancelled(saved);
+        return saved;
+    }
 
-        return interviewRepository.save(interview);
+    public Interview scheduleForOfficer(Long applicationId, Long officerUserId,
+                                        OffsetDateTime scheduledAt, InterviewMode mode,
+                                        String locationOrLink, String notes) {
+        Application application = applicationRepository.findByIdAndJob_CreatedBy_User_Id(applicationId, officerUserId)
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
+        if (application.getStatus() != ApplicationStatus.SHORTLISTED) {
+            throw new InvalidInterviewOperationException(
+                    "Only shortlisted applicants can be scheduled for interviews");
+        }
+        validateSchedule(scheduledAt, mode, locationOrLink);
+        Interview interview = new Interview(application, scheduledAt, mode);
+        interview.setLocationOrLink(locationOrLink.trim());
+        interview.setNotes(notes);
+        Interview saved = interviewRepository.save(interview);
+        notificationService.interviewScheduled(saved);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Interview> getInterviewsForOfficer(Long officerUserId, Pageable pageable) {
+        return interviewRepository.findByApplication_Job_CreatedBy_User_Id(officerUserId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Interview getInterviewForOfficer(Long interviewId, Long officerUserId) {
+        return interviewRepository.findByIdAndApplication_Job_CreatedBy_User_Id(interviewId, officerUserId)
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Interview> getInterviewsForStudent(Long studentId, Pageable pageable) {
+        return interviewRepository.findByApplication_Student_Id(studentId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Interview getInterviewForStudent(Long interviewId, Long studentId) {
+        return interviewRepository.findByIdAndApplication_Student_Id(interviewId, studentId)
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
+    }
+
+    public Interview updateForOfficer(Long interviewId, Long officerUserId,
+                                      OffsetDateTime scheduledAt, InterviewMode mode,
+                                      String locationOrLink, String notes) {
+        Interview interview = getInterviewForOfficer(interviewId, officerUserId);
+        requireScheduled(interview, "Only scheduled interviews can be updated");
+        validateSchedule(scheduledAt, mode, locationOrLink);
+        boolean changed = !Objects.equals(interview.getScheduledAt(), scheduledAt)
+                || interview.getInterviewMode() != mode
+                || !Objects.equals(interview.getLocationOrLink(), locationOrLink.trim())
+                || !Objects.equals(interview.getNotes(), notes);
+        interview.setScheduledAt(scheduledAt);
+        interview.setInterviewMode(mode);
+        interview.setLocationOrLink(locationOrLink.trim());
+        interview.setNotes(notes);
+        Interview saved = interviewRepository.save(interview);
+        if (changed) notificationService.interviewUpdated(saved);
+        return saved;
+    }
+
+    public Interview updateStatusForOfficer(Long interviewId, Long officerUserId, InterviewStatus newStatus) {
+        Interview interview = getInterviewForOfficer(interviewId, officerUserId);
+        requireScheduled(interview, "Only scheduled interviews can change status");
+        if (newStatus != InterviewStatus.COMPLETED && newStatus != InterviewStatus.CANCELLED) {
+            throw new InvalidInterviewOperationException("Scheduled interviews can only be completed or cancelled");
+        }
+        interview.setStatus(newStatus);
+        Interview saved = interviewRepository.save(interview);
+        if (newStatus == InterviewStatus.CANCELLED) notificationService.interviewCancelled(saved);
+        return saved;
+    }
+
+    public void deleteForOfficer(Long interviewId, Long officerUserId) {
+        Interview interview = getInterviewForOfficer(interviewId, officerUserId);
+        interviewRepository.delete(interview);
+    }
+
+    private static void validateSchedule(OffsetDateTime scheduledAt, InterviewMode mode, String locationOrLink) {
+        if (scheduledAt == null || !scheduledAt.isAfter(OffsetDateTime.now())) {
+            throw new IllegalArgumentException("Interview date and time must be in the future");
+        }
+        if (mode == null) throw new IllegalArgumentException("Interview mode is required");
+        if (locationOrLink == null || locationOrLink.isBlank()) {
+            throw new IllegalArgumentException("Interview location or meeting link is required");
+        }
+        if (locationOrLink.length() > 500) {
+            throw new IllegalArgumentException("Interview location or meeting link must not exceed 500 characters");
+        }
+    }
+
+    private static void requireScheduled(Interview interview, String message) {
+        if (interview.getStatus() != InterviewStatus.SCHEDULED) {
+            throw new InvalidInterviewOperationException(message);
+        }
     }
 }

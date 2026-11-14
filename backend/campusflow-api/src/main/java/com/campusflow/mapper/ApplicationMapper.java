@@ -26,6 +26,7 @@ public class ApplicationMapper {
         );
         dto.setCompanyName(application.getJob().getCompanyName());
         dto.setJobTitle(application.getJob().getJobTitle());
+        dto.setCoverLetter(application.getCoverLetter());
         dto.setStatus(application.getStatus());
         dto.setAppliedAt(application.getAppliedAt());
         dto.setUpdatedAt(application.getUpdatedAt());
