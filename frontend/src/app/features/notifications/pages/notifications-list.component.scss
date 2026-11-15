@@ -1,0 +1,50 @@
+:host { display: block; }
+
+.notifications-page { max-width: 1080px; margin: 0 auto; }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 32px); line-height: 1.2; }
+.intro { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+.heading-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.primary-button, .secondary-button { min-height: 40px; padding: 0 14px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.primary-button { border: 1px solid #2563eb; background: #2563eb; color: #fff; }
+.primary-button:disabled, .secondary-button:disabled, .text-button:disabled, .icon-button:disabled { cursor: not-allowed; opacity: .55; }
+.secondary-button { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
+.notification-panel { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 4%); }
+.action-message { margin: 0 0 14px; color: #166534; font-size: 14px; }
+.action-message.action-error { color: #b91c1c; }
+.results-summary { margin: 0; padding: 17px 22px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 12px; }
+.notification-list { margin: 0; padding: 0; list-style: none; }
+.notification-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 18px 22px; border-bottom: 1px solid #f1f5f9; }
+.notification-row:last-child { border-bottom: 0; }
+.notification-row.unread { background: #f8fbff; }
+.type-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: #eff6ff; color: #2563eb; }
+.notification-content { display: grid; min-width: 0; gap: 5px; color: inherit; text-decoration: none; }
+.notification-content:hover .notification-title { color: #1d4ed8; }
+.notification-title { color: #0f172a; font-size: 14px; font-weight: 650; }
+.unread .notification-title { font-weight: 750; }
+.notification-message { overflow: hidden; color: #475569; font-size: 13px; line-height: 1.5; text-overflow: ellipsis; }
+.notification-time { color: #64748b; font-size: 11px; }
+.row-actions { display: flex; align-items: center; gap: 12px; }
+.read-indicator { color: #64748b; font-size: 12px; }
+.unread-indicator { width: 8px; height: 8px; border-radius: 50%; background: #2563eb; }
+.text-button { padding: 6px 0; border: 0; background: transparent; color: #1d4ed8; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.icon-button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; }
+.icon-button:hover { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+.state-message { display: grid; justify-items: center; gap: 10px; padding: 56px 20px; color: #64748b; text-align: center; }
+.state-message h2 { margin: 0; color: #0f172a; font-size: 18px; }
+.state-message p { margin: 0; font-size: 14px; }
+.state-message mat-icon { width: 38px; height: 38px; color: #94a3b8; font-size: 38px; }
+.error-state h2 { color: #991b1b; }
+.error-state a { color: #1d4ed8; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 18px; border-top: 1px solid #e2e8f0; color: #475569; font-size: 13px; }
+.visually-hidden { position: absolute; overflow: hidden; width: 1px; height: 1px; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .page-heading { align-items: flex-start; flex-direction: column; }
+  .notification-row { grid-template-columns: 36px minmax(0, 1fr); gap: 11px; padding: 16px; }
+  .type-icon { width: 36px; height: 36px; }
+  .row-actions { grid-column: 2; justify-content: flex-start; }
+  .notification-message { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .pagination { gap: 9px; }
+}

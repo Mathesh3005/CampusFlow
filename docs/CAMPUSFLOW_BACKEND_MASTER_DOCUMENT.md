@@ -140,7 +140,7 @@ sequenceDiagram
 
 | Technology | Actual use in this project |
 |---|---|
-| Java 21 | Maven `java.version`; application and test language/runtime target. |
+| Java 25 LTS | Maven `java.version`; application and test language/runtime target. |
 | Spring Boot 4.1.2 | Parent/BOM and application bootstrap; dependency and auto-configuration management. |
 | Spring Web MVC | REST controllers, JSON, multipart resume upload, HTTP response handling. Dependency is `spring-boot-starter-webmvc`. |
 | Spring Security | Stateless filter chain, method-level role checks, DAO authentication and BCrypt. |
@@ -249,6 +249,7 @@ Clients send `Authorization: Bearer <accessToken>`. `JwtAuthenticationConverter`
 - `SessionCreationPolicy.STATELESS`.
 - `GET /api/v1/health`, `POST /api/v1/auth/register`, and `POST /api/v1/auth/login` are public.
 - Every other request must authenticate, then method-level `@PreAuthorize` restricts routes to `STUDENT` or `PLACEMENT_OFFICER`.
+- API CORS uses the explicit `APP_CORS_ALLOWED_ORIGINS` allowlist, permits bearer authorization headers, and does not allow credentials; production must configure the exact frontend origin(s).
 - BCrypt is used for stored password hashes; raw passwords are not returned.
 - `CustomUserPrincipal` and `UserDetailsServiceImpl` provide account identity and authorities to DAO authentication.
 
@@ -523,6 +524,7 @@ This is evidence of the recorded run only. It does not establish that the curren
 - PostgreSQL URL default `jdbc:postgresql://localhost:5432/campusflow_db`
 - `DB_USERNAME` and `DB_PASSWORD` environment substitutions
 - `APP_JWT_SECRET` as required Base64 HMAC key, minimum 32 decoded bytes
+- `APP_CORS_ALLOWED_ORIGINS` as a comma-separated origin allowlist; defaults to `http://localhost:4200` for local Angular development. Configure exact trusted origins in deployment; do not use `*`.
 - Resume storage path from `RESUME_STORAGE_LOCATION`, default `./uploads/resumes`
 - Upload maximum 5,242,880 bytes
 - Hibernate DDL disabled, SQL logging enabled, open-in-view disabled
@@ -532,7 +534,7 @@ Never place production credentials in source control or logs. Supply secrets thr
 
 ### 15.2 Requirements and commands
 
-- Java 21 JDK. The repository includes the Maven Wrapper scripts and wrapper configuration; the wrapper downloads Maven 3.10.0 as configured in `.mvn/wrapper/maven-wrapper.properties`.
+- Java 25 LTS JDK. The repository includes the Maven Wrapper scripts and wrapper configuration; the wrapper downloads Maven 3.10.0 as configured in `.mvn/wrapper/maven-wrapper.properties`.
 - PostgreSQL available at the configured host/port with database `campusflow_db` and supplied credentials.
 - Docker is required only for the Testcontainers-backed tests; local PostgreSQL may be used for manual development.
 - Provide a valid Base64 JWT key before app startup.
@@ -543,6 +545,7 @@ From `backend/campusflow-api`:
 $env:DB_USERNAME = "<database-user>"
 $env:DB_PASSWORD = "<database-password>"
 $env:APP_JWT_SECRET = "<base64-encoded-key-of-at-least-32-bytes>"
+$env:APP_CORS_ALLOWED_ORIGINS = "http://localhost:4200"
 $env:RESUME_STORAGE_LOCATION = "./uploads/resumes"
 .\mvnw.cmd spring-boot:run
 ```

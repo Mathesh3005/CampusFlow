@@ -4,11 +4,14 @@ import { EMPTY, Observable, catchError, expand, forkJoin, last, map, of } from '
 import { environment } from '../../../../environments/environment';
 import { ApiError } from '../../../core/http/api-error.handler';
 import { ApplicationResponse, InterviewResponse, JobResponse, NotificationResponse, PageResponse } from '../../../core/models/domain.models';
+import { NOTIFICATIONS_DEFAULT_SORT, NOTIFICATIONS_PAGE_SIZE } from '../../notifications/services/notification-api';
 import { DashboardSection, InterviewDashboardSection, StudentDashboardData } from '../models/dashboard.models';
+import { STUDENT_INTERVIEWS_DEFAULT_SORT, STUDENT_INTERVIEWS_PAGE_SIZE, StudentInterviewsService } from './student-interviews.service';
+import { StudentNotificationsService } from './student-notifications.service';
 
-const INTERVIEW_PAGE_SIZE = 20;
 const MAX_INTERVIEW_PAGES = 5;
 const UPCOMING_INTERVIEW_LIMIT = 5;
+const RECENT_NOTIFICATION_LIMIT = 5;
 
 interface InterviewScan {
   interviews: InterviewResponse[];
@@ -17,9 +20,11 @@ interface InterviewScan {
   error: string | null;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class StudentDashboardService {
   private readonly http = inject(HttpClient);
+  private readonly interviews = inject(StudentInterviewsService);
+  private readonly notifications = inject(StudentNotificationsService);
   private readonly baseUrl = environment.apiBaseUrl;
 
   loadDashboard(): Observable<StudentDashboardData> {
@@ -27,7 +32,7 @@ export class StudentDashboardService {
       applications: this.loadSection<ApplicationResponse>('/student/applications', 5, 'appliedAt,desc'),
       jobs: this.loadSection<JobResponse>('/student/jobs', 4, 'createdAt,desc'),
       interviews: this.loadUpcomingInterviews(),
-      notifications: this.loadSection<NotificationResponse>('/student/notifications', 5, 'createdAt,desc'),
+      notifications: this.loadRecentNotifications(),
     });
   }
 
@@ -60,11 +65,28 @@ export class StudentDashboardService {
   }
 
   private fetchInterviewPage(page: number): Observable<PageResponse<InterviewResponse>> {
-    const params = new HttpParams()
-      .set('page', String(page))
-      .set('size', String(INTERVIEW_PAGE_SIZE))
-      .set('sort', 'scheduledAt,asc');
-    return this.http.get<PageResponse<InterviewResponse>>(`${this.baseUrl}/student/interviews`, { params });
+    return this.interviews.listInterviews({
+      page,
+      size: STUDENT_INTERVIEWS_PAGE_SIZE,
+      sort: STUDENT_INTERVIEWS_DEFAULT_SORT,
+    });
+  }
+
+  private loadRecentNotifications(): Observable<DashboardSection<NotificationResponse>> {
+    return this.notifications.listNotifications({
+      page: 0,
+      size: NOTIFICATIONS_PAGE_SIZE,
+      sort: NOTIFICATIONS_DEFAULT_SORT,
+    }).pipe(
+      map(page => ({
+        page: { ...page, content: page.content.slice(0, RECENT_NOTIFICATION_LIMIT) },
+        error: null,
+      })),
+      catchError((error: unknown) => of({
+        page: null,
+        error: this.errorMessage(error),
+      })),
+    );
   }
 
   private createInterviewScan(page: PageResponse<InterviewResponse>, now: number): InterviewScan {

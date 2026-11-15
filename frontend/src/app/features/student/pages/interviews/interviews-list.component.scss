@@ -1,0 +1,42 @@
+.interviews-page { display: grid; gap: 22px; }
+.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); letter-spacing: -.5px; }
+.intro { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+.results-panel { min-height: 220px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
+.secondary-button, .primary-button { min-height: 38px; padding: 0 14px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.secondary-button { border: 1px solid #bfdbfe; background: #fff; color: #1d4ed8; }
+.primary-button { border: 1px solid #2563eb; background: #2563eb; color: #fff; }
+.secondary-button:disabled { cursor: default; opacity: .55; }
+.state-message { display: grid; min-height: 210px; align-content: center; justify-items: center; gap: 10px; color: #64748b; font-size: 14px; text-align: center; }
+.state-message h2, .state-message p { margin: 0; }
+.state-message h2 { color: #0f172a; font-size: 17px; }
+.state-message a { color: #1d4ed8; font-weight: 600; }
+.error-state p { color: #b91c1c; }
+.results-summary { margin: 0 0 12px; color: #64748b; font-size: 12px; }
+.interview-section { padding: 16px 0 4px; border-top: 1px solid #e2e8f0; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.section-heading h2 { margin: 0; color: #0f172a; font-size: 16px; }
+.section-heading p { margin: 5px 0 0; color: #64748b; font-size: 12px; }
+.section-count { display: grid; min-width: 28px; min-height: 28px; place-items: center; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; }
+.section-empty { margin: 0; padding: 16px 0; color: #64748b; font-size: 13px; }
+.interview-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 2px; border-top: 1px solid #f1f5f9; }
+.interview-main { min-width: 0; }
+.interview-main .eyebrow { margin-bottom: 6px; }
+.interview-main h3 { margin: 0; font-size: 15px; }
+.interview-main h3 a { color: #0f172a; text-decoration: none; }
+.interview-main h3 a:hover, .details-link:hover { color: #2563eb; text-decoration: underline; }
+.interview-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; color: #64748b; font-size: 12px; }
+.status-chip { padding: 5px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 700; }
+.details-link { flex: 0 0 auto; color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 20px; padding-top: 17px; border-top: 1px solid #e2e8f0; color: #475569; font-size: 12px; }
+.secondary-button:focus-visible, .primary-button:focus-visible, .details-link:focus-visible, .interview-main h3 a:focus-visible { outline: 3px solid rgb(37 99 235 / 25%); outline-offset: 3px; }
+
+@media (max-width: 600px) {
+  .interviews-page { gap: 16px; }
+  .results-panel { padding: 16px; }
+  .page-heading { align-items: flex-start; }
+  .interview-card { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .interview-meta { gap: 8px 10px; }
+  .pagination { justify-content: space-between; gap: 10px; }
+}

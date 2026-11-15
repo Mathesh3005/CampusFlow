@@ -4,7 +4,7 @@
 
 ## 1. Backend architecture findings
 
-The API is a Spring Boot 4.1.2 / Java 21 layered monolith under `backend/campusflow-api`: MVC controllers, request/response DTOs, services, Spring Data JPA repositories, entities/mappers, Spring Security resource-server JWT support, PostgreSQL/Flyway schema, and local filesystem resume storage. Services own state transitions, ownership checks, eligibility and notification side effects. Controllers expose versioned JSON APIs under `/api/v1`; resume upload is multipart. DTOs, rather than entities, define the wire contract.
+The API is a Spring Boot 4.1.2 / Java 25 LTS layered monolith under `backend/campusflow-api`: MVC controllers, request/response DTOs, services, Spring Data JPA repositories, entities/mappers, Spring Security resource-server JWT support, PostgreSQL/Flyway schema, and local filesystem resume storage. Services own state transitions, ownership checks, eligibility and notification side effects. Controllers expose versioned JSON APIs under `/api/v1`; resume upload is multipart. DTOs, rather than entities, define the wire contract.
 
 Primary domain relationships: User has a Student or PlacementOfficer profile; an officer owns jobs; student owns resumes/projects; applications bind a student and job and may use a resume belonging to that same student; interviews belong to applications; notifications belong to users. `Role` values are `STUDENT`, `PLACEMENT_OFFICER`, and `ADMIN`; ADMIN has no implemented role-specific workflow. Skills, student skills, job skills and project skills exist in entity/schema layers but no controllers expose them.
 
@@ -106,8 +106,8 @@ Notifications are generated for job publish to eligible students, application su
 | Frontend role | API access and viable screens |
 |---|---|
 | Anonymous | Health, register, login. |
-| STUDENT | Job discovery/detail; application submission/history/detail/withdrawal; resume list/upload/activate/deactivate/delete; interview list/detail; notification inbox/read/delete. |
-| PLACEMENT_OFFICER | Owned job management and lifecycle; applications for owned jobs and status review; interviews for owned applications; notification inbox/read/delete. Requires pre-provisioned account. |
+| STUDENT | Job discovery/detail; application submission/history/detail/withdrawal; resume list/upload/activate/deactivate/delete; interview list/detail; notification inbox/detail/read/read-all/delete. |
+| PLACEMENT_OFFICER | Owned job management and lifecycle; applications for owned jobs and status review; interviews for owned applications; notification inbox/detail/read/read-all/delete. Requires pre-provisioned account. |
 | ADMIN | No implemented admin API or admin screen can be backed by this repository. |
 
 Route guards improve navigation only. Every API request must still handle 401 (expired/invalid/missing bearer) and 403 (wrong role/denied); ownership checks can also return not-found to avoid exposing foreign data.
@@ -121,11 +121,11 @@ Route guards improve navigation only. Every API request must still handle 401 (e
 | Student applications | My applications, application detail, withdraw confirmation | `/student/applications` |
 | Student resumes | Resume list/upload/activate/deactivate/delete | `/student/resumes` |
 | Student interviews | Interview list/detail/calendar view | `/student/interviews` |
-| Student notifications | Inbox, notification detail/read/read-all/delete | `/student/notifications` |
+| Student notifications | Paginated inbox, notification detail/read/read-all/delete, latest-page unread navigation badge | `/student/notifications` |
 | Officer jobs | Owned jobs list, create/edit, publish/close/delete | `/officer/jobs` |
 | Officer applicants | Application list/detail, status transition action | `/officer/applications` |
 | Officer interviews | Interview list/detail, schedule/reschedule, complete/cancel/delete | `/officer/interviews` |
-| Officer notifications | Inbox and read/delete actions | `/officer/notifications` |
+| Officer notifications | Paginated inbox, notification detail/read/read-all/delete, latest-page unread navigation badge | `/officer/notifications` |
 | Not available | Profile CRUD, skill/project editing, resume download, unread count, admin screens, password reset, officer onboarding | No exposed controller endpoint |
 
 ## 6. Angular architecture recommendation
@@ -165,7 +165,7 @@ Use Reactive Forms for login/registration and job/application/interview forms. M
 - Upload resume with `FormData` key `file`; do not manually set `Content-Type`.
 - Treat `ProblemDetail.detail` as optional server text; use a fallback when absent. Avoid assuming a field-error map: the current advice mostly returns one general detail string.
 - Angular SSR/hydration is enabled. Browser storage APIs are unavailable on the server. Keep token access behind a browser-safe abstraction and prevent SSR from attempting protected calls before a client session exists. Prefer in-memory access-token handling or, if persistence is needed, formally assess XSS exposure; backend currently cannot issue HttpOnly-cookie auth itself.
-- Backend CORS settings are not evident in the inspected application configuration; development proxy or explicitly configured allowed origins may be needed. Confirm deployment origin/CORS before browser integration.
+- Backend CORS now allows the explicitly configured `APP_CORS_ALLOWED_ORIGINS` set (local Angular defaults to `http://localhost:4200`); set the exact frontend origin(s) for deployment and verify preflight behavior.
 
 ## 8. Security considerations
 
@@ -180,7 +180,7 @@ Implemented and directly consumable: authentication, jobs, applications, resumes
 - No resume file download endpoint; metadata response excludes storage path.
 - No notification unread count endpoint, bulk delete, push/WebSocket delivery, or client notification creation.
 - No password reset/change, refresh token, logout/revocation, email verification, or account recovery API.
-- No admin API, analytics/dashboard aggregate endpoints, employer/company accounts, or job skill filters.
+- No admin API or dashboard aggregate endpoint, employer/company accounts, or job skill filters. The officer dashboard can use paginated `totalElements` for exact job/application totals, but global job/application status breakdowns and an upcoming-interview count are not exposed; do not infer them from preview page content.
 - No application officer-side resume retrieval/download endpoint or dedicated student profile details in application DTO.
 - No explicit sorting allowlist on every pageable controller, and exception advice scope varies; parse errors consistently rather than assuming uniform error bodies.
 
@@ -195,7 +195,7 @@ Frontend should not fake data for these as if it were persisted server capabilit
 5. Implement resume upload/list/activation/deactivation/deletion and application resume selection; communicate the lack of download.
 6. Implement officer job CRUD and publish/close lifecycle, then application review/status workflow.
 7. Implement interview scheduling/update/status and student interview views.
-8. Implement notification inbox/read/read-all/delete for each role.
+8. **Completed:** integrate role-specific notification inbox, detail, read/read-all/delete, pagination, and navigation indicators.
 9. Align UI limits and enum choices to DTO/source and verify the actual backend origin/CORS and API contracts in integration environment before relying on them.
 
 ## Source areas reviewed

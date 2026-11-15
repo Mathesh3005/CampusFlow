@@ -18,7 +18,7 @@ src/environments/
   environment.development.ts  Local development API base
 ```
 
-Student-facing job discovery, application submission/history/withdrawal, and resume-management workflows use typed feature services and pages. Student interview and notification management and the placement-officer workflows remain deferred; the dashboard has its own read-only aggregation service for bounded overview requests.
+Student job, application, resume, interview, and notification workflows use typed feature services and pages. The placement-officer workspace includes a live dashboard plus job, application, interview, and notification workflows.
 
 ## API configuration
 
@@ -52,7 +52,7 @@ The app's existing `provideClientHydration`, server rendering configuration and 
 
 ## Remaining implementation tasks
 
-- Implement student interview and notification management, plus the placement-officer workflows.
+- Complete the remaining placement-officer dashboard and workflow gaps without changing the existing role-specific API contracts.
 - Add a student registration UI and ensure its controls mirror backend validation.
 - No `/me`, refresh, logout/revocation or password recovery API exists today.
 - Verify configured API origin and CORS/proxy behavior in the target deployment environment.
@@ -71,21 +71,36 @@ All requests are GETs under the configured API base and are authorized by the ba
 | `/student/applications` | `page=0`, `size=5`, `sort=appliedAt,desc` | Recent applications and authoritative `totalElements` application metric. DTO supplies job title, company, status and `appliedAt`. |
 | `/student/jobs` | `page=0`, `size=4`, `sort=createdAt,desc` | Available eligible published jobs and `totalElements` count. Backend applies student CGPA eligibility. DTO supplies title, company, employment type, location and deadline. |
 | `/student/interviews` | `page=0`, `size=20`, `sort=scheduledAt,desc` | Bounded interview sample; UI filters future `SCHEDULED` entries and sorts nearest first. DTO supplies application ID, time, status, mode and location/link. |
-| `/student/notifications` | `page=0`, `size=5`, `sort=createdAt,desc` | Recent notification titles/messages, read state and creation date. |
+| `/student/notifications` | `page=0`, `size=20`, `sort=createdAt,desc` | The shared student notification service supplies the latest page; the dashboard displays its five most recent titles/messages and read state. |
 
 Each response uses the shared `PageResponse<T>` contract. Four requests run in parallel. Each endpoint converts its own failure into a section error so successful panels remain visible. The dashboard does not request resumes because no dashboard information needs them. There is no unread-count endpoint, so no unread total is shown.
 
 ### Components and data flow
 
-`StudentDashboardService` owns the four typed bounded GET requests and partial failure results. `StudentDashboard` starts loading on initialization, uses `takeUntilDestroyed`, and exposes successful response pages to reusable `OverviewStatCard`, `RecentApplications`, `AvailableJobs`, `UpcomingInterviews`, and `RecentNotifications` standalone components. Each panel handles loading, its own error, empty state and populated state. A refresh control reloads all sections. The page displays only the authenticated session email; its current date is formatted with an explicit UTC timezone for consistent SSR/client rendering.
+`StudentDashboardService` owns the four bounded data loads and partial failure results. It delegates the student notification request to the same role-scoped notification service used by navigation and the inbox. `StudentDashboard` starts loading on initialization, uses `takeUntilDestroyed`, and exposes successful response pages to reusable `OverviewStatCard`, `RecentApplications`, `AvailableJobs`, `UpcomingInterviews`, and `RecentNotifications` standalone components. Each panel handles loading, its own error, empty state and populated state. A refresh control reloads all sections. The page displays only the authenticated session email; its current date is formatted with an explicit UTC timezone for consistent SSR/client rendering.
 
 ### Limitations
 
 - Interview DTOs include `applicationId` but no related job title or company, so the dashboard displays “Application #…” rather than inventing job details.
 - The interview endpoint has no status/date filter. The dashboard reads only the latest 20 scheduled-time records, then filters future scheduled interviews locally; if a student has more than 20 relevant records, a future item may be outside this preview. The full interviews page can paginate the API.
-- Unread notifications are identified per displayed item only. An accurate unread total requires a backend count endpoint or fetching all notification pages, neither of which is done here.
+- The backend exposes no unread-count endpoint. Navigation shows the unread count only from the latest loaded page (up to 20 items) and labels it accordingly; this is not a global unread total.
 - Overview application/job totals come from API `totalElements`, not client-side counts of the preview rows.
 - At the end of Phase 2B, other feature panels were placeholders. Subsequent Student Jobs, Student Applications Management, and Student Resume Management sections document the workflows added after that phase.
+
+## Placement Officer Dashboard
+
+The officer dashboard is a lazy standalone page at `/officer/dashboard` inside the existing placement-officer-guarded workspace. `OfficerDashboardService` composes the existing officer jobs, applications, interviews, and role-scoped notifications clients; it does not add an API client or depend on an aggregate endpoint. Four independent request streams keep widget failures isolated and support per-widget retry as well as a full refresh.
+
+| Endpoint | Request | Dashboard use |
+|---|---|---|
+| `/officer/jobs` | `page=0`, `size=1`, `sort=createdAt,desc` | `totalElements` is the exact total jobs metric. |
+| `/officer/applications` | `page=0`, `size=5`, `sort=appliedAt,desc` | `totalElements` is the exact total applications metric; the returned DTOs supply the five latest application rows. |
+| `/officer/interviews` | `page=0..4`, `size=20`, `sort=scheduledAt,asc` | At most five pages are searched for future `SCHEDULED` interviews; the nearest five are shown. The scan stops early after finding five. |
+| `/officer/notifications` | `page=0`, `size=20`, `sort=createdAt,desc` | Reuses the existing officer notification client; the latest five records show read state and link to details. |
+
+Requests run concurrently and each widget has its own loading, error, empty, retry, and successful states. Recent applications display only backend-provided application/student IDs, job title, company, status, and applied date. Interview entries show application ID, scheduled time, mode, and status; notifications use their existing title/message/type/read fields. Existing officer routes back all quick actions.
+
+The API does not expose status aggregates or an upcoming-interview count. Status breakdowns are shown as unavailable when records exist, and are shown as zero only when the corresponding exact `totalElements` is zero. Upcoming interviews are also shown as unavailable when interview records exist; zero is reported only when there are no interview records. A bounded/failed interview scan is labeled as a preview. The dashboard does not present page-content lengths as global totals or invent student details.
 
 ## Student Jobs Module — Stage 1
 

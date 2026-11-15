@@ -1,0 +1,64 @@
+<div class="interviews-page">
+  @let current = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+      <h1>Interview Management</h1>
+      <p class="intro">Schedule and manage interviews for shortlisted applicants.</p>
+    </div>
+    <div class="heading-actions">
+      <a class="primary-link" routerLink="/officer/interviews/new">Schedule interview</a>
+      <button class="secondary-button" type="button" (click)="retry()" [disabled]="current.status === 'loading'">Refresh</button>
+    </div>
+  </header>
+
+  <section class="results-panel" aria-label="Officer interviews" [attr.aria-busy]="current.status === 'loading'">
+    @if (current.status === 'loading') {
+      <p class="state-message" role="status">Loading interviews…</p>
+    } @else if (current.status === 'error') {
+      <div class="state-message error-state" role="alert">
+        <h2>Interviews could not be loaded</h2>
+        <p>{{ current.message }}</p>
+        @if (current.unauthorized) { <a routerLink="/login">Sign in</a> }
+        <button class="primary-button" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (current.page.content.length === 0) {
+      <div class="state-message empty-state">
+        <h2>No interviews to display</h2>
+        <p>Schedule an interview after an application has been shortlisted.</p>
+        <a class="primary-link" routerLink="/officer/interviews/new">Schedule an interview</a>
+      </div>
+    } @else {
+      <div class="results-heading">
+        <h2>Your interviews</h2>
+        <span>{{ current.page.totalElements }} total</span>
+      </div>
+      <div class="interview-list">
+        @for (interview of current.page.content; track interview.id) {
+          <article class="interview-card">
+            <div class="interview-main">
+              <p class="eyebrow">INTERVIEW #{{ interview.id }}</p>
+              <h3><a [routerLink]="['/officer/interviews', interview.id]">Application #{{ interview.applicationId }}</a></h3>
+              <dl class="interview-meta">
+                <div>
+                  <dt>Date and time</dt>
+                  <dd><time [attr.datetime]="interview.scheduledAt">{{ interview.scheduledAt | date:'medium':'UTC' }} UTC</time></dd>
+                </div>
+                <div><dt>Mode</dt><dd>{{ interview.interviewMode }}</dd></div>
+                <div><dt>Status</dt><dd><span class="status-chip">{{ interview.status }}</span></dd></div>
+              </dl>
+            </div>
+            <a class="details-link" [routerLink]="['/officer/interviews', interview.id]">View details</a>
+          </article>
+        }
+      </div>
+      @if (current.page.totalPages > 1) {
+        <nav class="pagination" aria-label="Interview pages">
+          <button class="secondary-button" type="button" (click)="changePage(pageIndex() - 1)" [disabled]="!current.page.hasPrevious">Previous</button>
+          <span>Page {{ current.page.page + 1 }} of {{ current.page.totalPages }}</span>
+          <button class="secondary-button" type="button" (click)="changePage(pageIndex() + 1)" [disabled]="!current.page.hasNext">Next</button>
+        </nav>
+      }
+    }
+  </section>
+</div>

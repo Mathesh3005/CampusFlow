@@ -21,7 +21,7 @@ Do not invent ADMIN functionality.
 ## 2. Technology Stack
 
 ### Backend
-- Java 21
+- Java 25 LTS
 - Spring Boot 4.1.2
 - Spring Security
 - Spring Data JPA

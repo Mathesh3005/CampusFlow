@@ -7,7 +7,9 @@ import com.campusflow.entity.Resume;
 import com.campusflow.entity.Student;
 import com.campusflow.entity.User;
 import com.campusflow.entity.NotificationType;
+import com.campusflow.repository.JobRepository;
 import com.campusflow.service.NotificationService;
+import com.campusflow.service.JobService;
 import com.campusflow.dto.job.JobResponseDto;
 import com.campusflow.entity.EmploymentType;
 import com.campusflow.entity.WorkMode;
@@ -47,6 +49,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -54,6 +57,8 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,6 +95,7 @@ class CampusflowApiApplicationTests {
     @Autowired UserRepository users;
     @Autowired StudentRepository students;
     @Autowired ResumeRepository resumes;
+    @Autowired JobService jobService;
     @Autowired NotificationService notificationService;
     @Autowired PasswordEncoder passwordEncoder;
     @Autowired JwtEncoder jwtEncoder;
@@ -278,6 +284,79 @@ class CampusflowApiApplicationTests {
                 bearer(officerToken), String.class).getStatusCode().value());
         assertEquals(403, http.exchange(url("/api/v1/officer/jobs"), HttpMethod.GET,
                 bearer(student.accessToken()), String.class).getStatusCode().value());
+    }
+
+    @Test
+    void jobSearchAcceptsAllOptionalFiltersAsNull() {
+        String suffix = UUID.randomUUID().toString();
+        Long eligibleId = addSearchJob(suffix + "-eligible", "Nullable Filters Eligible", null,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long cgpaRestrictedId = addSearchJob(suffix + "-cgpa", "Nullable Filters Restricted", null,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, new BigDecimal("7.00"), "PUBLISHED");
+        Long draftId = addSearchJob(suffix + "-draft", "Nullable Filters Draft", null,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "DRAFT");
+
+        var results = jobService.searchPublishedJobs(null, null, null, null, PageRequest.of(0, 100));
+
+        assertTrue(results.getContent().stream().anyMatch(job -> job.getId().equals(eligibleId)));
+        assertFalse(results.getContent().stream().anyMatch(job -> job.getId().equals(cgpaRestrictedId)));
+        assertFalse(results.getContent().stream().anyMatch(job -> job.getId().equals(draftId)));
+    }
+
+    @Test
+    void jobSearchAppliesLocationFilter() {
+        String suffix = UUID.randomUUID().toString();
+        Long matchingId = addSearchJob(suffix + "-match", "Location Match", "New York",
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long nonMatchingId = addSearchJob(suffix + "-other", "Location Other", "Seattle",
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+
+        var results = jobService.searchPublishedJobs("new york", null, null, null, PageRequest.of(0, 100));
+
+        assertEquals(List.of(matchingId), results.getContent().stream().map(job -> job.getId()).toList());
+        assertFalse(results.getContent().stream().anyMatch(job -> job.getId().equals(nonMatchingId)));
+    }
+
+    @Test
+    void jobSearchAppliesNonLocationFiltersWhenLocationIsNull() {
+        String suffix = UUID.randomUUID().toString();
+        Long matchingId = addSearchJob(suffix + "-match", "Other Filters Match", "Remote",
+                EmploymentType.INTERNSHIP, WorkMode.REMOTE, new BigDecimal("7.50"), "PUBLISHED");
+        addSearchJob(suffix + "-employment", "Other Filters Employment", "Remote",
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, new BigDecimal("7.00"), "PUBLISHED");
+        addSearchJob(suffix + "-mode", "Other Filters Mode", "Remote",
+                EmploymentType.INTERNSHIP, WorkMode.HYBRID, new BigDecimal("7.00"), "PUBLISHED");
+        addSearchJob(suffix + "-cgpa", "Other Filters CGPA", "Remote",
+                EmploymentType.INTERNSHIP, WorkMode.REMOTE, new BigDecimal("8.50"), "PUBLISHED");
+
+        var results = jobService.searchPublishedJobs(null, EmploymentType.INTERNSHIP, WorkMode.REMOTE,
+                new BigDecimal("8.00"), PageRequest.of(0, 100));
+
+        assertEquals(List.of(matchingId), results.getContent().stream().map(job -> job.getId()).toList());
+    }
+
+    @Test
+    void jobSearchPreservesPaginationAndSorting() {
+        String suffix = UUID.randomUUID().toString();
+        String location = "Sort-" + suffix;
+        Long zuluId = addSearchJob(suffix + "-zulu", "Zulu " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long alphaId = addSearchJob(suffix + "-alpha", "Alpha " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long mikeId = addSearchJob(suffix + "-mike", "Mike " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+
+        var firstPage = jobService.searchPublishedJobs(location, null, null, null,
+                PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "jobTitle")));
+        var secondPage = jobService.searchPublishedJobs(location, null, null, null,
+                PageRequest.of(1, 2, Sort.by(Sort.Direction.ASC, "jobTitle")));
+
+        assertEquals(List.of(alphaId, mikeId), firstPage.getContent().stream().map(job -> job.getId()).toList());
+        assertEquals(3, firstPage.getTotalElements());
+        assertEquals(2, firstPage.getSize());
+        assertTrue(firstPage.hasNext());
+        assertEquals(List.of(zuluId), secondPage.getContent().stream().map(job -> job.getId()).toList());
+        assertEquals(1, secondPage.getNumber());
     }
 
     @Test
@@ -652,6 +731,24 @@ class CampusflowApiApplicationTests {
                 VALUES (?, 'Integration Employer', ?, 'Application integration job', 'FULL_TIME', 'REMOTE', ?, ?, ?)
                 RETURNING id
                 """, Long.class, officerId, title, minimumCgpa, deadline, status);
+    }
+
+    private Long addSearchJob(String suffix, String title, String location, EmploymentType employmentType,
+                              WorkMode workMode, BigDecimal minimumCgpa, String status) {
+        Long officerUserId = jdbc.queryForObject(
+                "INSERT INTO users(email, password_hash, role) VALUES (?, ?, 'PLACEMENT_OFFICER') RETURNING id",
+                Long.class, "job-search-" + suffix + "@example.test", "test-only-hash");
+        Long officerId = jdbc.queryForObject(
+                "INSERT INTO placement_officers(user_id, employee_id, full_name) VALUES (?, ?, ?) RETURNING id",
+                Long.class, officerUserId, "JS-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20),
+                "Search Test Officer");
+        return jdbc.queryForObject("""
+                INSERT INTO jobs(created_by, company_name, job_title, job_description, location, employment_type,
+                                 work_mode, minimum_cgpa, application_deadline, status)
+                VALUES (?, 'Search Test Co', ?, 'Search test job', ?, ?, ?, ?, ?, ?)
+                RETURNING id
+                """, Long.class, officerId, title, location, employmentType.name(), workMode.name(),
+                minimumCgpa, OffsetDateTime.now().plusDays(30), status);
     }
 
     private ResponseEntity<String> postApplication(

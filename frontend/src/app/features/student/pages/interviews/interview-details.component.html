@@ -1,0 +1,91 @@
+<div class="details-page">
+  @let current = state();
+  <a class="back-link" routerLink="/student/interviews">← Back to interviews</a>
+
+  @if (current.status === 'loading') {
+    <section class="details-card state-card" aria-busy="true">
+      <p class="state-message" role="status">Loading interview details…</p>
+    </section>
+  } @else if (current.status === 'invalid') {
+    <section class="details-card state-card" role="alert">
+      <h1>Invalid interview link</h1>
+      <p>The interview ID in this link is invalid.</p>
+    </section>
+  } @else if (current.status === 'unauthorized') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Sign-in required</h1>
+      <p>Your session has expired. Sign in again to view this interview.</p>
+      <a class="primary-link" routerLink="/login">Sign in</a>
+    </section>
+  } @else if (current.status === 'forbidden') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Interview unavailable</h1>
+      <p>You do not have permission to view this interview.</p>
+    </section>
+  } @else if (current.status === 'notFound') {
+    <section class="details-card state-card" role="status">
+      <h1>Interview unavailable</h1>
+      <p>This interview was not found or is not available to your account.</p>
+    </section>
+  } @else if (current.status === 'error') {
+    <section class="details-card state-card error-state" role="alert">
+      <h1>Could not load interview</h1>
+      <p>{{ current.message }}</p>
+      <button class="primary-button" type="button" (click)="retry()">Retry</button>
+    </section>
+  } @else {
+    <article class="details-card">
+      <header class="interview-heading">
+        <div>
+          <p class="eyebrow">STUDENT INTERVIEW</p>
+          <h1>Interview #{{ current.interview.id }}</h1>
+          <p class="application-reference">Application #{{ current.interview.applicationId }}</p>
+        </div>
+        <span class="status-chip">{{ current.interview.status }}</span>
+      </header>
+
+      <section class="detail-section" aria-labelledby="interview-information-heading">
+        <h2 id="interview-information-heading">Interview information</h2>
+        <dl class="interview-information">
+          <div>
+            <dt>Date and time</dt>
+            <dd>
+              <time [attr.datetime]="current.interview.scheduledAt">
+                {{ current.interview.scheduledAt | date:'medium':'UTC' }} UTC
+              </time>
+            </dd>
+          </div>
+          <div>
+            <dt>Mode</dt>
+            <dd>{{ current.interview.interviewMode }}</dd>
+          </div>
+          <div>
+            <dt>Location or meeting link</dt>
+            <dd>{{ current.interview.locationOrLink }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{{ current.interview.status }}</dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd><time [attr.datetime]="current.interview.createdAt">{{ current.interview.createdAt | date:'medium':'UTC' }} UTC</time></dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd><time [attr.datetime]="current.interview.updatedAt">{{ current.interview.updatedAt | date:'medium':'UTC' }} UTC</time></dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-section" aria-labelledby="notes-heading">
+        <h2 id="notes-heading">Notes</h2>
+        @if (current.interview.notes) {
+          <p class="notes">{{ current.interview.notes }}</p>
+        } @else {
+          <p class="muted">No notes were added for this interview.</p>
+        }
+      </section>
+    </article>
+  }
+</div>

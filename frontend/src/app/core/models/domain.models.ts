@@ -33,6 +33,15 @@ export interface InterviewResponse {
   id: number; applicationId: number; scheduledAt: string; interviewMode: InterviewMode;
   locationOrLink: string; status: InterviewStatus; notes: string | null; createdAt: string; updatedAt: string;
 }
+export interface InterviewQuery { page?: number; size?: number; sort?: string; }
+export interface InterviewRequest {
+  applicationId: number; scheduledAt: string; interviewMode: InterviewMode;
+  locationOrLink: string; notes?: string | null;
+}
+export interface InterviewUpdateRequest {
+  scheduledAt: string; interviewMode: InterviewMode; locationOrLink: string; notes?: string | null;
+}
+export interface NotificationQuery { page?: number; size?: number; sort?: string; }
 export interface NotificationResponse {
   id: number; userId: number; title: string; message: string; notificationType: NotificationType;
   isRead: boolean; createdAt: string;

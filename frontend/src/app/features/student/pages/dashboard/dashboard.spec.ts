@@ -89,6 +89,7 @@ describe('StudentDashboard', () => {
     expect(text).toContain('Northwind');
     expect(text).toContain('Interview scheduled');
     expect(text).toContain('Unread');
+    expect(fixture.nativeElement.querySelector('a[href="/student/notifications/6"]')).toBeTruthy();
     expect(text).toContain('Application #9');
     expect(text).toContain('https://meet.example.edu/room');
     expect(fixture.nativeElement.querySelector('.welcome-meta')?.textContent?.trim().endsWith('UTC')).toBe(true);

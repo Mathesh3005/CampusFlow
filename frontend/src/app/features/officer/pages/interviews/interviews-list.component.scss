@@ -1,0 +1,45 @@
+.interviews-page { display: grid; gap: 22px; }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); letter-spacing: -.5px; }
+.intro { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+.heading-actions { display: flex; align-items: center; gap: 10px; }
+.results-panel { min-height: 220px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
+.secondary-button, .primary-button, .primary-link { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; padding: 0 14px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.secondary-button { border: 1px solid #bfdbfe; background: #fff; color: #1d4ed8; }
+.primary-button, .primary-link { border: 1px solid #2563eb; background: #2563eb; color: #fff; }
+.secondary-button:disabled { cursor: default; opacity: .55; }
+.state-message { display: grid; min-height: 210px; align-content: center; justify-items: center; gap: 10px; color: #64748b; font-size: 14px; text-align: center; }
+.state-message h2, .state-message p { margin: 0; }
+.state-message h2 { color: #0f172a; font-size: 17px; }
+.state-message a { color: #1d4ed8; font-weight: 600; }
+.error-state p { color: #b91c1c; }
+.results-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 2px 2px 16px; }
+.results-heading h2 { margin: 0; color: #0f172a; font-size: 15px; }
+.results-heading span { color: #64748b; font-size: 12px; }
+.interview-list { display: grid; }
+.interview-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 2px; border-top: 1px solid #e2e8f0; }
+.interview-main { min-width: 0; }
+.interview-main .eyebrow { margin-bottom: 6px; }
+.interview-main h3 { margin: 0; font-size: 16px; }
+.interview-main h3 a { color: #0f172a; text-decoration: none; }
+.interview-main h3 a:hover, .details-link:hover { color: #2563eb; text-decoration: underline; }
+.interview-meta { display: flex; flex-wrap: wrap; gap: 12px 22px; margin: 14px 0 0; }
+.interview-meta div { min-width: 110px; }
+.interview-meta dt { margin-bottom: 5px; color: #64748b; font-size: 10px; font-weight: 600; }
+.interview-meta dd { margin: 0; color: #334155; font-size: 12px; }
+.status-chip { display: inline-block; padding: 5px 9px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 700; }
+.details-link { flex: 0 0 auto; color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 20px; padding-top: 17px; border-top: 1px solid #e2e8f0; color: #475569; font-size: 12px; }
+.secondary-button:focus-visible, .primary-button:focus-visible, .primary-link:focus-visible, .details-link:focus-visible, .interview-main h3 a:focus-visible { outline: 3px solid rgb(37 99 235 / 25%); outline-offset: 3px; }
+@media (max-width: 700px) {
+  .page-heading { align-items: flex-start; flex-direction: column; }
+  .heading-actions { width: 100%; justify-content: space-between; }
+}
+@media (max-width: 600px) {
+  .interviews-page { gap: 16px; }
+  .results-panel { padding: 16px; }
+  .interview-card { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .interview-meta { gap: 12px; }
+  .pagination { justify-content: space-between; gap: 10px; }
+}

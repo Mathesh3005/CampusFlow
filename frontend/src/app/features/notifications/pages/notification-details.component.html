@@ -1,0 +1,65 @@
+<div class="details-page">
+  <a class="back-link" [routerLink]="['/', workspace, 'notifications']">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    Back to notifications
+  </a>
+
+  @let current = state();
+  @if (actionMessage()) {
+    <p class="action-message" [class.action-error]="actionError()" [attr.role]="actionError() ? 'alert' : 'status'">{{ actionMessage() }}</p>
+  }
+
+  <section class="details-panel" aria-label="Notification details" [attr.aria-busy]="current.status === 'loading'">
+    @if (current.status === 'loading') {
+      <p class="state-message" role="status">Loading notification…</p>
+    } @else if (current.status === 'invalid') {
+      <div class="state-message error-state" role="alert">
+        <h1>Invalid notification</h1>
+        <p>Enter a valid notification ID to view its details.</p>
+      </div>
+    } @else if (current.status === 'error') {
+      <div class="state-message error-state" role="alert">
+        <h1>Notification unavailable</h1>
+        <p>{{ current.message }}</p>
+        @if (current.unauthorized) { <a routerLink="/login">Sign in</a> }
+        <button class="primary-button" type="button" (click)="load()">Try again</button>
+      </div>
+    } @else if (current.status === 'deleted') {
+      <div class="state-message">
+        <mat-icon aria-hidden="true">check_circle</mat-icon>
+        <h1>Notification deleted</h1>
+        <p>This notification has been permanently removed.</p>
+        <a class="primary-button" [routerLink]="['/', workspace, 'notifications']">Return to notifications</a>
+      </div>
+    } @else {
+      @let notification = current.notification;
+      <header class="notification-header" [class.unread]="!notification.isRead">
+        <span class="type-icon"><mat-icon aria-hidden="true">{{ notificationIcon(notification.notificationType) }}</mat-icon></span>
+        <div>
+          <p class="eyebrow">{{ notification.notificationType.replace('_', ' ') }}</p>
+          <h1>{{ notification.title }}</h1>
+          <time
+            [attr.datetime]="notification.createdAt"
+            [attr.aria-label]="notification.createdAt | date:'full':'UTC'"
+            [title]="notification.createdAt | date:'full':'UTC'">
+            {{ relativeTime(notification.createdAt) }}
+          </time>
+        </div>
+        <span class="read-badge" [class.unread-badge]="!notification.isRead">{{ notification.isRead ? 'Read' : 'Unread' }}</span>
+      </header>
+      <div class="notification-body">
+        <p>{{ notification.message }}</p>
+      </div>
+      <footer class="notification-actions">
+        @if (!notification.isRead) {
+          <button class="primary-button" type="button" (click)="markRead()" [disabled]="pendingAction() !== null">
+            {{ pendingAction() === 'read' ? 'Saving…' : 'Mark as read' }}
+          </button>
+        }
+        <button class="delete-button" type="button" (click)="confirmDelete()" [disabled]="pendingAction() !== null">
+          {{ pendingAction() === 'confirm-delete' ? 'Confirming…' : pendingAction() === 'delete' ? 'Deleting…' : 'Delete notification' }}
+        </button>
+      </footer>
+    }
+  </section>
+</div>

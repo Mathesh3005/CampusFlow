@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { apiInterceptor } from '../../../core/http/api.interceptor';
 import { InterviewDashboardSection } from '../models/dashboard.models';
 import { ApplicationResponse, InterviewMode, InterviewResponse, InterviewStatus, JobResponse, NotificationResponse, PageResponse } from '../../../core/models/domain.models';
+import { StudentNotificationsService } from './student-notifications.service';
 import { StudentDashboardService } from './student-dashboard.service';
 
 describe('StudentDashboardService', () => {
@@ -15,7 +16,12 @@ describe('StudentDashboardService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([apiInterceptor])), provideHttpClientTesting()],
+      providers: [
+        StudentNotificationsService,
+        StudentDashboardService,
+        provideHttpClient(withInterceptors([apiInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     service = TestBed.inject(StudentDashboardService);
     requests = TestBed.inject(HttpTestingController);
@@ -98,7 +104,7 @@ describe('StudentDashboardService', () => {
     requests.expectOne(`${root}/student/jobs?page=0&size=4&sort=createdAt,desc`).flush(page<JobResponse>([], 14));
     requests.expectOne(`${interviewsUrl}?page=0&size=20&sort=scheduledAt,asc`)
       .flush({ detail: 'Interview service unavailable' }, { status: 500, statusText: 'Server Error' });
-    requests.expectOne(`${root}/student/notifications?page=0&size=5&sort=createdAt,desc`).flush(page<NotificationResponse>([], 3));
+    requests.expectOne(`${root}/student/notifications?page=0&size=20&sort=createdAt,desc`).flush(page<NotificationResponse>([], 3));
 
     expect(result?.applications.page?.totalElements).toBe(8);
     expect(result?.interviews.error).toContain('Interview service unavailable');
@@ -107,7 +113,7 @@ describe('StudentDashboardService', () => {
   function flushOtherSections(): void {
     requests.expectOne(`${root}/student/applications?page=0&size=5&sort=appliedAt,desc`).flush(page<ApplicationResponse>([], 0));
     requests.expectOne(`${root}/student/jobs?page=0&size=4&sort=createdAt,desc`).flush(page<JobResponse>([], 0));
-    requests.expectOne(`${root}/student/notifications?page=0&size=5&sort=createdAt,desc`).flush(page<NotificationResponse>([], 0));
+    requests.expectOne(`${root}/student/notifications?page=0&size=20&sort=createdAt,desc`).flush(page<NotificationResponse>([], 0));
   }
 });
 

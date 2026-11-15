@@ -1,0 +1,240 @@
+<main class="dashboard-page">
+  @let current = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+      <h1>Dashboard</h1>
+      <p class="intro">A live overview of jobs, applications, interviews and placement updates.</p>
+    </div>
+    <button class="secondary-button" type="button" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </header>
+
+  @if (allSectionsFailed()) {
+    <section class="page-error" role="alert">
+      <div>
+        <h2>Dashboard data is unavailable</h2>
+        <p>Every dashboard request failed. Check your connection or permissions and retry.</p>
+      </div>
+      <button class="primary-button" type="button" (click)="load()">Retry all</button>
+    </section>
+  }
+
+  @if (current.jobs.status === 'error') {
+    <section class="section-error jobs-error" role="alert">
+      <p>Job statistics could not be loaded. {{ current.jobs.message }}</p>
+      <button class="secondary-button" type="button" (click)="retryJobs()">Retry</button>
+    </section>
+  }
+
+  <section class="metrics-grid" aria-label="Dashboard statistics">
+    @for (metric of metrics(); track metric.label) {
+      <article class="metric-card" [attr.aria-busy]="metric.loading">
+        <span class="metric-icon"><mat-icon aria-hidden="true">{{ metric.icon }}</mat-icon></span>
+        <div class="metric-copy">
+          <span class="metric-label">{{ metric.label }}</span>
+          <strong>{{ metric.loading ? '—' : metric.value ?? 'Unavailable' }}</strong>
+          <span class="metric-caption">{{ metric.caption }}</span>
+        </div>
+      </article>
+    }
+  </section>
+
+  <div class="dashboard-grid">
+    <section
+      class="dashboard-card"
+      aria-labelledby="applications-heading"
+      [attr.aria-busy]="current.applications.status === 'loading'">
+      <header class="card-heading">
+        <div>
+          <h2 id="applications-heading">Recent applications</h2>
+          <p>Latest submissions to your jobs</p>
+        </div>
+        <a class="text-link" routerLink="/officer/applications">View all</a>
+      </header>
+
+      @if (current.applications.status === 'loading') {
+        <div class="loading-state" role="status"><span class="spinner" aria-hidden="true"></span>Loading applications</div>
+      } @else if (current.applications.status === 'error') {
+        <div class="section-error" role="alert">
+          <p>{{ current.applications.message }}</p>
+          <button class="secondary-button" type="button" (click)="retryApplications()">Retry</button>
+        </div>
+      } @else if (applications().length === 0) {
+        <div class="empty-state">
+          <mat-icon aria-hidden="true">description</mat-icon>
+          <h3>No applications yet</h3>
+          <p>New submissions for your jobs will appear here.</p>
+        </div>
+      } @else {
+        <ul class="activity-list">
+          @for (application of applications(); track application.id) {
+            <li class="application-row">
+              <span class="activity-icon"><mat-icon aria-hidden="true">person_outline</mat-icon></span>
+              <div class="activity-copy">
+                <strong>{{ application.jobTitle }}</strong>
+                <span>Application #{{ application.id }} · {{ application.companyName }} · Student #{{ application.studentId }}</span>
+                <span class="status-text">{{ application.status.replace('_', ' ') }}</span>
+              </div>
+              <div class="activity-meta">
+                <time [attr.datetime]="application.appliedAt">
+                  {{ application.appliedAt | date:'mediumDate':'UTC' }} UTC
+                </time>
+                @if (isValidId(application.id)) {
+                  <a [routerLink]="['/officer/applications', application.id]">
+                    View<span class="visually-hidden"> application {{ application.id }}</span>
+                  </a>
+                } @else {
+                  <span class="muted">Details unavailable</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section
+      class="dashboard-card"
+      aria-labelledby="interviews-heading"
+      [attr.aria-busy]="current.interviews.status === 'loading'">
+      <header class="card-heading">
+        <div>
+          <h2 id="interviews-heading">Upcoming interviews</h2>
+          <p>Scheduled interviews with future dates</p>
+        </div>
+        <a class="text-link" routerLink="/officer/interviews">View all</a>
+      </header>
+
+      @if (current.interviews.status === 'loading') {
+        <div class="loading-state" role="status"><span class="spinner" aria-hidden="true"></span>Loading interviews</div>
+      } @else if (current.interviews.status === 'error') {
+        <div class="section-error" role="alert">
+          <p>{{ current.interviews.message }}</p>
+          <button class="secondary-button" type="button" (click)="retryInterviews()">Retry</button>
+        </div>
+      } @else if (interviews().length === 0) {
+        <div class="empty-state">
+          <mat-icon aria-hidden="true">event_busy</mat-icon>
+          <h3>No upcoming interviews found</h3>
+          <p>
+            @if (current.interviews.data.upcomingTotal === 0) {
+              No interviews have been scheduled for your jobs.
+            } @else if (current.interviews.data.partialResults) {
+              The bounded preview did not find an upcoming interview; more records may remain.
+            } @else {
+              There are no future scheduled interviews in the records checked.
+            }
+          </p>
+          @if (current.interviews.data.warning) {
+            <p class="inline-warning" role="status">{{ current.interviews.data.warning }}</p>
+          }
+        </div>
+      } @else {
+        @if (current.interviews.data.partialResults) {
+          <p class="preview-note">Showing a bounded preview of upcoming interviews.</p>
+        }
+        @if (current.interviews.data.warning) {
+          <p class="inline-warning" role="status">{{ current.interviews.data.warning }} Showing results already found.</p>
+        }
+        <ul class="activity-list">
+          @for (interview of interviews(); track interview.id) {
+            <li class="interview-row">
+              <span class="activity-icon"><mat-icon aria-hidden="true">event</mat-icon></span>
+              <div class="activity-copy">
+                <strong>Interview #{{ interview.id }}</strong>
+                <span>Application #{{ interview.applicationId }}</span>
+                <span>{{ interview.interviewMode }} · {{ interview.status }}</span>
+                <time [attr.datetime]="interview.scheduledAt">
+                  {{ interview.scheduledAt | date:'medium':'UTC' }} UTC
+                </time>
+              </div>
+              <div class="activity-meta">
+                @if (isValidId(interview.id)) {
+                  <a [routerLink]="['/officer/interviews', interview.id]">
+                    View<span class="visually-hidden"> interview {{ interview.id }}</span>
+                  </a>
+                } @else {
+                  <span class="muted">Details unavailable</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section
+      class="dashboard-card"
+      aria-labelledby="notifications-heading"
+      [attr.aria-busy]="current.notifications.status === 'loading'">
+      <header class="card-heading">
+        <div>
+          <h2 id="notifications-heading">Recent notifications</h2>
+          <p>Your five latest placement updates</p>
+        </div>
+        <a class="text-link" routerLink="/officer/notifications">View all</a>
+      </header>
+
+      @if (current.notifications.status === 'loading') {
+        <div class="loading-state" role="status"><span class="spinner" aria-hidden="true"></span>Loading notifications</div>
+      } @else if (current.notifications.status === 'error') {
+        <div class="section-error" role="alert">
+          <p>{{ current.notifications.message }}</p>
+          <button class="secondary-button" type="button" (click)="retryNotifications()">Retry</button>
+        </div>
+      } @else if (notifications().length === 0) {
+        <div class="empty-state">
+          <mat-icon aria-hidden="true">notifications_none</mat-icon>
+          <h3>No notifications yet</h3>
+          <p>Officer placement updates will appear here.</p>
+        </div>
+      } @else {
+        <ul class="notification-list">
+          @for (notification of notifications(); track notification.id) {
+            <li>
+              @if (isValidId(notification.id)) {
+                <a
+                  class="notification-row"
+                  [class.unread]="!notification.isRead"
+                  [routerLink]="['/officer/notifications', notification.id]">
+                  <span class="activity-icon"><mat-icon aria-hidden="true">{{ notificationIcon(notification.notificationType) }}</mat-icon></span>
+                  <span class="notification-copy">
+                    <strong>{{ notification.title }}</strong>
+                    <span>{{ notification.message }}</span>
+                    <time [attr.datetime]="notification.createdAt" [attr.title]="notification.createdAt | date:'full':'UTC'">
+                      {{ notificationTime(notification.createdAt) }}
+                      <span class="visually-hidden">, {{ notification.createdAt | date:'full':'UTC' }} UTC</span>
+                    </time>
+                  </span>
+                  <span class="read-state">{{ notification.isRead ? 'Read' : 'Unread' }}</span>
+                </a>
+              } @else {
+                <div class="notification-row">
+                  <span class="activity-icon"><mat-icon aria-hidden="true">{{ notificationIcon(notification.notificationType) }}</mat-icon></span>
+                  <span class="notification-copy"><strong>{{ notification.title }}</strong><span>{{ notification.message }}</span></span>
+                  <span class="read-state">{{ notification.isRead ? 'Read' : 'Unread' }}</span>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <nav class="dashboard-card quick-actions" aria-labelledby="quick-actions-heading">
+      <header class="card-heading">
+        <div>
+          <h2 id="quick-actions-heading">Quick actions</h2>
+          <p>Jump to common placement workflows</p>
+        </div>
+      </header>
+      <a routerLink="/officer/jobs/new"><mat-icon aria-hidden="true">add_circle_outline</mat-icon><span>Create a job</span><mat-icon class="arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+      <a routerLink="/officer/jobs"><mat-icon aria-hidden="true">work_outline</mat-icon><span>Manage jobs</span><mat-icon class="arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+      <a routerLink="/officer/applications"><mat-icon aria-hidden="true">description</mat-icon><span>Review applications</span><mat-icon class="arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+      <a routerLink="/officer/interviews"><mat-icon aria-hidden="true">event</mat-icon><span>Manage interviews</span><mat-icon class="arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+      <a routerLink="/officer/notifications"><mat-icon aria-hidden="true">notifications</mat-icon><span>View notifications</span><mat-icon class="arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+    </nav>
+  </div>
+</main>

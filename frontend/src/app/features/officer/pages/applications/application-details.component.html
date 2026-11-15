@@ -2,6 +2,18 @@
   @let current = state();
   <a class="back-link" routerLink="/officer/applications">← Back to applications</a>
 
+  @if (actionSuccess(); as message) {
+    <p class="feedback success-message" role="status">{{ message }}</p>
+  }
+  @if (actionError(); as message) {
+    <div class="feedback error-message" role="alert">
+      <p>{{ message }}</p>
+      @if (actionErrorCanRefresh()) {
+        <button class="secondary-button" type="button" (click)="retry()">Refresh application</button>
+      }
+    </div>
+  }
+
   @if (current.status === 'loading') {
     <section class="details-card" aria-busy="true">
       <p class="state-message" role="status">Loading application details…</p>
@@ -91,10 +103,33 @@
       }
 
       <section class="review-section" aria-labelledby="review-heading">
-        <div>
+        <div class="review-copy">
           <h2 id="review-heading">Status review</h2>
-          <p>Status review actions are not available yet.</p>
+          @if (availableTransitions(current.application.status).length > 0) {
+            <p>Choose the next status for this application.</p>
+          } @else {
+            <p>No further status actions are available for this application.</p>
+          }
         </div>
+        @if (availableTransitions(current.application.status).length > 0) {
+          <div class="status-actions">
+            @for (target of availableTransitions(current.application.status); track target) {
+              <button
+                class="status-action-button"
+                [class.reject-button]="target === 'REJECTED'"
+                [attr.data-status]="target"
+                type="button"
+                [disabled]="actionPending()"
+                (click)="confirmStatusChange(current.application, target)">
+                @if (actionPending() && pendingStatus() === target) {
+                  Updating…
+                } @else {
+                  {{ statusActionLabel(target) }}
+                }
+              </button>
+            }
+          </div>
+        }
       </section>
     </article>
   }

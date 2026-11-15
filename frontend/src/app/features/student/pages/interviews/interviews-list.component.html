@@ -1,0 +1,98 @@
+<div class="interviews-page">
+  @let current = state();
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">STUDENT WORKSPACE</p>
+      <h1>My interviews</h1>
+      <p class="intro">Review interview schedules and outcomes for your applications.</p>
+    </div>
+    <button class="secondary-button" type="button" (click)="retry()" [disabled]="current.status === 'loading'">Refresh</button>
+  </header>
+
+  <section class="results-panel" aria-label="Your interviews" [attr.aria-busy]="current.status === 'loading'">
+    @if (current.status === 'loading') {
+      <p class="state-message" role="status">Loading interviews…</p>
+    } @else if (current.status === 'error') {
+      <div class="state-message error-state" role="alert">
+        <h2>Interviews could not be loaded</h2>
+        <p>{{ current.message }}</p>
+        @if (current.unauthorized) { <a routerLink="/login">Sign in</a> }
+        <button class="primary-button" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (current.page.content.length === 0) {
+      <div class="state-message empty-state">
+        <h2>No interviews yet</h2>
+        <p>Interviews scheduled for your applications will appear here.</p>
+      </div>
+    } @else {
+      <p class="results-summary">{{ current.page.totalElements }} total interview{{ current.page.totalElements === 1 ? '' : 's' }}</p>
+      <section class="interview-section" aria-labelledby="upcoming-heading">
+        <header class="section-heading">
+          <div>
+            <h2 id="upcoming-heading">Upcoming interviews</h2>
+            <p>Scheduled interviews on this page.</p>
+          </div>
+          <span class="section-count">{{ interviewSections().upcoming.length }}</span>
+        </header>
+        @if (interviewSections().upcoming.length === 0) {
+          <p class="section-empty">No upcoming scheduled interviews on this page.</p>
+        } @else {
+          <div class="interview-list">
+            @for (interview of interviewSections().upcoming; track interview.id) {
+              <article class="interview-card">
+                <div class="interview-main">
+                  <p class="eyebrow">INTERVIEW #{{ interview.id }}</p>
+                  <h3><a [routerLink]="['/student/interviews', interview.id]">Application #{{ interview.applicationId }}</a></h3>
+                  <div class="interview-meta">
+                    <span class="status-chip">{{ interview.status }}</span>
+                    <span>{{ interview.interviewMode }}</span>
+                    <time [attr.datetime]="interview.scheduledAt">{{ interview.scheduledAt | date:'medium':'UTC' }} UTC</time>
+                  </div>
+                </div>
+                <a class="details-link" [routerLink]="['/student/interviews', interview.id]">View details</a>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="interview-section" aria-labelledby="past-heading">
+        <header class="section-heading">
+          <div>
+            <h2 id="past-heading">Past interviews</h2>
+            <p>Completed, cancelled, or earlier interviews on this page.</p>
+          </div>
+          <span class="section-count">{{ interviewSections().past.length }}</span>
+        </header>
+        @if (interviewSections().past.length === 0) {
+          <p class="section-empty">No past or inactive interviews on this page.</p>
+        } @else {
+          <div class="interview-list">
+            @for (interview of interviewSections().past; track interview.id) {
+              <article class="interview-card">
+                <div class="interview-main">
+                  <p class="eyebrow">INTERVIEW #{{ interview.id }}</p>
+                  <h3><a [routerLink]="['/student/interviews', interview.id]">Application #{{ interview.applicationId }}</a></h3>
+                  <div class="interview-meta">
+                    <span class="status-chip">{{ interview.status }}</span>
+                    <span>{{ interview.interviewMode }}</span>
+                    <time [attr.datetime]="interview.scheduledAt">{{ interview.scheduledAt | date:'medium':'UTC' }} UTC</time>
+                  </div>
+                </div>
+                <a class="details-link" [routerLink]="['/student/interviews', interview.id]">View details</a>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      @if (current.page.totalPages > 1) {
+        <nav class="pagination" aria-label="Interview pages">
+          <button class="secondary-button" type="button" (click)="changePage(pageIndex() - 1)" [disabled]="!current.page.hasPrevious">Previous</button>
+          <span>Page {{ current.page.page + 1 }} of {{ current.page.totalPages }}</span>
+          <button class="secondary-button" type="button" (click)="changePage(pageIndex() + 1)" [disabled]="!current.page.hasNext">Next</button>
+        </nav>
+      }
+    }
+  </section>
+</div>

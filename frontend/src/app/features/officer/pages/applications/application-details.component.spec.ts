@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { ApiError } from '../../../../core/http/api-error.handler';
 import { ApplicationResponse, ApplicationStatus } from '../../../../core/models/domain.models';
-import { OfficerApplicationsService } from '../../services/officer-applications.service';
+import { OfficerApplicationStatus, OfficerApplicationsService } from '../../services/officer-applications.service';
+import { ApplicationStatusConfirmationDialog } from './application-status-confirmation-dialog.component';
 import { OfficerApplicationDetails } from './application-details.component';
 
 describe('OfficerApplicationDetails', () => {
@@ -30,7 +32,9 @@ describe('OfficerApplicationDetails', () => {
     expect(text).toContain('I am interested in this role.');
     expect(text).not.toContain('Student Name');
     expect(text).not.toContain('Graduate Engineer');
-    expect(text).toContain('Status review actions are not available yet.');
+    expect(text).toContain('Choose the next status for this application.');
+    expect(fixture.nativeElement.querySelector('[data-status="SHORTLISTED"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-status="REJECTED"]')).not.toBeNull();
   });
 
   it('shows loading while the details request is pending', () => {
@@ -108,13 +112,204 @@ describe('OfficerApplicationDetails', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Resume ID');
     expect(fixture.nativeElement.querySelector('#cover-letter-heading')).toBeNull();
   });
+
+  it.each([
+    [ApplicationStatus.Applied, ['UNDER_REVIEW', 'REJECTED']],
+    [ApplicationStatus.UnderReview, ['SHORTLISTED', 'REJECTED']],
+    [ApplicationStatus.Shortlisted, ['SELECTED', 'REJECTED']],
+    [ApplicationStatus.Rejected, []],
+    [ApplicationStatus.Selected, []],
+    [ApplicationStatus.Withdrawn, []],
+  ] as const)('shows only permitted status actions from %s', (status, targets) => {
+    const fixture = createFixture('42', vi.fn(() => of(application({ status }))));
+    fixture.detectChanges();
+
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button[data-status]') as NodeListOf<HTMLButtonElement>);
+    expect(buttons.map(button => button.getAttribute('data-status')).sort()).toEqual([...targets].sort());
+    if (targets.length === 0) {
+      expect(fixture.nativeElement.textContent).toContain('No further status actions are available');
+    }
+  });
+
+  it.each([
+    [ApplicationStatus.Applied, ApplicationStatus.UnderReview],
+    [ApplicationStatus.Applied, ApplicationStatus.Rejected],
+    [ApplicationStatus.UnderReview, ApplicationStatus.Shortlisted],
+    [ApplicationStatus.UnderReview, ApplicationStatus.Rejected],
+    [ApplicationStatus.Shortlisted, ApplicationStatus.Selected],
+    [ApplicationStatus.Shortlisted, ApplicationStatus.Rejected],
+  ])('confirms and applies the permitted transition %s to %s', (source, target) => {
+    const updated = application({ status: target, updatedAt: '2026-11-15T10:00:00Z' });
+    const updateApplicationStatus = vi.fn((_id: number, _status: OfficerApplicationStatus) => of(updated));
+    const fixture = createFixture('42', vi.fn(() => of(application({ status: source }))), {
+      updateApplicationStatus,
+      confirmed: true,
+    });
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector(`[data-status="${target}"]`) as HTMLButtonElement;
+    expect(button).not.toBeNull();
+    button.click();
+    fixture.detectChanges();
+
+    expect(fixture.dialog.open).toHaveBeenCalledWith(
+      ApplicationStatusConfirmationDialog,
+      expect.objectContaining({
+        data: { targetStatus: target, jobTitle: 'Graduate Engineer', companyName: 'CampusFlow Labs' },
+        role: 'alertdialog',
+      }),
+    );
+    expect(updateApplicationStatus).toHaveBeenCalledOnce();
+    expect(updateApplicationStatus).toHaveBeenCalledWith(42, target);
+    expect(fixture.componentInstance.state()).toEqual({ status: 'ready', application: updated });
+    expect(fixture.nativeElement.textContent).toContain(`Application status updated to ${target.replace('_', ' ')}.`);
+    expect(fixture.nativeElement.querySelector('.status-chip')?.textContent).toContain(target.replace('_', ' '));
+  });
+
+  it('does not send a status update when confirmation is dismissed', () => {
+    const updateApplicationStatus = vi.fn(() => of(application({ status: ApplicationStatus.UnderReview })));
+    const fixture = createFixture('42', vi.fn(() => of(application({ status: ApplicationStatus.Applied }))), {
+      updateApplicationStatus,
+    });
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-status="UNDER_REVIEW"]') as HTMLButtonElement).click();
+
+    expect(fixture.dialog.open).toHaveBeenCalledOnce();
+    expect(updateApplicationStatus).not.toHaveBeenCalled();
+  });
+
+  it('rejects a forbidden transition even if confirmStatusChange is invoked directly', () => {
+    const updateApplicationStatus = vi.fn(() => of(application()));
+    const fixture = createFixture('42', vi.fn(() => of(application({ status: ApplicationStatus.Applied }))), {
+      updateApplicationStatus,
+      confirmed: true,
+    });
+    fixture.detectChanges();
+
+    fixture.componentInstance.confirmStatusChange(application({ status: ApplicationStatus.Applied }), ApplicationStatus.Selected);
+
+    expect(fixture.dialog.open).not.toHaveBeenCalled();
+    expect(updateApplicationStatus).not.toHaveBeenCalled();
+  });
+
+  it('disables status actions and blocks duplicate requests while an update is pending', () => {
+    const response = new Subject<ApplicationResponse>();
+    const updateApplicationStatus = vi.fn(() => response.asObservable());
+    const fixture = createFixture('42', vi.fn(() => of(application({ status: ApplicationStatus.Applied }))), {
+      updateApplicationStatus,
+      confirmed: true,
+    });
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('[data-status="UNDER_REVIEW"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(updateApplicationStatus).toHaveBeenCalledOnce();
+    expect(fixture.componentInstance.actionPending()).toBe(true);
+    expect(Array.from(fixture.nativeElement.querySelectorAll('button[data-status]') as NodeListOf<HTMLButtonElement>)
+      .every(button => button.disabled)).toBe(true);
+
+    fixture.componentInstance.confirmStatusChange(application({ status: ApplicationStatus.Applied }), ApplicationStatus.Rejected);
+    expect(fixture.dialog.open).toHaveBeenCalledOnce();
+    expect(updateApplicationStatus).toHaveBeenCalledOnce();
+
+    response.next(application({ status: ApplicationStatus.UnderReview }));
+    response.complete();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.actionPending()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Application status updated to UNDER REVIEW.');
+  });
+
+  it.each([
+    [400, 'The status change was not accepted', false],
+    [401, 'Your session has expired', false],
+    [403, 'You do not have permission to change this application', false],
+    [404, 'could not be found or is no longer available', true],
+    [409, 'status may have changed since this page loaded', true],
+  ])('shows status-update feedback for HTTP %s', (status, message, canRefresh) => {
+    const updateApplicationStatus = vi.fn(() => throwError(() => new ApiError(
+      status,
+      'other',
+      { status, detail: 'Untrusted server detail' },
+    )));
+    const fixture = createFixture('42', vi.fn(() => of(application({ status: ApplicationStatus.Applied }))), {
+      updateApplicationStatus,
+      confirmed: true,
+    });
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('[data-status="UNDER_REVIEW"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(message);
+    expect(fixture.nativeElement.textContent).not.toContain('Untrusted server detail');
+    expect(fixture.nativeElement.querySelector('.secondary-button') !== null).toBe(canRefresh);
+    expect(fixture.componentInstance.actionPending()).toBe(false);
+  });
+
+  it('refreshes application details when a status conflict is reported', () => {
+    const getApplicationById = vi.fn()
+      .mockReturnValueOnce(of(application({ status: ApplicationStatus.Applied })))
+      .mockReturnValueOnce(of(application({ status: ApplicationStatus.UnderReview })));
+    const updateApplicationStatus = vi.fn(() => throwError(() => new ApiError(409, 'conflict', { status: 409 })));
+    const fixture = createFixture('42', getApplicationById, { updateApplicationStatus, confirmed: true });
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-status="UNDER_REVIEW"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.secondary-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(getApplicationById).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('[data-status="UNDER_REVIEW"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-status="SHORTLISTED"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.error-message')).toBeNull();
+  });
 });
+
+describe('ApplicationStatusConfirmationDialog', () => {
+  it('describes the requested status and closes with confirmation or cancellation', () => {
+    const dialogRef = { close: vi.fn() };
+    TestBed.configureTestingModule({
+      imports: [ApplicationStatusConfirmationDialog],
+      providers: [
+        { provide: MAT_DIALOG_DATA, useValue: {
+          targetStatus: ApplicationStatus.Rejected,
+          jobTitle: 'Graduate Engineer',
+          companyName: 'CampusFlow Labs',
+        } },
+        { provide: MatDialogRef, useValue: dialogRef },
+      ],
+    });
+    const fixture = TestBed.createComponent(ApplicationStatusConfirmationDialog);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Change application status?');
+    expect(fixture.nativeElement.textContent).toContain('Graduate Engineer');
+    expect(fixture.nativeElement.textContent).toContain('REJECTED');
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    buttons[0].click();
+    expect(dialogRef.close).toHaveBeenLastCalledWith(false);
+    buttons[1].click();
+    expect(dialogRef.close).toHaveBeenLastCalledWith(true);
+  });
+});
+
+interface ApplicationDetailsTestOverrides {
+  updateApplicationStatus?: (id: number, status: OfficerApplicationStatus) => Observable<ApplicationResponse>;
+  confirmed?: boolean;
+}
 
 function createFixture(
   id: string,
   getApplicationById: ReturnType<typeof vi.fn>,
+  overrides: ApplicationDetailsTestOverrides = {},
 ) {
   const paramMap = convertToParamMap({ id });
+  const dialog = {
+    open: vi.fn(() => ({ afterClosed: () => of(overrides.confirmed ?? false) })),
+  };
+  const updateApplicationStatus = overrides.updateApplicationStatus
+    ?? vi.fn((_id: number, status: OfficerApplicationStatus) => of(application({ status })));
   TestBed.configureTestingModule({
     imports: [OfficerApplicationDetails],
     providers: [
@@ -122,11 +317,12 @@ function createFixture(
       { provide: ActivatedRoute, useValue: { paramMap: of(paramMap), snapshot: { paramMap } } },
       {
         provide: OfficerApplicationsService,
-        useValue: { getApplicationById },
+        useValue: { getApplicationById, updateApplicationStatus },
       },
     ],
   });
-  return TestBed.createComponent(OfficerApplicationDetails);
+  TestBed.overrideProvider(MatDialog, { useValue: dialog });
+  return Object.assign(TestBed.createComponent(OfficerApplicationDetails), { dialog });
 }
 
 function application(

@@ -1,0 +1,138 @@
+<div class="form-page">
+  @let currentState = state();
+  <a class="back-link" [routerLink]="cancelLink()">← {{ isEditMode() ? 'Back to interview' : 'Back to interviews' }}</a>
+
+  @if (currentState.status === 'loading') {
+    <section class="form-card state-card" aria-busy="true">
+      <p class="state-message" role="status">Loading interview…</p>
+    </section>
+  } @else if (currentState.status === 'invalid') {
+    <section class="form-card state-card" role="alert">
+      <h1>Invalid interview link</h1>
+      <p>The interview ID in this link is invalid.</p>
+    </section>
+  } @else if (currentState.status === 'notFound') {
+    <section class="form-card state-card" role="status">
+      <h1>Interview not found</h1>
+      <p>This interview was not found or is not available to your account.</p>
+    </section>
+  } @else if (currentState.status === 'notEditable') {
+    <section class="form-card state-card" role="status">
+      <h1>Interview cannot be edited</h1>
+      <p>Only scheduled interviews can be edited. This interview is {{ currentState.interview.status }}.</p>
+      <a class="cancel-button" [routerLink]="cancelLink()">View interview details</a>
+    </section>
+  } @else if (currentState.status === 'error') {
+    <section class="form-card state-card error-state" role="alert">
+      <h1>Could not load interview</h1>
+      <p>{{ currentState.message }}</p>
+      <button class="submit-button" type="button" (click)="retryLoad()">Retry</button>
+    </section>
+  } @else {
+    <section class="form-card">
+      <header class="page-heading">
+        <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+        <h1>{{ isEditMode() ? 'Edit interview' : 'Schedule an interview' }}</h1>
+        <p class="intro">
+          {{ isEditMode()
+            ? 'Update the date, mode, location or meeting link, and notes.'
+            : 'Interviews can only be scheduled for shortlisted applications.' }}
+        </p>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-grid">
+          @if (!isEditMode()) {
+            <div class="field">
+              <label for="application-id">Application ID <span aria-hidden="true">*</span></label>
+              <input id="application-id" type="number" min="1" step="1" formControlName="applicationId" [disabled]="submitting()" />
+              @if (shouldShowError(form.controls.applicationId)) {
+                <p class="field-error" id="application-id-error">Enter a positive whole-number application ID.</p>
+              }
+            </div>
+          } @else {
+            <div class="field">
+              <label for="application-id-readonly">Application ID</label>
+              <input id="application-id-readonly" type="number" formControlName="applicationId" readonly />
+            </div>
+          }
+
+          <div class="field">
+            <label for="scheduled-at">Date and time <span aria-hidden="true">*</span></label>
+            <input id="scheduled-at" type="datetime-local" formControlName="scheduledAt" [disabled]="submitting()" />
+            @if (shouldShowError(form.controls.scheduledAt)) {
+              <p class="field-error" id="scheduled-at-error">
+                @if (form.controls.scheduledAt.hasError('required')) {
+                  Interview date and time are required.
+                } @else {
+                  Interview date and time must be in the future.
+                }
+              </p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="interview-mode">Mode <span aria-hidden="true">*</span></label>
+            <select id="interview-mode" formControlName="interviewMode" [disabled]="submitting()">
+              <option [ngValue]="null">Select mode</option>
+              @for (mode of interviewModes; track mode) {
+                <option [ngValue]="mode">{{ mode }}</option>
+              }
+            </select>
+            @if (shouldShowError(form.controls.interviewMode)) {
+              <p class="field-error" id="interview-mode-error">Select an interview mode.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="location-or-link">Location or meeting link <span aria-hidden="true">*</span></label>
+            <input id="location-or-link" type="text" maxlength="500" formControlName="locationOrLink" [disabled]="submitting()" />
+            @if (shouldShowError(form.controls.locationOrLink)) {
+              <p class="field-error" id="location-or-link-error">
+                @if (form.controls.locationOrLink.hasError('maxlength')) {
+                  Location or meeting link must be 500 characters or fewer.
+                } @else {
+                  Enter a location or meeting link.
+                }
+              </p>
+            }
+          </div>
+
+          <div class="field full-width">
+            <label for="interview-notes">Notes</label>
+            <textarea id="interview-notes" rows="5" formControlName="notes" [disabled]="submitting()"></textarea>
+          </div>
+        </div>
+
+        @if (successMessage(); as message) {
+          <div class="success-message" role="status">
+            <p>{{ message }}</p>
+            @if (savedInterviewId() !== null) {
+              <a [routerLink]="['/officer/interviews', savedInterviewId()]">View interview details</a>
+            }
+          </div>
+        }
+
+        @if (errorMessage(); as message) {
+          <div class="api-error" role="alert">
+            <p>{{ message }}</p>
+            @if (errorCanRefresh()) {
+              <button class="secondary-button" type="button" (click)="retryLoad()">Refresh interview</button>
+            }
+          </div>
+        }
+
+        @if (submitting()) {
+          <p class="saving-status" role="status">{{ isEditMode() ? 'Saving interview changes…' : 'Scheduling interview…' }}</p>
+        }
+
+        <div class="form-actions">
+          <a class="cancel-button" [routerLink]="cancelLink()">Cancel</a>
+          <button class="submit-button" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : isEditMode() ? 'Save changes' : 'Schedule interview' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+</div>

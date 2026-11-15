@@ -1,0 +1,55 @@
+:host { display: block; }
+.dashboard-page { display: grid; gap: 24px; }
+.page-heading, .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.eyebrow { margin: 0 0 8px; color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); }
+.intro, .card-heading p { margin: 8px 0 0; color: #64748b; font-size: 13px; }
+.secondary-button, .primary-button { min-height: 38px; padding: 0 14px; border: 1px solid #bfdbfe; border-radius: 8px; background: #fff; color: #1d4ed8; cursor: pointer; font-size: 12px; font-weight: 600; }
+.primary-button { border-color: #2563eb; background: #2563eb; color: #fff; }
+.metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.metric-card, .dashboard-card { min-width: 0; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
+.metric-card { display: flex; min-height: 108px; align-items: center; gap: 14px; padding: 18px; }
+.metric-icon, .activity-icon { display: grid; flex: 0 0 40px; width: 40px; height: 40px; place-items: center; border-radius: 10px; background: #eff6ff; color: #2563eb; }
+.metric-copy { display: grid; min-width: 0; gap: 4px; }
+.metric-label { color: #64748b; font-size: 12px; font-weight: 600; }
+.metric-copy strong { color: #0f172a; font-size: 23px; }
+.metric-caption { color: #94a3b8; font-size: 10px; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 18px; }
+.dashboard-card { padding: 20px; }
+.card-heading { margin-bottom: 18px; }
+.card-heading h2 { margin: 0; color: #0f172a; font-size: 16px; }
+.card-heading p { font-size: 11px; }
+.text-link, .activity-meta a { color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none; }
+a:focus-visible, button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+.loading-state { display: flex; min-height: 120px; align-items: center; justify-content: center; gap: 10px; color: #64748b; font-size: 13px; }
+.spinner { width: 17px; height: 17px; border: 2px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; }
+.section-error, .page-error { border: 1px solid #fecaca; border-radius: 9px; background: #fff7f7; color: #991b1b; }
+.section-error { display: grid; justify-items: start; gap: 12px; padding: 16px; font-size: 12px; }
+.section-error p, .inline-warning { margin: 0; }
+.page-error { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; }
+.empty-state { display: grid; min-height: 150px; align-content: center; justify-items: center; padding: 18px; text-align: center; }
+.activity-list, .notification-list { margin: 0; padding: 0; list-style: none; }
+.activity-list li, .notification-list li { border-top: 1px solid #f1f5f9; }
+.activity-list li { display: flex; align-items: center; gap: 12px; padding: 13px 0; }
+.activity-icon { flex-basis: 36px; width: 36px; height: 36px; }
+.activity-copy, .notification-copy { display: grid; min-width: 0; flex: 1; gap: 4px; }
+.activity-copy strong, .notification-copy strong { color: #0f172a; }
+.activity-copy span, .activity-copy time, .notification-copy span, .notification-copy time { color: #64748b; font-size: 11px; }
+.preview-note, .inline-warning { margin: 0 0 8px; color: #64748b; font-size: 11px; }
+.inline-warning { color: #92400e; }
+.notification-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; color: inherit; text-decoration: none; }
+.notification-row.unread .notification-copy strong, .notification-row.unread .read-state { color: #1d4ed8; }
+.notification-row.unread .activity-icon { background: #dbeafe; }
+.quick-actions { display: grid; }
+.quick-actions > a { display: flex; min-height: 46px; align-items: center; gap: 12px; border-top: 1px solid #f1f5f9; color: #334155; text-decoration: none; }
+.quick-actions .arrow { margin-left: auto; color: #94a3b8; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 1050px) { .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .dashboard-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .dashboard-page { gap: 18px; }
+  .metrics-grid { grid-template-columns: 1fr; gap: 10px; }
+  .metric-card, .dashboard-card { padding: 15px; }
+  .activity-list li { align-items: flex-start; }
+  .page-error { align-items: flex-start; flex-direction: column; }
+}

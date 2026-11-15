@@ -11,4 +11,6 @@ public interface PlacementOfficerRepository
     Optional<PlacementOfficer> findByUserId(Long userId);
 
     boolean existsByUserId(Long userId);
+
+    boolean existsByEmployeeId(String employeeId);
 }

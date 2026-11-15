@@ -1,7 +1,7 @@
 # CampusFlow – Enterprise Product & Project Documentation Pack
 **Version:** 2.0 (MNC Enterprise Grade & Production-Ready Standard)  
 **Author:** Mathesh S. (Lead Full-Stack Architect & Software Engineer)  
-**Tech Stack:** Angular + TypeScript (Frontend) | Java 21 + Spring Boot 3.x (Backend) | PostgreSQL 16 (Database)  
+**Tech Stack:** Angular + TypeScript (Frontend) | Java 25 LTS + Spring Boot 3.x (Backend) | PostgreSQL 16 (Database)<br>
 **Target Deployment:** AWS / Cloud-Native Kubernetes Infrastructure with CI/CD Pipelines
 
 ---
@@ -100,7 +100,7 @@ CampusFlow is structured as a decoupled enterprise application, separating the A
 
 ### 4.2 Technology Stack Justification
 * **Frontend:** Angular with TypeScript for robust compile-time type safety, dependency injection, and enterprise-grade reactive forms.
-* **Backend:** Java 21 (LTS) & Spring Boot 3.x leveraging virtual threads, modern pattern matching, and high-performance garbage collection.
+* **Backend:** Java 25 (LTS) & Spring Boot 3.x leveraging virtual threads, modern pattern matching, and high-performance garbage collection.
 * **Persistence Layer:** PostgreSQL 16 with Hibernate ORM, offering ACID compliance, custom check constraints, and optimized index structures.
 * **Security Subsystem:** Spring Security 6 with stateless JWT filters, delegating password cryptography to strength-tuned BCrypt encoders.
 
@@ -278,7 +278,7 @@ APP_FRONTEND_URL=https://placement.campusflow.edu
 ### 11.2 CI/CD Pipeline & Release Checklist
 1. Automated Git Guardian secret scans on pull requests.
 2. Maven clean test execution with minimum 80% code coverage threshold.
-3. Multi-stage Docker image build leveraging distroless Java 21 runtime baselines.
+3. Multi-stage Docker image build leveraging distroless Java 25 runtime baselines.
 4. Zero-downtime rolling deployment managed via Kubernetes Ingress controllers and liveness/readiness probes.
 
 ---
