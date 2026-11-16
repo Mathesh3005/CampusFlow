@@ -1,0 +1,74 @@
+<section class="profile-page" aria-labelledby="profile-title">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">STUDENT WORKSPACE</p>
+      <h1 id="profile-title">My profile</h1>
+      <p class="subheading">Keep your academic details current so officers can review your placement profile.</p>
+    </div>
+    @if (profile(); as student) {
+      <div class="profile-avatar" aria-hidden="true">{{ student.fullName.slice(0, 1).toUpperCase() }}</div>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="state-card" role="status">Loading your profile…</div>
+  } @else if (!profile()) {
+    <div class="state-card error-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button class="secondary-button" type="button" (click)="loadProfile()">Try again</button>
+    </div>
+  } @else {
+    <form class="profile-card" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="card-heading">
+        <div><h2>Personal and academic details</h2><p>Fields marked required are needed for your profile.</p></div>
+        <span class="required-note">* Required</span>
+      </div>
+
+      <div class="form-grid">
+        <label class="field">
+          <span>Full name <b>*</b></span>
+          <input formControlName="fullName" autocomplete="name" maxlength="150" required />
+          @if (form.controls.fullName.touched && form.controls.fullName.invalid) { <small>Please enter your name (up to 150 characters).</small> }
+        </label>
+        <label class="field">
+          <span>Institutional email</span>
+          <input [value]="profile()!.email" readonly aria-describedby="email-hint" />
+          <small id="email-hint">Contact your placement office if this address needs to change.</small>
+        </label>
+        <label class="field">
+          <span>Registration number</span>
+          <input [value]="profile()!.registerNumber" readonly />
+        </label>
+        <label class="field">
+          <span>Department <b>*</b></span>
+          <input formControlName="department" maxlength="100" required />
+          @if (form.controls.department.touched && form.controls.department.invalid) { <small>Please enter your department (up to 100 characters).</small> }
+        </label>
+        <label class="field">
+          <span>Graduation year <b>*</b></span>
+          <input type="number" formControlName="graduationYear" min="2020" max="2040" required />
+          @if (form.controls.graduationYear.touched && form.controls.graduationYear.invalid) { <small>Enter a year between 2020 and 2040.</small> }
+        </label>
+        <label class="field">
+          <span>CGPA <span class="optional">(optional)</span></span>
+          <input type="number" formControlName="cgpa" min="0" max="10" step="0.01" inputmode="decimal" />
+          @if (form.controls.cgpa.touched && form.controls.cgpa.invalid) { <small>CGPA must be between 0 and 10.</small> }
+        </label>
+        <label class="field">
+          <span>Phone <span class="optional">(optional)</span></span>
+          <input type="tel" formControlName="phone" autocomplete="tel" maxlength="15" />
+        </label>
+      </div>
+
+      @if (errorMessage()) { <p class="form-message error-message" role="alert">{{ errorMessage() }}</p> }
+      @if (successMessage()) { <p class="form-message success-message" role="status">{{ successMessage() }}</p> }
+
+      <footer class="form-footer">
+        <span class="privacy-note">Your profile information is visible to authorized placement officers.</span>
+        <button class="save-button" type="submit" [disabled]="saving() || form.invalid">
+          {{ saving() ? 'Saving…' : 'Save changes' }}
+        </button>
+      </footer>
+    </form>
+  }
+</section>

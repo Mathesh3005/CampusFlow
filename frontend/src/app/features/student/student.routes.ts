@@ -19,6 +19,9 @@ export const studentRoutes: Routes = [{
   children: [
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.StudentDashboard) },
+    { path: 'profile', loadComponent: () => import('./pages/profile/student-profile.component').then(m => m.StudentProfileComponent) },
+    { path: 'projects', loadComponent: () => import('./pages/projects/student-projects.component').then(m => m.StudentProjectsComponent) },
+    { path: 'skills', loadComponent: () => import('./pages/skills/student-skills.component').then(m => m.StudentSkillsComponent) },
     {
       path: 'jobs',
       children: [
@@ -34,6 +37,7 @@ export const studentRoutes: Routes = [{
       ],
     },
     { path: 'resumes', loadComponent: () => import('./pages/resumes/resumes-page.component').then(m => m.StudentResumesPage) },
+    { path: 'settings', loadComponent: () => import('../account/pages/account-settings.component').then(m => m.AccountSettingsComponent) },
     {
       path: 'interviews',
       children: [

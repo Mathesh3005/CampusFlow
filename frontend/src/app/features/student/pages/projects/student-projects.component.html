@@ -1,0 +1,41 @@
+<section class="projects-page" aria-labelledby="projects-title">
+  <header class="page-heading">
+    <div><p class="eyebrow">STUDENT WORKSPACE</p><h1 id="projects-title">Projects</h1><p class="subheading">Showcase practical work, technologies, and outcomes.</p></div>
+    <button class="primary-button" type="button" (click)="startCreate()">Add project</button>
+  </header>
+
+  @if (successMessage()) { <p class="success-message" role="status">{{ successMessage() }}</p> }
+  @if (errorMessage()) { <div class="error-state" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="load()">Retry</button></div> }
+
+  @if (formOpen()) {
+    <form class="project-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-heading"><div><h2>{{ editingId() === null ? 'Add a project' : 'Edit project' }}</h2><p>Share enough detail for an officer to understand your contribution.</p></div><button class="close-button" type="button" (click)="cancelEdit()" aria-label="Close form">×</button></div>
+      <label class="field"><span>Project title</span><input formControlName="title" maxlength="150" required />@if (form.controls.title.touched && form.controls.title.invalid) { <small>Enter a title up to 150 characters.</small> }</label>
+      <label class="field"><span>Description</span><textarea formControlName="description" rows="4" maxlength="10000"></textarea></label>
+      <div class="form-grid">
+        <label class="field"><span>Source code URL</span><input type="url" formControlName="githubUrl" maxlength="500" placeholder="https://github.com/…" /></label>
+        <label class="field"><span>Live demo URL</span><input type="url" formControlName="liveDemoUrl" maxlength="500" placeholder="https://…" /></label>
+        <label class="field"><span>Start date</span><input type="date" formControlName="startDate" /></label>
+        <label class="field"><span>End date</span><input type="date" formControlName="endDate" /></label>
+      </div>
+      @if (formError()) { <p class="form-error" role="alert">{{ formError() }}</p> }
+      <div class="form-actions"><button class="secondary-button" type="button" (click)="cancelEdit()">Cancel</button><button class="primary-button" type="submit" [disabled]="saving() || form.invalid">{{ saving() ? 'Saving…' : 'Save project' }}</button></div>
+    </form>
+  }
+
+  @if (loading()) { <div class="state-card" role="status">Loading projects…</div> }
+  @else if (!errorMessage() && projects().length === 0) {
+    <div class="empty-state"><div class="empty-icon" aria-hidden="true">↗</div><h2>Your work belongs here</h2><p>Add class, research, and personal projects to give your placement profile more context.</p><button class="primary-button" type="button" (click)="startCreate()">Add your first project</button></div>
+  } @else if (!errorMessage()) {
+    <div class="project-list">
+      @for (project of projects(); track project.id) {
+        <article class="project-card">
+          <div class="project-top"><div><h2>{{ project.title }}</h2><p class="project-dates">{{ project.startDate || 'Date not set' }} @if (project.endDate) { <span>— {{ project.endDate }}</span> }</p></div><div class="project-actions"><button class="text-button" type="button" (click)="startEdit(project)">Edit</button><button class="text-button danger" type="button" (click)="deletingId.set(project.id)">Remove</button></div></div>
+          @if (project.description) { <p class="description">{{ project.description }}</p> }
+          <div class="project-links">@if (project.githubUrl) { <a [href]="project.githubUrl" target="_blank" rel="noopener noreferrer">Source code <span aria-hidden="true">↗</span></a> } @if (project.liveDemoUrl) { <a [href]="project.liveDemoUrl" target="_blank" rel="noopener noreferrer">Live demo <span aria-hidden="true">↗</span></a> }</div>
+          @if (deletingId() === project.id) { <div class="delete-confirm" role="group" aria-label="Confirm project removal"><span>Remove this project?</span><button class="text-button" type="button" (click)="deletingId.set(null)">Keep it</button><button class="text-button danger" type="button" (click)="deleteProject(project.id)">Remove</button></div> }
+        </article>
+      }
+    </div>
+  }
+</section>

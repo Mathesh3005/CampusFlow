@@ -8,6 +8,11 @@ h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); }
 .total-label { color: #64748b; font-size: 11px; }
 .total-applications strong { color: #0f172a; font-size: 20px; line-height: 1.2; }
 .metric-skeleton { width: 42px; height: 20px; border-radius: 5px; background: #e2e8f0; animation: pulse 1.4s ease-in-out infinite; }
+.filter-bar { display: flex; gap: 14px; flex-wrap: wrap; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
+.filter-bar label { display: grid; gap: 5px; color: #64748b; font-size: 11px; font-weight: 600; }
+.filter-bar select, .filter-bar input { min-width: 170px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a; font: inherit; font-size: 12px; }
+.cell-primary { display: block; color: #0f172a; font-size: 12px; }
+.cell-secondary { display: block; margin-top: 3px; color: #64748b; font-size: 11px; }
 .applications-panel { min-height: 220px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 4%); }
 .secondary-button, .primary-button { min-height: 38px; padding: 0 14px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
 .secondary-button { border: 1px solid #bfdbfe; background: #fff; color: #1d4ed8; }

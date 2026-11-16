@@ -49,6 +49,16 @@ public class OfficerDashboardService {
                         officerId,
                         JobStatus.PUBLISHED));
 
+        response.setDraftJobs(
+                jobRepository.countByCreatedBy_IdAndStatus(
+                        officerId,
+                        JobStatus.DRAFT));
+
+        response.setClosedJobs(
+                jobRepository.countByCreatedBy_IdAndStatus(
+                        officerId,
+                        JobStatus.CLOSED));
+
         response.setTotalApplications(
                 applicationRepository.countByJob_CreatedBy_User_Id(
                         userId));
@@ -62,6 +72,16 @@ public class OfficerDashboardService {
                 .countByJob_CreatedBy_User_IdAndStatus(
                         userId,
                         ApplicationStatus.UNDER_REVIEW);
+
+        response.setUnderReviewApplications(underReview);
+        response.setShortlistedApplications(applicationRepository
+                .countByJob_CreatedBy_User_IdAndStatus(userId, ApplicationStatus.SHORTLISTED));
+        response.setSelectedApplications(applicationRepository
+                .countByJob_CreatedBy_User_IdAndStatus(userId, ApplicationStatus.SELECTED));
+        response.setRejectedApplications(applicationRepository
+                .countByJob_CreatedBy_User_IdAndStatus(userId, ApplicationStatus.REJECTED));
+        response.setWithdrawnApplications(applicationRepository
+                .countByJob_CreatedBy_User_IdAndStatus(userId, ApplicationStatus.WITHDRAWN));
 
         response.setPendingApplications(applied + underReview);
 

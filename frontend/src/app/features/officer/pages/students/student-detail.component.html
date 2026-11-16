@@ -1,0 +1,115 @@
+<section class="student-detail">
+  <a class="back-link" routerLink="/officer/students">
+    <span aria-hidden="true">←</span> Back to students
+  </a>
+
+  @let current = state();
+  @if (current.status === 'loading') {
+    <div class="state" role="status"><span class="spinner" aria-hidden="true"></span><p>Loading student profile…</p></div>
+  } @else if (current.status === 'error') {
+    <div class="state error" role="alert">
+      <h1>Profile unavailable</h1>
+      <p>{{ current.message }}</p>
+      <a class="primary-button" routerLink="/officer/students">Return to directory</a>
+    </div>
+  } @else {
+    @let detail = current.detail;
+    <header class="profile-header">
+      <div class="avatar" aria-hidden="true">{{ detail.student.fullName.charAt(0) }}</div>
+      <div>
+        <span class="eyebrow">STUDENT PROFILE</span>
+        <h1>{{ detail.student.fullName }}</h1>
+        <p>{{ detail.student.registerNumber }} · {{ detail.student.department }}</p>
+      </div>
+      <span class="read-only-chip">Read-only record</span>
+    </header>
+
+    <div class="summary-grid">
+      <article><span>Email</span><strong>{{ detail.student.email }}</strong></article>
+      <article><span>Phone</span><strong>{{ detail.student.phone || 'Not provided' }}</strong></article>
+      <article><span>Graduation year</span><strong>{{ detail.student.graduationYear ?? '—' }}</strong></article>
+      <article><span>CGPA</span><strong>{{ detail.student.cgpa ?? '—' }}</strong></article>
+    </div>
+
+    <div class="content-grid">
+      <section class="panel">
+        <h2>Skills</h2>
+        @if (detail.skills.length === 0) {
+          <p class="empty-copy">No skills have been added.</p>
+        } @else {
+          <ul class="skill-list">
+            @for (skill of detail.skills; track skill.skillId) {
+              <li>
+                <span>{{ skill.skillName }}</span>
+                <span class="badge">{{ statusLabel(skill.proficiencyLevel) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="panel">
+        <h2>Projects</h2>
+        @if (detail.projects.length === 0) {
+          <p class="empty-copy">No projects have been added.</p>
+        } @else {
+          <div class="project-list">
+            @for (project of detail.projects; track project.id) {
+              <article>
+                <h3>{{ project.title }}</h3>
+                @if (project.description) {
+                  <p>{{ project.description }}</p>
+                }
+                <div class="project-links">
+                  @if (project.githubUrl) {
+                    <a [href]="project.githubUrl" target="_blank" rel="noopener noreferrer">GitHub</a>
+                  }
+                  @if (project.liveDemoUrl) {
+                    <a [href]="project.liveDemoUrl" target="_blank" rel="noopener noreferrer">Live demo</a>
+                  }
+                  @if (project.startDate || project.endDate) {
+                    <span>{{ project.startDate || '?' }} – {{ project.endDate || 'present' }}</span>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    </div>
+
+    <section class="panel applications-panel">
+      <h2>Application history</h2>
+      @if (detail.applications.length === 0) {
+        <p class="empty-copy">This student has not applied to any opportunities yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Role</th>
+                <th scope="col">Company</th>
+                <th scope="col">Status</th>
+                <th scope="col">Applied</th>
+                <th scope="col"><span class="visually-hidden">Details</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (application of detail.applications; track application.id) {
+                <tr>
+                  <td>{{ application.jobTitle }}</td>
+                  <td>{{ application.companyName }}</td>
+                  <td><span class="status-chip">{{ statusLabel(application.status) }}</span></td>
+                  <td>{{ application.appliedAt | date: 'mediumDate' }}</td>
+                  <td class="actions">
+                    <a [routerLink]="['/officer/applications', application.id]">View application</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</section>

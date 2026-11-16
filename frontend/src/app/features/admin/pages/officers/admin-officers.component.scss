@@ -1,0 +1,220 @@
+.officers-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 1180px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0.25rem 0 0.5rem;
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+  }
+
+  p {
+    margin: 0;
+    color: var(--cf-text-secondary);
+  }
+}
+
+.eyebrow {
+  color: var(--cf-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.notice {
+  margin: 0;
+  border-radius: var(--cf-radius-sm);
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+
+  &.error {
+    background: color-mix(in srgb, var(--cf-danger) 8%, white);
+    color: #991b1b;
+  }
+
+  &.success {
+    background: color-mix(in srgb, var(--cf-success) 10%, white);
+    color: #166534;
+  }
+}
+
+.create-card {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid color-mix(in srgb, var(--cf-primary) 25%, var(--cf-border));
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-surface);
+  padding: 1.5rem;
+  box-shadow: var(--cf-shadow-md);
+}
+
+.create-heading {
+  h2 { margin: 0 0 0.35rem; font-size: 1.15rem; }
+  p { margin: 0; color: var(--cf-text-secondary); }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+
+  label {
+    display: grid;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  input {
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-sm);
+    padding: 0.65rem 0.75rem;
+    background: white;
+    font: inherit;
+
+    &:focus {
+      outline: 2px solid color-mix(in srgb, var(--cf-primary) 40%, transparent);
+      border-color: var(--cf-primary);
+    }
+  }
+
+  small {
+    color: var(--cf-danger);
+    font-weight: 500;
+  }
+}
+
+.create-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 320px;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-md);
+  background: var(--cf-surface);
+  padding: 0.15rem 0.75rem;
+
+  mat-icon { color: var(--cf-text-secondary); }
+
+  input {
+    flex: 1;
+    border: 0;
+    padding: 0.65rem 0;
+    background: transparent;
+    font: inherit;
+
+    &:focus { outline: none; }
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.9rem 1rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: color-mix(in srgb, var(--cf-primary) 4%, white);
+    color: var(--cf-text-secondary);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  tbody tr + tr { border-top: 1px solid var(--cf-border); }
+
+  td strong { display: block; }
+
+  .subtle {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--cf-text-secondary);
+    font-size: 0.85rem;
+  }
+}
+
+.status-chip {
+  display: inline-flex;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cf-success) 12%, white);
+  color: #166534;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  &.inactive {
+    background: color-mix(in srgb, var(--cf-text-secondary) 12%, white);
+    color: #475569;
+  }
+}
+
+.actions { text-align: right; }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  color: var(--cf-text-secondary);
+  font-size: 0.9rem;
+}
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-surface);
+  padding: 3rem 1.5rem;
+  text-align: center;
+
+  h2 { margin: 0; font-size: 1.1rem; }
+  p { margin: 0; color: var(--cf-text-secondary); }
+
+  &.error mat-icon { color: var(--cf-danger); }
+  &.empty mat-icon { color: var(--cf-primary); font-size: 2rem; width: 2rem; height: 2rem; }
+}
+
+.spin { animation: spin 1s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 720px) {
+  table {
+    thead { display: none; }
+    tr { display: grid; padding: 0.75rem 0; }
+    td { padding: 0.3rem 1rem; }
+  }
+}

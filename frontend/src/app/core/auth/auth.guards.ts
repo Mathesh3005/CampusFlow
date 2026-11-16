@@ -12,7 +12,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
   return true;
 };
 
-export function roleGuard(requiredRole: UserRole.Student | UserRole.PlacementOfficer): CanActivateFn {
+export function roleGuard(requiredRole: UserRole): CanActivateFn {
   return () => {
     const auth = inject(AuthStateStore);
     const router = inject(Router);
@@ -30,16 +30,18 @@ export const loginGuard: CanActivateFn = () => {
   return user ? router.parseUrl(homeUrlForRole(user.role)) : true;
 };
 
-function homeUrlForRole(role: UserRole): string {
+export function homeUrlForRole(role: UserRole): string {
   if (role === UserRole.Student) return '/student/dashboard';
   if (role === UserRole.PlacementOfficer) return '/officer/dashboard';
+  if (role === UserRole.Admin) return '/admin/dashboard';
   return '/access-denied';
 }
 
 export function postLoginUrl(returnUrl: string | null | undefined, role: UserRole): string {
   const homeUrl = homeUrlForRole(role);
   const rolePrefix = role === UserRole.Student ? '/student'
-    : role === UserRole.PlacementOfficer ? '/officer' : null;
+    : role === UserRole.PlacementOfficer ? '/officer'
+      : role === UserRole.Admin ? '/admin' : null;
   if (!returnUrl || !rolePrefix || !isInternalRoute(returnUrl)) return homeUrl;
 
   const parsed = new URL(returnUrl, 'https://campusflow.invalid');

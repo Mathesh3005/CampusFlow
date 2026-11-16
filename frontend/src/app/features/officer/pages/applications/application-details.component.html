@@ -49,25 +49,37 @@
       <header class="application-heading">
         <div>
           <p class="eyebrow">APPLICATION DETAILS</p>
-          <h1>Application #{{ current.application.id }}</h1>
+          <h1>{{ current.application.jobTitle }}</h1>
+          <p class="company">{{ current.application.companyName }}</p>
         </div>
         <span class="status-chip">{{ current.application.status.replace('_', ' ') }}</span>
       </header>
+
+      <section class="candidate-card" aria-labelledby="candidate-heading">
+        <div class="candidate-avatar" aria-hidden="true">{{ current.application.studentName.charAt(0) }}</div>
+        <div>
+          <h2 id="candidate-heading">{{ current.application.studentName }}</h2>
+          <p>
+            {{ current.application.studentRegisterNumber }}
+            · {{ current.application.studentDepartment }}
+            · CGPA {{ current.application.studentCgpa ?? '—' }}
+          </p>
+        </div>
+        <a class="secondary-button" [routerLink]="['/officer/students', current.application.studentId]">
+          View student profile
+        </a>
+      </section>
 
       <section class="detail-section" aria-labelledby="application-information-heading">
         <h2 id="application-information-heading">Application information</h2>
         <dl class="application-information">
           <div>
-            <dt>Application ID</dt>
-            <dd>{{ current.application.id }}</dd>
+            <dt>Application</dt>
+            <dd>#{{ current.application.id }}</dd>
           </div>
           <div>
-            <dt>Student ID</dt>
-            <dd>{{ current.application.studentId }}</dd>
-          </div>
-          <div>
-            <dt>Job ID</dt>
-            <dd>{{ current.application.jobId }}</dd>
+            <dt>Job</dt>
+            <dd>#{{ current.application.jobId }}</dd>
           </div>
           <div>
             <dt>Current status</dt>
@@ -81,18 +93,26 @@
               </time>
             </dd>
           </div>
-          @if (current.application.resumeId !== null) {
-            <div>
-              <dt>Resume ID</dt>
-              <dd>{{ current.application.resumeId }}</dd>
-            </div>
-          } @else {
-            <div>
-              <dt>Resume</dt>
-              <dd>No resume attached</dd>
-            </div>
-          }
         </dl>
+      </section>
+
+      <section class="detail-section" aria-labelledby="resume-heading">
+        <div class="section-heading">
+          <h2 id="resume-heading">Resume</h2>
+          @if (current.application.resumeId !== null) {
+            <button class="secondary-button" type="button" (click)="downloadResume(current.application)" [disabled]="resumeDownloading()">
+              {{ resumeDownloading() ? 'Downloading…' : 'Download PDF' }}
+            </button>
+          }
+        </div>
+        @if (resumeError()) {
+          <p class="feedback error-message" role="alert">{{ resumeError() }}</p>
+        }
+        @if (current.application.resumeId !== null) {
+          <p class="resume-name">{{ current.application.resumeFileName || 'Attached resume' }}</p>
+        } @else {
+          <p class="muted">No resume attached.</p>
+        }
       </section>
 
       @if (current.application.coverLetter) {

@@ -1,0 +1,131 @@
+.admin-dashboard {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.page-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0.25rem 0 0.5rem;
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+  }
+
+  p {
+    margin: 0;
+    color: var(--cf-text-secondary);
+  }
+}
+
+.eyebrow {
+  color: var(--cf-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-surface);
+  padding: 1.25rem;
+  box-shadow: var(--cf-shadow-sm);
+}
+
+.metric-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  border-radius: var(--cf-radius-md);
+  background: color-mix(in srgb, var(--cf-primary) 10%, white);
+  color: var(--cf-primary);
+}
+
+.metric-label {
+  margin: 0;
+  color: var(--cf-text-secondary);
+  font-size: 0.85rem;
+}
+
+.metric-value {
+  margin: 0.25rem 0 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.metric-note {
+  margin: 0.35rem 0 0;
+  color: var(--cf-text-secondary);
+  font-size: 0.8rem;
+}
+
+.admin-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+
+  article {
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-lg);
+    background: var(--cf-surface);
+    padding: 1.5rem;
+  }
+
+  mat-icon {
+    color: var(--cf-primary);
+  }
+
+  h2 {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+  }
+
+  p {
+    margin: 0 0 1rem;
+    color: var(--cf-text-secondary);
+  }
+}
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-surface);
+  padding: 3rem 1.5rem;
+  text-align: center;
+
+  p {
+    margin: 0;
+    color: var(--cf-text-secondary);
+  }
+
+  &.error mat-icon {
+    color: var(--cf-danger);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

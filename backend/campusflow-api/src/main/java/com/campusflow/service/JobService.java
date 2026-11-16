@@ -4,6 +4,7 @@ import com.campusflow.entity.Job;
 import com.campusflow.entity.JobStatus;
 import com.campusflow.entity.PlacementOfficer;
 import com.campusflow.repository.JobRepository;
+import com.campusflow.repository.JobSpecifications;
 import com.campusflow.repository.PlacementOfficerRepository;
 
 import org.springframework.stereotype.Service;
@@ -92,8 +93,8 @@ public class JobService {
     @Transactional(readOnly = true)
     public Page<Job> searchPublishedJobs(String location, EmploymentType employmentType,
                                          WorkMode workMode, BigDecimal studentCgpa, Pageable pageable) {
-        return jobRepository.search(JobStatus.PUBLISHED, normalizeFilter(location), employmentType,
-                workMode, studentCgpa, pageable);
+        return jobRepository.findAll(JobSpecifications.publishedForStudent(
+                normalizeFilter(location), employmentType, workMode, studentCgpa), pageable);
     }
 
     @Transactional(readOnly = true)

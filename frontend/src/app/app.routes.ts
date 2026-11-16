@@ -11,6 +11,11 @@ export const routes: Routes = [
         (m) => m.Login
       ),
   },
+  {
+    path: 'register',
+    canActivate: [loginGuard],
+    loadComponent: () => import('./features/auth/pages/register/register.component').then(m => m.RegisterComponent),
+  },
   { path: 'access-denied', component: AccessDenied },
   {
     path: 'student',
@@ -19,6 +24,10 @@ export const routes: Routes = [
   {
     path: 'officer',
     loadChildren: () => import('./features/officer/officer.routes').then(m => m.officerRoutes),
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes),
   },
   {
     path: '',

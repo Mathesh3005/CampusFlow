@@ -39,6 +39,7 @@ export class StudentResumesPage implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly uploading = signal(false);
   readonly operation = signal<ResumeOperation | null>(null);
+  readonly downloadingId = signal<number | null>(null);
   readonly needsLogin = signal(false);
 
   ngOnInit(): void {
@@ -146,6 +147,29 @@ export class StudentResumesPage implements OnInit {
   retry(): void {
     this.needsLogin.set(false);
     this.loadResumes();
+  }
+
+  download(resume: StudentResume): void {
+    if (this.downloadingId() !== null) return;
+    this.downloadingId.set(resume.id);
+    this.operationError.set(null);
+    this.resumesService.downloadResume(resume.id).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: blob => {
+        this.downloadingId.set(null);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = resume.fileName;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+      },
+      error: (error: unknown) => {
+        this.downloadingId.set(null);
+        this.operationError.set(this.errorMessage(error, 'list'));
+      },
+    });
   }
 
   formatFileSize(size: number): string {

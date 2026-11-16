@@ -75,6 +75,37 @@ class AuthServiceTest {
         assertEquals("ROLE_STUDENT", CustomUserPrincipal.from(user(1L, true)).getAuthorities().iterator().next().getAuthority());
     }
 
+    @Test void passwordChangeRequiresCurrentPasswordAndStoresNewHash() {
+        User user = new User("s@example.com", encoder.encode("password123"), Role.STUDENT);
+        setId(user, 8L);
+        when(users.findById(8L)).thenReturn(Optional.of(user));
+
+        service.changePassword(8L, "password123", "newPassword456");
+
+        assertTrue(encoder.matches("newPassword456", user.getPasswordHash()));
+        verify(users).save(user);
+    }
+
+    @Test void passwordChangeRejectsWrongCurrentPassword() {
+        User user = new User("s@example.com", encoder.encode("password123"), Role.STUDENT);
+        setId(user, 8L);
+        when(users.findById(8L)).thenReturn(Optional.of(user));
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> service.changePassword(8L, "wrongPassword", "newPassword456"));
+        verify(users, never()).save(any());
+    }
+
+    @Test void passwordChangeRejectsReusingCurrentPassword() {
+        User user = new User("s@example.com", encoder.encode("password123"), Role.STUDENT);
+        setId(user, 8L);
+        when(users.findById(8L)).thenReturn(Optional.of(user));
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> service.changePassword(8L, "password123", "password123"));
+        verify(users, never()).save(any());
+    }
+
     private static User user(Long id, boolean active) {
         User u = new User("s@example.com", "encoded", Role.STUDENT); setId(u, id); u.setIsActive(active); return u;
     }

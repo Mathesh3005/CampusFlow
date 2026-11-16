@@ -49,8 +49,16 @@ public class AnalyticsOverviewService {
         long totalApplications =
                 applicationRepository.countByJob_CreatedBy_User_Id(userId);
 
+        long totalApplicants =
+                applicationRepository.countDistinctStudentsByOfficer(userId);
+
         long selectedStudents =
                 applicationRepository.countDistinctStudentsByOfficerAndStatus(
+                        userId,
+                        ApplicationStatus.SELECTED);
+
+        long selectedApplications =
+                applicationRepository.countByJob_CreatedBy_User_IdAndStatus(
                         userId,
                         ApplicationStatus.SELECTED);
 
@@ -63,6 +71,12 @@ public class AnalyticsOverviewService {
                                 2,
                                 RoundingMode.HALF_UP);
 
+        BigDecimal applicationSelectionRate = totalApplications == 0
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(selectedApplications)
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(BigDecimal.valueOf(totalApplications), 2, RoundingMode.HALF_UP);
+
         AnalyticsOverviewResponseDto response =
                 new AnalyticsOverviewResponseDto();
 
@@ -70,8 +84,11 @@ public class AnalyticsOverviewService {
         response.setTotalJobs(totalJobs);
         response.setPublishedJobs(publishedJobs);
         response.setTotalApplications(totalApplications);
+        response.setTotalApplicants(totalApplicants);
         response.setSelectedStudents(selectedStudents);
+        response.setSelectedApplications(selectedApplications);
         response.setPlacementRate(placementRate);
+        response.setApplicationSelectionRate(applicationSelectionRate);
 
         return response;
     }

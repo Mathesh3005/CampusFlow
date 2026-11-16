@@ -36,6 +36,10 @@ export class StudentResumesService {
     );
   }
 
+  downloadResume(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/student/resumes/${id}/file`, { responseType: 'blob' });
+  }
+
   deleteResume(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/student/resumes/${id}`);
   }

@@ -115,6 +115,12 @@ public class ResumeService {
     }
 
     @Transactional(readOnly = true)
+    public byte[] readResumeFile(Long resumeId, Long studentId) {
+        Resume resume = getResumeByIdAndStudent(resumeId, studentId);
+        return fileStorageService.read(resume.getStoragePath());
+    }
+
+    @Transactional(readOnly = true)
     public List<Resume> getResumesByStudent(Long studentId) {
 
         if (!studentRepository.existsById(studentId)) {

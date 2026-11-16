@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Observable, catchError, expand, last, map, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { EMPTY, Observable, catchError, expand, forkJoin, last, map, of } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { ApiError } from '../../../core/http/api-error.handler';
 import {
   ApplicationResponse,
@@ -21,30 +23,41 @@ import {
   OFFICER_INTERVIEWS_DEFAULT_SORT,
   OfficerInterviewsService,
 } from './officer-interviews.service';
-import {
-  OFFICER_JOBS_DEFAULT_SORT,
-  OfficerJobsService,
-} from './officer-jobs.service';
 import { OfficerNotificationsService } from './officer-notifications.service';
 
 const RECENT_ITEMS_LIMIT = 5;
 const MAX_INTERVIEW_PAGES = 5;
 
+interface OfficerDashboardResponse {
+  totalJobs: number;
+  publishedJobs: number;
+  draftJobs: number;
+  closedJobs: number;
+  totalApplications: number;
+  pendingApplications: number;
+  underReviewApplications: number;
+  shortlistedApplications: number;
+  selectedApplications: number;
+  rejectedApplications: number;
+  withdrawnApplications: number;
+  scheduledInterviews: number;
+}
+
 export interface OfficerJobsOverview {
   totalJobs: number;
   statusTotals: {
-    published: number | null;
-    draft: number | null;
-    closed: number | null;
+    published: number;
+    draft: number;
+    closed: number;
   };
 }
 
 export interface OfficerApplicationsOverview {
   totalApplications: number;
   statusTotals: {
-    awaitingReview: number | null;
-    shortlisted: number | null;
-    selected: number | null;
+    awaitingReview: number;
+    shortlisted: number;
+    selected: number;
   };
   recentApplications: ApplicationResponse[];
 }
@@ -66,38 +79,42 @@ interface InterviewScan {
 
 @Injectable()
 export class OfficerDashboardService {
-  private readonly jobs = inject(OfficerJobsService);
+  private readonly http = inject(HttpClient);
   private readonly applications = inject(OfficerApplicationsService);
   private readonly interviews = inject(OfficerInterviewsService);
   private readonly notifications = inject(OfficerNotificationsService);
+  private readonly dashboardUrl = `${environment.apiBaseUrl}/officer/dashboard`;
 
   loadJobsOverview(): Observable<OfficerJobsOverview> {
-    return this.jobs.listJobs({ page: 0, size: 1, sort: OFFICER_JOBS_DEFAULT_SORT }).pipe(
-      map(page => ({
-        totalJobs: page.totalElements,
+    return this.http.get<OfficerDashboardResponse>(this.dashboardUrl).pipe(
+      map(dashboard => ({
+        totalJobs: dashboard.totalJobs,
         statusTotals: {
-          published: page.totalElements === 0 ? 0 : null,
-          draft: page.totalElements === 0 ? 0 : null,
-          closed: page.totalElements === 0 ? 0 : null,
+          published: dashboard.publishedJobs,
+          draft: dashboard.draftJobs,
+          closed: dashboard.closedJobs,
         },
       })),
     );
   }
 
   loadApplicationsOverview(): Observable<OfficerApplicationsOverview> {
-    return this.applications.listApplications({
-      page: 0,
-      size: RECENT_ITEMS_LIMIT,
-      sort: OFFICER_APPLICATIONS_DEFAULT_SORT,
+    return forkJoin({
+      dashboard: this.http.get<OfficerDashboardResponse>(this.dashboardUrl),
+      recent: this.applications.listApplications({
+        page: 0,
+        size: RECENT_ITEMS_LIMIT,
+        sort: OFFICER_APPLICATIONS_DEFAULT_SORT,
+      }),
     }).pipe(
-      map(page => ({
-        totalApplications: page.totalElements,
+      map(({ dashboard, recent }) => ({
+        totalApplications: dashboard.totalApplications,
         statusTotals: {
-          awaitingReview: page.totalElements === 0 ? 0 : null,
-          shortlisted: page.totalElements === 0 ? 0 : null,
-          selected: page.totalElements === 0 ? 0 : null,
+          awaitingReview: dashboard.pendingApplications,
+          shortlisted: dashboard.shortlistedApplications,
+          selected: dashboard.selectedApplications,
         },
-        recentApplications: page.content.slice(0, RECENT_ITEMS_LIMIT),
+        recentApplications: recent.content.slice(0, RECENT_ITEMS_LIMIT),
       })),
     );
   }

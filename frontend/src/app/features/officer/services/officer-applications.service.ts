@@ -12,6 +12,9 @@ export interface OfficerApplicationsQuery {
   page?: number;
   size?: number;
   sort?: string;
+  jobId?: number;
+  status?: ApplicationStatus;
+  studentId?: number;
 }
 
 export type OfficerApplicationStatus =
@@ -29,10 +32,13 @@ export class OfficerApplicationsService {
   private readonly baseUrl = environment.apiBaseUrl;
 
   listApplications(query: OfficerApplicationsQuery = {}): Observable<PageResponse<ApplicationResponse>> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('page', String(query.page ?? 0))
       .set('size', String(query.size ?? OFFICER_APPLICATIONS_PAGE_SIZE))
       .set('sort', query.sort ?? OFFICER_APPLICATIONS_DEFAULT_SORT);
+    if (query.jobId) params = params.set('jobId', String(query.jobId));
+    if (query.status) params = params.set('status', query.status);
+    if (query.studentId) params = params.set('studentId', String(query.studentId));
 
     return this.http.get<PageResponse<ApplicationResponse>>(
       `${this.baseUrl}/officer/applications`,
@@ -42,6 +48,10 @@ export class OfficerApplicationsService {
 
   getApplicationById(id: number): Observable<ApplicationResponse> {
     return this.http.get<ApplicationResponse>(`${this.baseUrl}/officer/applications/${id}`);
+  }
+
+  downloadResume(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/officer/applications/${id}/resume`, { responseType: 'blob' });
   }
 
   updateApplicationStatus(id: number, status: OfficerApplicationStatus): Observable<ApplicationResponse> {

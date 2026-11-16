@@ -1,6 +1,6 @@
 <div class="workspace-shell" [class.nav-open]="mobileNavOpen()">
   <aside id="workspace-sidebar" class="workspace-sidebar" aria-label="Main navigation" (keydown.escape)="onSidebarEscape($event)">
-    <a class="brand" [routerLink]="['/', role === 'STUDENT' ? 'student' : 'officer', 'dashboard']" (click)="closeMobileNavigation()">
+    <a class="brand" [routerLink]="['/', workspacePrefix, 'dashboard']" (click)="closeMobileNavigation()">
       <span class="brand-mark">C</span>
       <span>CampusFlow</span>
     </a>
@@ -9,7 +9,7 @@
       @for (item of navigation; track item.path) {
         <a
           class="navigation-link"
-          [routerLink]="['/', role === 'STUDENT' ? 'student' : 'officer', item.path]"
+          [routerLink]="['/', workspacePrefix, item.path]"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
           (click)="closeMobileNavigation()"
@@ -48,6 +48,10 @@
         <span class="user-email">{{ user()?.email }}</span>
         <span class="user-role">{{ user()?.role }}</span>
       </div>
+      <button class="logout-button" type="button" (click)="logOut()" aria-label="Log out of CampusFlow">
+        <mat-icon aria-hidden="true">logout</mat-icon>
+        <span>Log out</span>
+      </button>
     </header>
 
     <main class="workspace-content">

@@ -134,6 +134,25 @@
   font-weight: 600;
 }
 
+.logout-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #fff;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.logout-button:hover { border-color: #cbd5e1; background: #f8fafc; color: #0f172a; }
+.logout-button mat-icon { width: 18px; height: 18px; font-size: 18px; }
+
 .user-summary {
   display: grid;
   justify-items: end;
@@ -235,4 +254,13 @@
     border: 0;
     background: rgb(15 23 42 / 36%);
   }
+}
+
+@media (max-width: 480px) {
+  .topbar { gap: 8px; padding: 0 10px; }
+  .topbar-role { font-size: 12px; }
+  .user-email { max-width: 105px; font-size: 11px; }
+  .user-role { display: none; }
+  .logout-button { width: 40px; min-width: 40px; justify-content: center; padding: 0; }
+  .logout-button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 }

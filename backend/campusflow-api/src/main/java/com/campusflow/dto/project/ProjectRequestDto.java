@@ -1,12 +1,18 @@
 package com.campusflow.dto.project;
 
 import java.time.LocalDate;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class ProjectRequestDto {
 
+    @NotBlank @Size(max = 150)
     private String title;
+    @Size(max = 10000)
     private String description;
+    @Size(max = 500)
     private String githubUrl;
+    @Size(max = 500)
     private String liveDemoUrl;
     private LocalDate startDate;
     private LocalDate endDate;

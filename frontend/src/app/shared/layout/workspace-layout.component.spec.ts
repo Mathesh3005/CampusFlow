@@ -1,7 +1,9 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthStateStore } from '../../core/auth/auth-state.store';
+import { UserRole } from '../../core/models/auth.models';
 import { NOTIFICATIONS_API, NotificationsApi } from '../../features/notifications/services/notification-api';
 import { WorkspaceLayout } from './workspace-layout.component';
 
@@ -88,6 +90,22 @@ describe('WorkspaceLayout mobile navigation', () => {
     expect(fixture.nativeElement.querySelector('.navigation-link')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Unread status unavailable');
     expect(fixture.nativeElement.querySelector('.navigation-unread-badge')).toBeNull();
+  });
+
+  it('clears the in-memory session and navigates to sign in on logout', () => {
+    const auth = TestBed.inject(AuthStateStore);
+    auth.setSession({
+      accessToken: 'test-token', tokenType: 'Bearer', expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      userId: 7, email: 'student@example.edu', role: UserRole.Student,
+    });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(WorkspaceLayout);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.logout-button') as HTMLButtonElement).click();
+
+    expect(auth.isAuthenticated()).toBe(false);
+    expect(navigate).toHaveBeenCalledWith('/login');
   });
 });
 

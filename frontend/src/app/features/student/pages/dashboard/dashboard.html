@@ -14,8 +14,14 @@
       <button type="button" (click)="load()">Try again</button>
     </section>
   } @else {
+    @if (data()?.summaryError) {
+      <p class="summary-warning" role="status">Summary metrics are temporarily unavailable. Sections below are still up to date.</p>
+    }
     <section class="stats-grid" aria-label="Overview">
       <app-overview-stat-card label="Applications" icon="description" caption="All submitted applications" [value]="applicationsCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Shortlisted" icon="task_alt" caption="Applications moved forward" [value]="shortlistedCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Selected" icon="verified" caption="Offers received" [value]="selectedCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Upcoming interviews" icon="event" caption="Scheduled in the future" [value]="upcomingInterviewCount()" [loading]="loading()" />
       <app-overview-stat-card label="Available jobs" icon="work_outline" caption="Published and eligible for you" [value]="jobsCount()" [loading]="loading()" />
     </section>
 

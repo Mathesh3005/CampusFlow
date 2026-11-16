@@ -1,10 +1,13 @@
 package com.campusflow.dto.studentskill;
 
 import com.campusflow.entity.ProficiencyLevel;
+import jakarta.validation.constraints.NotNull;
 
 public class StudentSkillRequestDto {
 
+    @NotNull
     private Long skillId;
+    @NotNull
     private ProficiencyLevel proficiencyLevel;
 
     public Long getSkillId() {

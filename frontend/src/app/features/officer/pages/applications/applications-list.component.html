@@ -27,6 +27,22 @@
     </div>
   </header>
 
+  <div class="filter-bar">
+    <label>
+      <span>Status</span>
+      <select (change)="applyStatus($any($event.target).value)">
+        <option value="">All statuses</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Job ID</span>
+      <input type="number" min="1" placeholder="Filter by job" [value]="jobIdFilter() ?? ''" (change)="applyJobId($any($event.target).value)" />
+    </label>
+  </div>
+
   <section
     class="applications-panel"
     aria-label="Applications received for your jobs"
@@ -57,10 +73,10 @@
         <table>
           <thead>
             <tr>
-              <th scope="col">Application ID</th>
-              <th scope="col">Student ID</th>
-              <th scope="col">Job ID</th>
+              <th scope="col">Student</th>
+              <th scope="col">Opportunity</th>
               <th scope="col">Status</th>
+              <th scope="col">Resume</th>
               <th scope="col">Applied</th>
               <th scope="col"><span class="visually-hidden">Details</span></th>
             </tr>
@@ -68,15 +84,21 @@
           <tbody>
             @for (application of currentState.page.content; track application.id) {
               <tr>
-                <td data-label="Application ID">{{ application.id }}</td>
-                <td data-label="Student ID">{{ application.studentId }}</td>
-                <td data-label="Job ID">{{ application.jobId }}</td>
-                <td data-label="Status">
-                  <span class="status-chip">{{ application.status.replace('_', ' ') }}</span>
+                <td data-label="Student">
+                  <strong class="cell-primary">{{ application.studentName }}</strong>
+                  <span class="cell-secondary">{{ application.studentRegisterNumber }} · {{ application.studentDepartment }}</span>
                 </td>
+                <td data-label="Opportunity">
+                  <strong class="cell-primary">{{ application.jobTitle }}</strong>
+                  <span class="cell-secondary">{{ application.companyName }}</span>
+                </td>
+                <td data-label="Status">
+                  <span class="status-chip">{{ statusLabel(application.status) }}</span>
+                </td>
+                <td data-label="Resume">{{ application.resumeFileName || 'Not attached' }}</td>
                 <td data-label="Applied">
                   <time [attr.datetime]="application.appliedAt">
-                    {{ application.appliedAt | date:'mediumDate':'UTC' }} UTC
+                    {{ application.appliedAt | date:'mediumDate' }}
                   </time>
                 </td>
                 <td class="details-cell">

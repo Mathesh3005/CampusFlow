@@ -1,0 +1,218 @@
+<div class="analytics-page">
+
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">PLACEMENT MANAGEMENT</span>
+      <h1>Analytics Overview</h1>
+      <p>Monitor institutional placement performance and student outcomes.</p>
+    </div>
+
+    <button class="refresh-button" (click)="loadAnalytics()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading placement analytics...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-state">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button (click)="loadAnalytics()">Try Again</button>
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+
+    <section class="metrics-grid">
+
+      @for (metric of metrics(); track metric.label) {
+        <article class="metric-card">
+
+          <div class="metric-top">
+            <span>{{ metric.label }}</span>
+
+            <div class="metric-icon">
+              <mat-icon>{{ metric.icon }}</mat-icon>
+            </div>
+          </div>
+
+          <h2>{{ metric.value }}</h2>
+
+          <p>{{ metric.description }}</p>
+
+        </article>
+      }
+
+    </section>
+
+    <section class="analytics-section">
+
+      <div class="section-heading">
+        <div>
+          <h2>Department Selection Analysis</h2>
+          <p>Application-level outcomes for students in your jobs.</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+
+        <table>
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th>Applications</th>
+              <th>Shortlisted</th>
+              <th>Selected</th>
+              <th>Selection rate</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            @for (department of state().departments; track trackDepartment($index, department)) {
+              <tr>
+                <td class="department-name">
+                  {{ department.department }}
+                </td>
+
+                <td>{{ department.totalApplications }}</td>
+
+                <td>{{ department.shortlistedApplications }}</td>
+
+                <td>{{ department.selectedApplications }}</td>
+
+                <td>
+                  <div class="rate-cell">
+                    <div class="progress-track">
+                      <div
+                        class="progress-fill"
+                        [style.width.%]="department.placementRate">
+                      </div>
+                    </div>
+
+                    <span>{{ department.placementRate }}%</span>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @if (state().departments.length === 0) {
+              <tr>
+                <td colspan="5" class="empty-state">
+                  No department placement data available.
+                </td>
+              </tr>
+            }
+
+          </tbody>
+        </table>
+
+      </div>
+
+    </section>
+
+    <section class="analytics-grid">
+
+      <article class="analytics-card">
+
+        <div class="section-heading">
+          <div>
+            <h2>Selection Trends</h2>
+            <p>Graduation-year-wise application outcomes.</p>
+          </div>
+        </div>
+
+        @for (trend of state().trends; track trackYear($index, trend)) {
+
+          <div class="trend-item">
+
+            <div class="trend-header">
+              <strong>{{ trend.graduationYear }}</strong>
+
+              <span>{{ trend.placementRate }}% selected</span>
+            </div>
+
+            <div class="trend-bar">
+              <div
+                class="trend-fill"
+                [style.width.%]="applicantBarWidth(trend.totalApplications)">
+              </div>
+            </div>
+
+            <div class="trend-details">
+              <span>{{ trend.totalApplications }} applications</span>
+              <span>{{ trend.selectedApplications }} selected</span>
+            </div>
+
+          </div>
+
+        }
+
+        @if (state().trends.length === 0) {
+          <p class="empty-state">No placement trend data available.</p>
+        }
+
+      </article>
+
+      <article class="analytics-card">
+
+        <div class="section-heading">
+          <div>
+            <h2>Top Selection Rates</h2>
+            <p>Departments ranked by selected applications.</p>
+          </div>
+        </div>
+
+        @for (
+          department of state().topDepartments;
+          track trackDepartment($index, department);
+        ) {
+
+          <div class="ranking-item">
+
+            <div class="rank-number">
+              {{ $index + 1 }}
+            </div>
+
+            <div class="rank-details">
+              <strong>{{ department.department }}</strong>
+
+              <span>
+                {{ department.selectedApplications }} /
+                {{ department.totalApplications }} applications selected
+              </span>
+            </div>
+
+            <div class="rank-percentage">
+              {{ department.placementRate }}%
+            </div>
+
+          </div>
+
+        }
+
+        @if (state().topDepartments.length === 0) {
+          <p class="empty-state">No department rankings available.</p>
+        }
+
+      </article>
+
+    </section>
+
+    <footer class="analytics-footer">
+      <mat-icon>info_outline</mat-icon>
+      Campus placement rate uses all registered students as the denominator. Department and
+      graduation-year percentages measure selected applications out of applications received.
+      Results reflect current application statuses.
+    </footer>
+
+  }
+
+</div>

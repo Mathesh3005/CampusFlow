@@ -44,6 +44,10 @@
           </div>
         </div>
         <div class="status-actions">
+          <a class="secondary-button" [routerLink]="['/officer/jobs', current.job.id, 'edit']">Edit</a>
+          <a class="secondary-button" [routerLink]="['/officer/applications']" [queryParams]="{ jobId: current.job.id }">
+            View applicants
+          </a>
           <span class="status-chip">{{ current.job.status.replace('_', ' ') }}</span>
           @if (canPublish(current.job)) {
             <button

@@ -48,6 +48,8 @@ export class OfficerApplicationDetails implements OnInit {
   readonly actionError = signal<string | null>(null);
   readonly actionErrorCanRefresh = signal(false);
   readonly actionSuccess = signal<string | null>(null);
+  readonly resumeDownloading = signal(false);
+  readonly resumeError = signal<string | null>(null);
 
   ngOnInit(): void {
     merge(
@@ -72,6 +74,31 @@ export class OfficerApplicationDetails implements OnInit {
 
   statusLabel(status: ApplicationStatus): string {
     return status.replace('_', ' ');
+  }
+
+  downloadResume(application: ApplicationResponse): void {
+    if (this.resumeDownloading() || application.resumeId === null) return;
+    this.resumeDownloading.set(true);
+    this.resumeError.set(null);
+    this.service.downloadResume(application.id).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: blob => {
+        this.resumeDownloading.set(false);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = application.resumeFileName ?? `application-${application.id}-resume.pdf`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+      },
+      error: (error: unknown) => {
+        this.resumeDownloading.set(false);
+        this.resumeError.set(error instanceof ApiError && error.status === 404
+          ? 'The attached resume could not be found.'
+          : 'The resume could not be downloaded. Please try again.');
+      },
+    });
   }
 
   statusActionLabel(status: OfficerApplicationStatus): string {

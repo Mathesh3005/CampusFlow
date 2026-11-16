@@ -1,0 +1,121 @@
+.settings-page {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 1080px;
+}
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h1 {
+    margin: 0.25rem 0 0.5rem;
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+  }
+
+  p {
+    margin: 0;
+    color: var(--cf-text-secondary);
+  }
+}
+
+.eyebrow {
+  color: var(--cf-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.settings-card {
+  height: 100%;
+}
+
+mat-card-header {
+  padding-bottom: 1rem;
+}
+
+mat-card-avatar {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--cf-primary) 12%, white);
+  color: var(--cf-primary);
+}
+
+form {
+  display: grid;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+
+  button {
+    justify-self: start;
+    margin-top: 0.35rem;
+  }
+}
+
+.notice {
+  margin: 0 0 0.75rem;
+  border-radius: var(--cf-radius-sm);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+
+  &.error {
+    background: color-mix(in srgb, var(--cf-danger) 8%, white);
+    color: #991b1b;
+  }
+
+  &.success {
+    background: color-mix(in srgb, var(--cf-success) 10%, white);
+    color: #166534;
+  }
+}
+
+.account-details {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0.25rem 0 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--cf-border);
+    padding-bottom: 0.7rem;
+  }
+
+  div:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  dt {
+    color: var(--cf-text-secondary);
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.help-card p {
+  margin: 0.25rem 0 0;
+  color: var(--cf-text-secondary);
+  line-height: 1.6;
+}
+
+@media (max-width: 540px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}

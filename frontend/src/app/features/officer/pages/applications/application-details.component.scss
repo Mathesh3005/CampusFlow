@@ -6,6 +6,16 @@
 .eyebrow { margin: 0 0 8px; color: #2563eb; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
 h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 4vw, 32px); letter-spacing: -.5px; overflow-wrap: anywhere; }
 .status-chip { flex: 0 0 auto; padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; }
+.company { margin: 6px 0 0; color: #64748b; font-size: 14px; }
+.candidate-card { display: flex; align-items: center; gap: 14px; margin-top: 20px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 9px; background: #f8fafc; }
+.candidate-avatar { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 50%; background: #dbeafe; color: #1d4ed8; font-size: 16px; font-weight: 700; }
+.candidate-card h2 { margin: 0 0 3px; color: #0f172a; font-size: 15px; }
+.candidate-card p { margin: 0; color: #64748b; font-size: 12px; line-height: 1.5; }
+.candidate-card .secondary-button { margin-left: auto; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
+.section-heading h2 { margin: 0; }
+.resume-name { margin: 0; color: #334155; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.muted { margin: 0; color: #64748b; font-size: 14px; }
 .detail-section { padding: 22px 0; border-bottom: 1px solid #e2e8f0; }
 .detail-section h2, .review-section h2 { margin: 0 0 14px; color: #0f172a; font-size: 15px; }
 .application-information { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 22px; margin: 0; }

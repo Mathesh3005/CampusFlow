@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { InjectionToken, Signal, signal } from '@angular/core';
-import { Observable, finalize, shareReplay, tap, throwError } from 'rxjs';
+import { Observable, finalize, map, shareReplay, tap, throwError } from 'rxjs';
 import {
   NotificationQuery,
   NotificationResponse,
@@ -12,6 +12,7 @@ export const NOTIFICATIONS_DEFAULT_SORT = 'createdAt,desc';
 
 export interface NotificationsApi {
   readonly unreadOnLatestPage: Signal<number | null>;
+  refreshUnreadCount(): Observable<number>;
   listNotifications(query?: NotificationQuery, refresh?: boolean): Observable<PageResponse<NotificationResponse>>;
   getNotification(id: number): Observable<NotificationResponse>;
   markNotificationRead(id: number): Observable<NotificationResponse>;
@@ -32,6 +33,13 @@ export abstract class NotificationsApiClient implements NotificationsApi {
     private readonly http: HttpClient,
     private readonly baseUrl: string,
   ) {}
+
+  refreshUnreadCount(): Observable<number> {
+    return this.http.get<{ count: number }>(`${this.baseUrl}/unread-count`).pipe(
+      tap(response => this.unreadCount.set(response.count)),
+      map(response => response.count),
+    );
+  }
 
   listNotifications(
     query: NotificationQuery = {},

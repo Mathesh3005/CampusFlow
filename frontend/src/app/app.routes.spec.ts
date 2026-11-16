@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { AuthStateStore } from './core/auth/auth-state.store';
 import { UserRole } from './core/models/auth.models';
 import { officerRoutes } from './features/officer/officer.routes';
+import { OfficerAnalyticsService } from './features/officer/services/officer-analytics.service';
 import { OfficerInterviewsService } from './features/officer/services/officer-interviews.service';
 import { StudentInterviewsService } from './features/student/services/student-interviews.service';
 import { routes } from './app.routes';
@@ -34,6 +35,22 @@ describe('application route configuration', () => {
         provideRouter(routes),
         provideHttpClient(),
         provideHttpClientTesting(),
+        {
+          provide: OfficerAnalyticsService,
+          useValue: {
+            getOverview: () => of({
+              placementRate: 0,
+              publishedJobs: 0,
+              selectedStudents: 0,
+              totalApplications: 0,
+              totalJobs: 0,
+              totalStudents: 0,
+            }),
+            getDepartmentPlacements: () => of([]),
+            getPlacementTrends: () => of([]),
+            getTopDepartments: () => of([]),
+          },
+        },
         { provide: StudentInterviewsService, useValue: { listInterviews: () => of(emptyPage) } },
         { provide: OfficerInterviewsService, useValue: { listInterviews: () => of(emptyPage) } },
       ],
@@ -78,6 +95,26 @@ describe('application route configuration', () => {
     expect(workspace.canActivate?.length).toBeGreaterThan(0);
     expect(typeof dashboard?.loadComponent).toBe('function');
     expect(dashboard?.component).toBeUndefined();
+  });
+
+  it('allows an authenticated officer to navigate from the dashboard to Analytics', async () => {
+    setUser(UserRole.PlacementOfficer);
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/officer/dashboard');
+    await harness.navigateByUrl('/officer/analytics');
+
+    expect(router.url).toBe('/officer/analytics');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain('Analytics Overview');
+    expect(auth.isAuthenticated()).toBe(true);
+  });
+
+  it('redirects a student away from officer Analytics', async () => {
+    setUser(UserRole.Student);
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/officer/analytics');
+
+    expect(router.url).toBe('/student/dashboard');
+    expect(harness.routeNativeElement?.textContent).not.toContain('Analytics Overview');
   });
 
   it('allows an officer to navigate directly to an officer route', async () => {

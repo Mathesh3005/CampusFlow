@@ -1,10 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, catchError, map, of, switchMap } from 'rxjs';
 import { ApiError } from '../../../../core/http/api-error.handler';
-import { ApplicationResponse, PageResponse } from '../../../../core/models/domain.models';
+import { ApplicationResponse, ApplicationStatus, PageResponse } from '../../../../core/models/domain.models';
 import {
   OFFICER_APPLICATIONS_DEFAULT_SORT,
   OFFICER_APPLICATIONS_PAGE_SIZE,
@@ -27,13 +27,30 @@ type ApplicationsListState =
 })
 export class OfficerApplicationsList implements OnInit {
   private readonly service = inject(OfficerApplicationsService);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly pageRequests = new Subject<OfficerApplicationsQuery>();
 
   readonly pageIndex = signal(0);
   readonly state = signal<ApplicationsListState>({ status: 'loading' });
+  readonly statusFilter = signal<ApplicationStatus | null>(null);
+  readonly jobIdFilter = signal<number | null>(null);
+
+  readonly statuses = [
+    ApplicationStatus.Applied,
+    ApplicationStatus.UnderReview,
+    ApplicationStatus.Shortlisted,
+    ApplicationStatus.Selected,
+    ApplicationStatus.Rejected,
+    ApplicationStatus.Withdrawn,
+  ];
 
   ngOnInit(): void {
+    const jobId = Number(this.route.snapshot.queryParamMap.get('jobId'));
+    if (Number.isSafeInteger(jobId) && jobId > 0) {
+      this.jobIdFilter.set(jobId);
+    }
+
     this.pageRequests.pipe(
       switchMap(query => {
         this.state.set({ status: 'loading' });
@@ -64,7 +81,26 @@ export class OfficerApplicationsList implements OnInit {
       page: this.pageIndex(),
       size: OFFICER_APPLICATIONS_PAGE_SIZE,
       sort: OFFICER_APPLICATIONS_DEFAULT_SORT,
+      jobId: this.jobIdFilter() ?? undefined,
+      status: this.statusFilter() ?? undefined,
     });
+  }
+
+  applyStatus(value: string): void {
+    this.statusFilter.set(value ? value as ApplicationStatus : null);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  applyJobId(value: string): void {
+    const id = Number(value);
+    this.jobIdFilter.set(Number.isSafeInteger(id) && id > 0 ? id : null);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  statusLabel(status: ApplicationStatus): string {
+    return status.replaceAll('_', ' ').toLowerCase().replace(/^\w/, character => character.toUpperCase());
   }
 
   changePage(page: number): void {

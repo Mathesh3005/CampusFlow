@@ -21,8 +21,10 @@ export interface JobRequest {
   salaryMin?: number | null; salaryMax?: number | null; applicationDeadline: string;
 }
 export interface ApplicationResponse {
-  id: number; studentId: number; jobId: number; resumeId: number | null; companyName: string;
-  jobTitle: string; coverLetter: string | null; status: ApplicationStatus; appliedAt: string; updatedAt: string;
+  id: number; studentId: number; studentName: string; studentRegisterNumber: string;
+  studentDepartment: string; studentCgpa: number | null; jobId: number; resumeId: number | null;
+  resumeFileName: string | null; companyName: string; jobTitle: string; coverLetter: string | null;
+  status: ApplicationStatus; appliedAt: string; updatedAt: string;
 }
 export interface ApplicationRequest { jobId: number; resumeId?: number | null; coverLetter?: string | null; }
 export interface ResumeResponse {

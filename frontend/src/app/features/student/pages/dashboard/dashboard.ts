@@ -41,6 +41,13 @@ export class StudentDashboard implements OnInit {
   jobs(): JobResponse[] { return this.data()?.jobs.page?.content ?? []; }
   interviews(): InterviewResponse[] { return this.data()?.interviews.interviews ?? []; }
   notifications(): NotificationResponse[] { return this.data()?.notifications.page?.content ?? []; }
-  applicationsCount(): number | null { return this.data()?.applications.page?.totalElements ?? null; }
+  applicationsCount(): number | null {
+    return this.data()?.summary?.totalApplications ?? this.data()?.applications.page?.totalElements ?? null;
+  }
   jobsCount(): number | null { return this.data()?.jobs.page?.totalElements ?? null; }
+  applicationStat(key: string): number | null { return this.data()?.summary?.applicationStats?.[key] ?? null; }
+  shortlistedCount(): number | null { return this.applicationStat('shortlisted'); }
+  selectedCount(): number | null { return this.applicationStat('selected'); }
+  upcomingInterviewCount(): number | null { return this.data()?.summary?.upcomingInterviews ?? null; }
+  hasActiveResume(): boolean { return this.data()?.summary?.hasActiveResume ?? false; }
 }

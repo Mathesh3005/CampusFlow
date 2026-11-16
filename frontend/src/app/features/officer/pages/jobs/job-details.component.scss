@@ -9,6 +9,8 @@ h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 4vw, 32px); letter-spacin
 .job-tags span, .status-chip { padding: 6px 9px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 700; }
 .status-chip { flex: 0 0 auto; background: #eff6ff; color: #1d4ed8; }
 .status-actions { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.secondary-button { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #334155; font-size: 12px; font-weight: 600; text-decoration: none; }
+.secondary-button:hover { border-color: #2563eb; color: #1d4ed8; }
 .status-action-button { min-height: 36px; padding: 0 13px; border: 1px solid transparent; border-radius: 7px; color: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .status-action-button:disabled { cursor: wait; opacity: .6; }
 .publish-button { border-color: #2563eb; background: #2563eb; }

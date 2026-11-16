@@ -72,8 +72,17 @@ export class StudentJobDetails implements OnInit {
     this.selectedResumeId.set(resumeId);
   }
 
+  canSubmitApplication(): boolean {
+    const current = this.resumesState();
+    return current.status === 'ready'
+      && this.selectedResumeId() !== null
+      && current.resumes.some(resume => resume.id === this.selectedResumeId() && resume.isActive);
+  }
+
+  retryLoadingResumes(): void { this.loadResumes(); }
+
   submitApplication(job: JobResponse): void {
-    if (this.submitting() || this.submittedApplication()) return;
+    if (this.submitting() || this.submittedApplication() || !this.canSubmitApplication()) return;
 
     const coverLetter = this.coverLetter.value.trim();
     const resumeId = this.selectedResumeId();

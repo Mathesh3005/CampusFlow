@@ -102,12 +102,13 @@ class CampusflowApiApplicationTests {
     @org.springframework.boot.test.web.server.LocalServerPort int port;
 
     @Test
-    void contextStartsAgainstDisposablePostgresAndAppliesOnlyV1() {
+    void contextStartsAgainstDisposablePostgresAndAppliesMigrations() {
         assertTrue(POSTGRES.isRunning(), "PostgreSQL Testcontainer must be running");
         assertFalse(POSTGRES.getJdbcUrl().contains("localhost:5432/campusflow_db"));
         var applied = flyway.info().applied();
-        assertEquals(1, applied.length, "The fresh test database should have exactly one applied migration");
-        assertEquals(MigrationVersion.fromVersion("1"), applied[0].getVersion());
+        assertEquals(3, applied.length, "The fresh test database should have all migrations applied");
+        assertEquals(MigrationVersion.fromVersion("3"), applied[2].getVersion());
+        assertTrue(jdbc.queryForObject("SELECT COUNT(*) FROM skills", Integer.class) > 0);
         assertEquals("campusflow_it", jdbc.queryForObject("SELECT current_database()", String.class));
     }
 
@@ -406,7 +407,8 @@ class CampusflowApiApplicationTests {
                 Long.class, mainApplicationId));
         assertEquals(409, postApplication(openJobId, resumeA.getBody().getId(), studentAHeaders).getStatusCode().value());
 
-        ResponseEntity<String> withdrawApplication = postApplication(withdrawJobId, null, studentAHeaders);
+        ResponseEntity<String> withdrawApplication = postApplication(
+                withdrawJobId, resumeA.getBody().getId(), studentAHeaders);
         assertEquals(201, withdrawApplication.getStatusCode().value());
         long applicationId = mainApplicationId;
         long withdrawalId = jdbc.queryForObject("SELECT id FROM applications WHERE student_id=? AND job_id=?",

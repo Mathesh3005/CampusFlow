@@ -48,6 +48,20 @@ public class AuthService {
         return response(CustomUserPrincipal.from(user));
     }
 
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated account not found"));
+        if (!passwords.matches(currentPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        if (passwords.matches(newPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from the current password");
+        }
+        user.setPasswordHash(passwords.encode(newPassword));
+        users.save(user);
+    }
+
     public AuthResponse login(LoginRequest request) {
         Authentication auth;
         try {

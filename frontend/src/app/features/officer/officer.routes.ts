@@ -19,6 +19,12 @@ export const officerRoutes: Routes = [{
   ],
   data: { role: UserRole.PlacementOfficer },
   children: [
+    {
+  path: 'analytics',
+  loadComponent: () =>
+    import('./pages/analytics/officer-analytics.component')
+      .then(m => m.OfficerAnalyticsComponent),
+    },
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     {
       path: 'dashboard',
@@ -62,6 +68,14 @@ export const officerRoutes: Routes = [{
         { path: ':id', loadComponent: () => import('./pages/interviews/interview-details.component').then(m => m.OfficerInterviewDetails) },
       ],
     },
+    {
+      path: 'students',
+      children: [
+        { path: '', pathMatch: 'full', loadComponent: () => import('./pages/students/students-list.component').then(m => m.OfficerStudentsList) },
+        { path: ':id', loadComponent: () => import('./pages/students/student-detail.component').then(m => m.OfficerStudentDetailComponent) },
+      ],
+    },
+    { path: 'settings', loadComponent: () => import('../account/pages/account-settings.component').then(m => m.AccountSettingsComponent) },
     {
       path: 'notifications',
       children: [

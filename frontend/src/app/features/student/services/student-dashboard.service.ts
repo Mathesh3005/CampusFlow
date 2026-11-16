@@ -5,7 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ApiError } from '../../../core/http/api-error.handler';
 import { ApplicationResponse, InterviewResponse, JobResponse, NotificationResponse, PageResponse } from '../../../core/models/domain.models';
 import { NOTIFICATIONS_DEFAULT_SORT, NOTIFICATIONS_PAGE_SIZE } from '../../notifications/services/notification-api';
-import { DashboardSection, InterviewDashboardSection, StudentDashboardData } from '../models/dashboard.models';
+import { DashboardSection, InterviewDashboardSection, StudentDashboardData, StudentDashboardSummary } from '../models/dashboard.models';
 import { STUDENT_INTERVIEWS_DEFAULT_SORT, STUDENT_INTERVIEWS_PAGE_SIZE, StudentInterviewsService } from './student-interviews.service';
 import { StudentNotificationsService } from './student-notifications.service';
 
@@ -29,11 +29,28 @@ export class StudentDashboardService {
 
   loadDashboard(): Observable<StudentDashboardData> {
     return forkJoin({
+      summary: this.loadSummary(),
       applications: this.loadSection<ApplicationResponse>('/student/applications', 5, 'appliedAt,desc'),
       jobs: this.loadSection<JobResponse>('/student/jobs', 4, 'createdAt,desc'),
       interviews: this.loadUpcomingInterviews(),
       notifications: this.loadRecentNotifications(),
-    });
+    }).pipe(
+      map(({ summary, applications, jobs, interviews, notifications }) => ({
+        summary: summary.data,
+        summaryError: summary.error,
+        applications,
+        jobs,
+        interviews,
+        notifications,
+      })),
+    );
+  }
+
+  private loadSummary(): Observable<{ data: StudentDashboardSummary | null; error: string | null }> {
+    return this.http.get<StudentDashboardSummary>(`${this.baseUrl}/student/dashboard`).pipe(
+      map(data => ({ data, error: null })),
+      catchError((error: unknown) => of({ data: null, error: this.errorMessage(error) })),
+    );
   }
 
   private loadUpcomingInterviews(): Observable<InterviewDashboardSection> {

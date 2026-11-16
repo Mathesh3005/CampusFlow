@@ -75,7 +75,7 @@ describe('StudentJobDetails application flow', () => {
     expect(fixture.componentInstance.selectedResumeId()).toBe(4);
   });
 
-  it('submits without resumeId when no resume is selected and shows the created application link', () => {
+  it('requires a resume selection before submitting the application', () => {
     const submitApplication = vi.fn(() => of(application()));
     const fixture = createFixture('22', { submitApplication });
     fixture.detectChanges();
@@ -84,7 +84,14 @@ describe('StudentJobDetails application flow', () => {
     fixture.componentInstance.submitApplication(job());
     fixture.detectChanges();
 
-    expect(submitApplication).toHaveBeenCalledWith({ jobId: 22, coverLetter: 'Interested in this role.' });
+    expect(submitApplication).not.toHaveBeenCalled();
+    expect((fixture.nativeElement.querySelector('.submit-application') as HTMLButtonElement).disabled).toBe(true);
+
+    fixture.componentInstance.selectResume(44);
+    fixture.componentInstance.submitApplication(job());
+    fixture.detectChanges();
+
+    expect(submitApplication).toHaveBeenCalledWith({ jobId: 22, resumeId: 44, coverLetter: 'Interested in this role.' });
     expect(fixture.nativeElement.textContent).toContain('Application #789');
     expect(fixture.nativeElement.textContent).toContain('Status: APPLIED');
     expect(fixture.nativeElement.querySelector('a[href="/student/applications/789"]')).toBeTruthy();
@@ -112,6 +119,7 @@ describe('StudentJobDetails application flow', () => {
       submitApplication: () => throwError(() => new ApiError(status, status === 403 ? 'forbidden' : 'conflict', { status, detail })),
     });
     fixture.detectChanges();
+    fixture.componentInstance.selectResume(44);
     fixture.componentInstance.submitApplication(job());
     fixture.detectChanges();
 
@@ -124,6 +132,7 @@ describe('StudentJobDetails application flow', () => {
     const fixture = createFixture('22', { submitApplication });
     fixture.detectChanges();
 
+    fixture.componentInstance.selectResume(44);
     fixture.componentInstance.submitApplication(job());
     fixture.componentInstance.submitApplication(job());
     fixture.detectChanges();
@@ -142,7 +151,7 @@ function createFixture(id: string, services: DetailTestServices = {}) {
       provideRouter([]),
       { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id })) } },
       { provide: StudentJobsService, useValue: { getJob: services.getJob ?? (() => of(job())) } },
-      { provide: StudentResumesService, useValue: { listResumes: services.listResumes ?? (() => of([])) } },
+      { provide: StudentResumesService, useValue: { listResumes: services.listResumes ?? (() => of([studentResume(44, 'active.pdf', true)])) } },
       { provide: StudentApplicationsService, useValue: { submitApplication: services.submitApplication ?? (() => of(application())) } },
     ],
   });

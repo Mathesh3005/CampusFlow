@@ -11,7 +11,21 @@ export interface InterviewDashboardSection {
   partialResults: boolean;
 }
 
+export interface StudentDashboardSummary {
+  studentName: string;
+  department: string;
+  graduationYear: number | null;
+  cgpa: number | null;
+  totalApplications: number;
+  applicationStats: Record<string, number>;
+  upcomingInterviews: number;
+  hasActiveResume: boolean;
+  unreadNotifications: number;
+}
+
 export interface StudentDashboardData {
+  summary: StudentDashboardSummary | null;
+  summaryError: string | null;
   applications: DashboardSection<ApplicationResponse>;
   jobs: DashboardSection<JobResponse>;
   interviews: InterviewDashboardSection;

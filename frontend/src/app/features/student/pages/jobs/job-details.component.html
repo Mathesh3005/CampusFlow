@@ -89,14 +89,16 @@
           </div>
 
           <fieldset class="resume-picker">
-            <legend>Select a resume <span>(optional)</span></legend>
-            <p class="resume-help">You may attach one of your active resumes, or apply without a resume.</p>
+            <legend>Select a resume <span>(required)</span></legend>
+            <p class="resume-help">Choose an active PDF resume to include with your application.</p>
             @if (resumeState.status === 'loading') {
               <p class="inline-state" role="status">Loading your resumes…</p>
             } @else if (resumeState.status === 'error') {
-              <p class="inline-state error-state" role="alert">Your resumes could not be loaded. You can still apply without attaching one.</p>
-            } @else if (resumeState.resumes.length === 0) {
-              <p class="inline-state">You have no resumes yet. Resume attachment is optional.</p>
+              <p class="inline-state error-state" role="alert">Your resumes could not be loaded. Try again before submitting.</p>
+              <button class="resume-retry" type="button" (click)="retryLoadingResumes()">Retry resume list</button>
+            } @else if (!resumeState.resumes.some(resume => resume.isActive)) {
+              <p class="inline-state">You need an active resume before applying.</p>
+              <a class="resume-retry" routerLink="/student/resumes">Upload or activate a resume</a>
             } @else {
               <div class="resume-list">
                 @for (resume of resumeState.resumes; track resume.id) {
@@ -128,7 +130,7 @@
           @if (submissionError()) {
             <p class="submission-error" role="alert">{{ submissionError() }}</p>
           }
-          <button class="submit-application" type="button" [disabled]="submitting()" (click)="submitApplication(current.job)">
+          <button class="submit-application" type="button" [disabled]="submitting() || !canSubmitApplication()" (click)="submitApplication(current.job)">
             {{ submitting() ? 'Submitting…' : 'Submit application' }}
           </button>
         }

@@ -7,6 +7,9 @@ import com.campusflow.repository.StudentRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,8 +35,15 @@ public class ProjectService {
             String title,
             String description) {
 
+        return createProject(studentId, title, description, null, null, null, null);
+    }
+
+    public Project createProject(Long studentId, String title, String description,
+                                 String githubUrl, String liveDemoUrl,
+                                 LocalDate startDate, LocalDate endDate) {
+
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
 
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Project title is required");
@@ -44,6 +54,11 @@ public class ProjectService {
                 title.trim(),
                 description
         );
+        validateDates(startDate, endDate);
+        project.setGithubUrl(githubUrl);
+        project.setLiveDemoUrl(liveDemoUrl);
+        project.setStartDate(startDate);
+        project.setEndDate(endDate);
 
         return projectRepository.save(project);
     }
@@ -53,7 +68,7 @@ public class ProjectService {
     public Project getProjectById(Long projectId) {
 
         return projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
     }
 
     // Get all projects belonging to a student
@@ -61,7 +76,7 @@ public class ProjectService {
     public List<Project> getProjectsByStudent(Long studentId) {
 
         if (!studentRepository.existsById(studentId)) {
-            throw new RuntimeException("Student not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found");
         }
 
         return projectRepository.findByStudentId(studentId);
@@ -80,22 +95,17 @@ public class ProjectService {
 
         Project project = projectRepository
                 .findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
 
         if (!project.getStudent().getId().equals(studentId)) {
-            throw new RuntimeException(
-                    "You cannot update another student's project");
+            throw new AccessDeniedException("You cannot update another student's project");
         }
 
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Project title is required");
         }
 
-        if (startDate != null && endDate != null &&
-                endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException(
-                    "Project end date cannot be before start date");
-        }
+        validateDates(startDate, endDate);
 
         project.setTitle(title.trim());
         project.setDescription(description);
@@ -107,16 +117,21 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
+    private static void validateDates(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Project end date cannot be before start date");
+        }
+    }
+
     // Delete a student project
     public void deleteProject(Long projectId, Long studentId) {
 
         Project project = projectRepository
                 .findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
 
         if (!project.getStudent().getId().equals(studentId)) {
-            throw new RuntimeException(
-                    "You cannot delete another student's project");
+            throw new AccessDeniedException("You cannot delete another student's project");
         }
 
         projectRepository.delete(project);

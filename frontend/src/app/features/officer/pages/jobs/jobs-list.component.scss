@@ -34,6 +34,10 @@ h1 { margin: 0; color: #0f172a; font-size: clamp(24px, 3vw, 30px); letter-spacin
 .job-details div { min-width: 0; }
 .job-details dt { margin-bottom: 5px; color: #64748b; font-size: 10px; font-weight: 600; }
 .job-details dd { margin: 0; color: #334155; font-size: 12px; overflow-wrap: anywhere; }
+.job-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+.job-links a { color: #1d4ed8; font-size: 12px; font-weight: 600; text-decoration: none; }
+.job-links a:hover { text-decoration: underline; }
+a.primary-button { display: inline-flex; align-items: center; text-decoration: none; }
 .job-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .publish-button { border-color: #2563eb; background: #2563eb; color: #fff; }
 .close-button, .delete-button { border-color: #b91c1c; background: #b91c1c; color: #fff; }

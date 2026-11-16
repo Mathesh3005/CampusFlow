@@ -20,6 +20,7 @@
       <button class="secondary-button" type="button" (click)="retry()" [disabled]="currentState.status === 'loading' || actingOnJobId() !== null || deletingJobId() !== null">
         Refresh
       </button>
+      <a class="primary-button" routerLink="/officer/jobs/new">Create job</a>
     </div>
   </header>
 
@@ -63,6 +64,11 @@
               </div>
               <span class="status-chip">{{ job.status.replace('_', ' ') }}</span>
             </header>
+            <div class="job-links">
+              <a [routerLink]="['/officer/jobs', job.id]">View details</a>
+              <a [routerLink]="['/officer/jobs', job.id, 'edit']">Edit job</a>
+              <a [routerLink]="['/officer/applications']" [queryParams]="{ jobId: job.id }">View applicants</a>
+            </div>
             <dl class="job-details">
               <div>
                 <dt>Location</dt>

@@ -1,0 +1,162 @@
+<section class="officers-page">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">ACCESS MANAGEMENT</span>
+      <h1>Placement officers</h1>
+      <p>Create accounts for placement staff and control who can manage campus opportunities.</p>
+    </div>
+    <button mat-flat-button color="primary" type="button" (click)="toggleCreate()">
+      <mat-icon>{{ showCreateForm() ? 'close' : 'person_add' }}</mat-icon>
+      {{ showCreateForm() ? 'Cancel' : 'New officer' }}
+    </button>
+  </header>
+
+  @if (createSuccess()) {
+    <p class="notice success" role="status">{{ createSuccess() }}</p>
+  }
+
+  @if (showCreateForm()) {
+    <form class="create-card" [formGroup]="createForm" (ngSubmit)="create()">
+      <div class="create-heading">
+        <h2>Create placement officer</h2>
+        <p>The officer can sign in immediately with the password you set here.</p>
+      </div>
+      @if (createError()) {
+        <p class="notice error" role="alert">{{ createError() }}</p>
+      }
+      <div class="form-grid">
+        <label>
+          <span>Full name</span>
+          <input type="text" formControlName="fullName" autocomplete="name" />
+          @if (createForm.controls.fullName.touched && createForm.controls.fullName.invalid) {
+            <small>Enter the officer's full name.</small>
+          }
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" formControlName="email" autocomplete="email" />
+          @if (createForm.controls.email.touched && createForm.controls.email.invalid) {
+            <small>Enter a valid email address.</small>
+          }
+        </label>
+        <label>
+          <span>Employee ID</span>
+          <input type="text" formControlName="employeeId" />
+          @if (createForm.controls.employeeId.touched && createForm.controls.employeeId.invalid) {
+            <small>An employee ID is required.</small>
+          }
+        </label>
+        <label>
+          <span>Department</span>
+          <input type="text" formControlName="department" />
+          @if (createForm.controls.department.touched && createForm.controls.department.invalid) {
+            <small>A department is required.</small>
+          }
+        </label>
+        <label>
+          <span>Temporary password</span>
+          <input type="password" formControlName="password" autocomplete="new-password" />
+          @if (createForm.controls.password.touched && createForm.controls.password.invalid) {
+            <small>Use between 8 and 72 characters.</small>
+          }
+        </label>
+      </div>
+      <div class="create-actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="creating()">
+          {{ creating() ? 'Creating…' : 'Create account' }}
+        </button>
+        <button mat-stroked-button type="button" (click)="toggleCreate()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  <div class="toolbar">
+    <label class="search-field">
+      <mat-icon aria-hidden="true">search</mat-icon>
+      <input
+        type="search"
+        placeholder="Search name, email, employee ID, department"
+        [value]="search()"
+        (input)="applySearch($any($event.target).value)"
+        aria-label="Search placement officers"
+      />
+    </label>
+    <button mat-stroked-button type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="state error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ errorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="load()">Try again</button>
+    </div>
+  } @else if (loading()) {
+    <div class="state" role="status">
+      <mat-icon class="spin">progress_activity</mat-icon>
+      <p>Loading officer accounts…</p>
+    </div>
+  } @else if (page(); as result) {
+    @if (result.content.length === 0) {
+      <div class="state empty">
+        <mat-icon>badge</mat-icon>
+        <h2>No officer accounts found</h2>
+        <p>{{ search() ? 'Try a different search.' : 'Create the first placement officer account to get started.' }}</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Officer</th>
+              <th scope="col">Employee ID</th>
+              <th scope="col">Department</th>
+              <th scope="col">Status</th>
+              <th scope="col">Created</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (officer of result.content; track officer.id) {
+              <tr>
+                <td>
+                  <strong>{{ officer.fullName }}</strong>
+                  <span class="subtle">{{ officer.email }}</span>
+                </td>
+                <td>{{ officer.employeeId }}</td>
+                <td>{{ officer.department }}</td>
+                <td>
+                  <span class="status-chip" [class.inactive]="!officer.active">
+                    {{ officer.active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>{{ officer.createdAt | date: 'mediumDate' }}</td>
+                <td class="actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="setActive(officer)"
+                    [disabled]="togglingId() === officer.id"
+                  >
+                    {{ togglingId() === officer.id ? 'Updating…' : officer.active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (result.totalPages > 1) {
+        <nav class="pagination" aria-label="Officer pages">
+          <button mat-stroked-button type="button" (click)="changePage(-1)" [disabled]="!result.hasPrevious">
+            Previous
+          </button>
+          <span>Page {{ result.page + 1 }} of {{ result.totalPages }}</span>
+          <button mat-stroked-button type="button" (click)="changePage(1)" [disabled]="!result.hasNext">
+            Next
+          </button>
+        </nav>
+      }
+    }
+  }
+</section>

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { DatePipe } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, filter, finalize, map, of, switchMap } from 'rxjs';
 import { ApiError } from '../../../../core/http/api-error.handler';
 import { JobResponse, JobStatus, PageResponse } from '../../../../core/models/domain.models';
@@ -23,7 +24,7 @@ type JobsListState =
 @Component({
   selector: 'app-officer-jobs-list',
   standalone: true,
-  imports: [DatePipe, MatDialogModule],
+  imports: [DatePipe, MatDialogModule, RouterLink],
   templateUrl: './jobs-list.component.html',
   styleUrl: './jobs-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

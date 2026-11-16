@@ -1,0 +1,27 @@
+<section class="skills-page" aria-labelledby="skills-title">
+  <header class="page-heading"><div><p class="eyebrow">STUDENT WORKSPACE</p><h1 id="skills-title">Skills</h1><p class="subheading">Help placement officers see your strengths and current proficiency.</p></div></header>
+  @if (successMessage()) { <p class="success-message" role="status">{{ successMessage() }}</p> }
+  @if (errorMessage()) { <div class="error-state" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="load()">Retry</button></div> }
+
+  <form class="add-card" [formGroup]="form" (ngSubmit)="add()">
+    <div><h2>Add a skill</h2><p>Choose from the shared skills catalog and set your current level.</p></div>
+    <div class="add-controls">
+      <label class="field"><span>Skill</span><select formControlName="skillId" required><option value="" disabled>Select a skill</option>@for (skill of availableSkills; track skill.id) { <option [value]="skill.id">{{ skill.name }}</option> }</select></label>
+      <label class="field"><span>Proficiency</span><select formControlName="proficiencyLevel">@for (level of levels; track level) { <option [value]="level">{{ level | titlecase }}</option> }</select></label>
+      <button class="primary-button" type="submit" [disabled]="saving() || !availableSkills.length">{{ saving() ? 'Adding…' : 'Add skill' }}</button>
+    </div>
+    @if (!loading() && !availableSkills.length) { <p class="catalog-note">You have added every skill in the current catalog.</p> }
+  </form>
+
+  @if (loading()) { <div class="state-card" role="status">Loading your skills…</div> }
+  @else if (!errorMessage() && !skills().length) { <div class="empty-state"><div class="empty-icon" aria-hidden="true">✳</div><h2>Build your skills profile</h2><p>Add technologies and strengths to make your profile easier to evaluate.</p></div> }
+  @else if (!errorMessage()) {
+    <section class="skill-list" aria-label="Your skills">
+      @for (skill of skills(); track skill.skillId) {
+        <article class="skill-row"><div class="skill-mark" aria-hidden="true">{{ skill.skillName.slice(0, 1).toUpperCase() }}</div><div class="skill-name"><strong>{{ skill.skillName }}</strong><span>Added {{ skill.createdAt | date:'mediumDate' }}</span></div><label class="level-control"><span class="visually-hidden">{{ skill.skillName }} proficiency</span><select [value]="skill.proficiencyLevel" (change)="updateProficiency(skill.skillId, $event)">@for (level of levels; track level) { <option [value]="level">{{ level | titlecase }}</option> }</select></label><button class="text-button danger" type="button" (click)="removingId.set(skill.skillId)">Remove</button>
+          @if (removingId() === skill.skillId) { <div class="delete-confirm" role="group" aria-label="Confirm skill removal"><span>Remove {{ skill.skillName }}?</span><button class="text-button" type="button" (click)="removingId.set(null)">Cancel</button><button class="text-button danger" type="button" (click)="remove(skill.skillId)">Remove skill</button></div> }
+        </article>
+      }
+    </section>
+  }
+</section>

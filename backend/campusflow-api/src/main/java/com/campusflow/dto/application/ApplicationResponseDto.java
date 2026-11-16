@@ -5,8 +5,13 @@ import java.time.OffsetDateTime;
 public class ApplicationResponseDto {
     private Long id;
     private Long studentId;
+    private String studentName;
+    private String studentRegisterNumber;
+    private String studentDepartment;
+    private java.math.BigDecimal studentCgpa;
     private Long jobId;
     private Long resumeId;
+    private String resumeFileName;
     private String companyName;
     private String jobTitle;
     private String coverLetter;
@@ -20,6 +25,46 @@ public class ApplicationResponseDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getStudentRegisterNumber() {
+        return studentRegisterNumber;
+    }
+
+    public void setStudentRegisterNumber(String studentRegisterNumber) {
+        this.studentRegisterNumber = studentRegisterNumber;
+    }
+
+    public String getStudentDepartment() {
+        return studentDepartment;
+    }
+
+    public void setStudentDepartment(String studentDepartment) {
+        this.studentDepartment = studentDepartment;
+    }
+
+    public java.math.BigDecimal getStudentCgpa() {
+        return studentCgpa;
+    }
+
+    public void setStudentCgpa(java.math.BigDecimal studentCgpa) {
+        this.studentCgpa = studentCgpa;
+    }
+
+    public String getResumeFileName() {
+        return resumeFileName;
+    }
+
+    public void setResumeFileName(String resumeFileName) {
+        this.resumeFileName = resumeFileName;
     }
 
     public Long getJobId() {
