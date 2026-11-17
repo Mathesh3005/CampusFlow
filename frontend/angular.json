@@ -36,11 +36,13 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": []
+              "allowedHosts": ["frontend.mathuamg3008.workers.dev"]
             },
             "ssr": {
-              "entry": "src/server.ts"
-            }
+              "entry": "src/server.ts",
+              "platform": "neutral"
+            },
+            "outputPath": "dist"
           },
           "configurations": {
             "production": {
