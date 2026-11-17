@@ -41,8 +41,12 @@ public class AuthService {
     public AuthResponse register(RegisterStudentRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
         if (users.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
+        String registerNumber = request.registerNumber().trim();
+        if (students.existsByRegisterNumber(registerNumber)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Registration number is already registered");
+        }
         User user = users.save(new User(email, passwords.encode(request.password()), Role.STUDENT));
-        Student student = new Student(user, request.registerNumber().trim(), request.fullName().trim(),
+        Student student = new Student(user, registerNumber, request.fullName().trim(),
                 request.department().trim(), request.graduationYear());
         students.save(student);
         return response(CustomUserPrincipal.from(user));

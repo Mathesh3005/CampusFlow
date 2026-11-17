@@ -12,11 +12,11 @@ import { AdminOfficersService } from '../../services/admin-officers.service';
   imports: [RouterLink, MatButtonModule, MatIconModule],
   template: `
     <section class="admin-dashboard">
-      <header class="page-heading">
+      <header class="page-heading dashboard-hero">
         <div>
-          <span class="eyebrow">ADMINISTRATION</span>
+          <span class="eyebrow">CAMPUSFLOW ADMINISTRATION</span>
           <h1>Platform overview</h1>
-          <p>Monitor campus adoption and manage placement officer access.</p>
+          <p>Track placement activity and keep officer access up to date.</p>
         </div>
         <a mat-flat-button color="primary" routerLink="/admin/officers">
           <mat-icon>person_add</mat-icon>
@@ -36,9 +36,18 @@ import { AdminOfficersService } from '../../services/admin-officers.service';
           <p>Loading platform metrics…</p>
         </div>
       } @else if (dashboard(); as data) {
+        <section class="metrics-section" aria-labelledby="metrics-heading">
+        <header class="section-heading"><div><h2 id="metrics-heading">Platform at a glance</h2><p>Live totals from your CampusFlow workspace</p></div><span class="live-summary"><span></span>Live data</span></header>
         <div class="metric-grid">
           <article class="metric-card">
             <span class="metric-icon"><mat-icon>groups</mat-icon></span>
+            <div>
+              <p class="metric-label">Total users</p>
+              <p class="metric-value">{{ data.totalUsers }}</p>
+            </div>
+          </article>
+          <article class="metric-card">
+            <span class="metric-icon"><mat-icon>school</mat-icon></span>
             <div>
               <p class="metric-label">Students</p>
               <p class="metric-value">{{ data.totalStudents }}</p>
@@ -68,8 +77,9 @@ import { AdminOfficersService } from '../../services/admin-officers.service';
             </div>
           </article>
         </div>
+        </section>
 
-        <div class="admin-links">
+        <section class="admin-links" aria-label="Administration shortcuts">
           <article>
             <mat-icon>manage_accounts</mat-icon>
             <h2>Officer accounts</h2>
@@ -82,7 +92,7 @@ import { AdminOfficersService } from '../../services/admin-officers.service';
             <p>Update the credentials used to administer CampusFlow.</p>
             <a mat-stroked-button routerLink="/admin/settings">Open settings</a>
           </article>
-        </div>
+        </section>
       }
     </section>
   `,

@@ -12,7 +12,7 @@ import {
 import { OfficerApplicationsList } from './applications-list.component';
 
 describe('OfficerApplicationsList', () => {
-  it('shows loading and renders backend application fields without profile details', () => {
+  it('shows loading and renders backend application and student details', () => {
     const response = new Subject<PageResponse<ApplicationResponse>>();
     const listApplications = vi.fn(() => response.asObservable());
     const fixture = createFixture(listApplications);
@@ -31,13 +31,13 @@ describe('OfficerApplicationsList', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Application Management');
     expect(text).toContain('23');
-    expect(text).toContain('Application ID');
-    expect(text).toContain('Student ID');
+    expect(text).toContain('Student One');
+    expect(text).toContain('REG-007');
     expect(text).toContain('Job ID');
-    expect(text).toContain('UNDER REVIEW');
+    expect(text).toContain('Under review');
     expect(text).toContain('Applied');
-    expect(text).not.toContain('Graduate Engineer');
-    expect(text).not.toContain('CampusFlow Labs');
+    expect(text).toContain('Graduate Engineer');
+    expect(text).toContain('CampusFlow Labs');
   });
 
   it('changes pages and ignores stale in-flight responses', () => {
@@ -155,8 +155,13 @@ function application(id = 42): ApplicationResponse {
   return {
     id,
     studentId: 7,
+    studentName: 'Student One',
+    studentRegisterNumber: 'REG-007',
+    studentDepartment: 'Computer Science',
+    studentCgpa: 8.5,
     jobId: 18,
     resumeId: null,
+    resumeFileName: null,
     companyName: 'CampusFlow Labs',
     jobTitle: 'Graduate Engineer',
     coverLetter: null,

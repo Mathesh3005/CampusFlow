@@ -46,6 +46,7 @@
               <div class="application-meta">
                 <span class="status-chip">{{ application.status.replace('_', ' ') }}</span>
                 <span>Applied <time [attr.datetime]="application.appliedAt">{{ application.appliedAt | date:'mediumDate':'UTC' }} UTC</time></span>
+                @if (application.resumeId !== null) { <span>Resume: {{ application.resumeFileName || 'Resume #' + application.resumeId }}</span> }
               </div>
             </div>
             <div class="application-actions">

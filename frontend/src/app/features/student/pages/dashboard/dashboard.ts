@@ -1,5 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthStateStore } from '../../../../core/auth/auth-state.store';
 import { ApplicationResponse, InterviewResponse, JobResponse, NotificationResponse } from '../../../../core/models/domain.models';
 import { AvailableJobs } from '../../components/available-jobs.component';
@@ -13,7 +15,7 @@ import { StudentDashboardService } from '../../services/student-dashboard.servic
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [OverviewStatCard, RecentApplications, AvailableJobs, UpcomingInterviews, RecentNotifications],
+  imports: [RouterLink, MatIconModule, OverviewStatCard, RecentApplications, AvailableJobs, UpcomingInterviews, RecentNotifications],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -22,6 +24,9 @@ export class StudentDashboard implements OnInit {
   private readonly auth = inject(AuthStateStore);
   private readonly destroyRef = inject(DestroyRef);
   readonly user = this.auth.user;
+  readonly welcomeName = computed(() => this.data()?.summary?.studentName?.trim()
+    || this.user()?.email?.split('@')[0]
+    || 'there');
   readonly state = signal<DashboardLoadState>({ status: 'loading', data: null, error: null });
   readonly loading = computed(() => this.state().status === 'loading');
   readonly data = computed(() => this.state().status === 'ready' ? this.state().data : null);

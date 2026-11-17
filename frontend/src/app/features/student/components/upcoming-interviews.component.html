@@ -4,14 +4,14 @@
     <a routerLink="/student/interviews">View all</a>
   </header>
   @if (partialResults() && !loading() && !error()) {
-    <p class="panel-state" role="status">Showing a partial list. More interview records are available; refresh to try loading further results.</p>
+    <p class="panel-state panel-notice" role="status">Showing a partial list. More interview records are available; refresh to try loading further results.</p>
   }
   @if (loading()) {
-    <p class="panel-state" role="status">Loading interviews…</p>
+    <p class="panel-state loading-state" role="status">Loading interviews…</p>
   } @else if (error()) {
     <p class="panel-state error-state" role="alert">{{ error() }}</p>
   } @else if (upcoming().length === 0) {
-    <p class="panel-state">You have no upcoming interviews.</p>
+    <p class="panel-state panel-empty">You have no upcoming interviews.</p>
   } @else {
     <ul class="item-list">
       @for (interview of upcoming(); track interview.id) {

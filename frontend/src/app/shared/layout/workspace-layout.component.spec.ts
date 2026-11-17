@@ -20,6 +20,7 @@ describe('WorkspaceLayout mobile navigation', () => {
           provide: NOTIFICATIONS_API,
           useValue: {
             unreadOnLatestPage: unreadCount.asReadonly(),
+            refreshUnreadCount: () => of(0),
             listNotifications: () => of(emptyPage),
             getNotification: () => of(notification),
             markNotificationRead: () => of(notification),
@@ -77,6 +78,7 @@ describe('WorkspaceLayout mobile navigation', () => {
   it('keeps navigation available when the unread summary request fails', () => {
     const unavailableApi = {
       unreadOnLatestPage: signal<number | null>(null).asReadonly(),
+      refreshUnreadCount: () => of(0),
       listNotifications: () => throwError(() => new Error('Offline')),
       getNotification: () => of(notification),
       markNotificationRead: () => of(notification),

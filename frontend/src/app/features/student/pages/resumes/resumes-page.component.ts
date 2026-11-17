@@ -40,6 +40,7 @@ export class StudentResumesPage implements OnInit {
   readonly uploading = signal(false);
   readonly operation = signal<ResumeOperation | null>(null);
   readonly downloadingId = signal<number | null>(null);
+  readonly previewingId = signal<number | null>(null);
   readonly needsLogin = signal(false);
 
   ngOnInit(): void {
@@ -168,6 +169,43 @@ export class StudentResumesPage implements OnInit {
       error: (error: unknown) => {
         this.downloadingId.set(null);
         this.operationError.set(this.errorMessage(error, 'list'));
+      },
+    });
+  }
+
+  preview(resume: StudentResume): void {
+    if (this.downloadingId() !== null) return;
+    let previewWindow: Window | null;
+    try {
+      previewWindow = window.open('about:blank', '_blank');
+      if (previewWindow) previewWindow.opener = null;
+    } catch {
+      previewWindow = null;
+    }
+    if (!previewWindow) {
+      this.operationError.set('Your browser blocked the preview window. Allow pop-ups and try again.');
+      return;
+    }
+
+    this.previewingId.set(resume.id);
+    this.downloadingId.set(resume.id);
+    this.operationError.set(null);
+    this.resumesService.downloadResume(resume.id).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: blob => {
+        this.previewingId.set(null);
+        this.downloadingId.set(null);
+        const url = URL.createObjectURL(new Blob([blob], { type: PDF_CONTENT_TYPE }));
+        previewWindow?.location.replace(url);
+        setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+      },
+      error: (error: unknown) => {
+        previewWindow?.close();
+        this.previewingId.set(null);
+        this.downloadingId.set(null);
+        this.operationError.set(this.errorMessage(error, 'list'));
+        this.needsLogin.set(this.isUnauthorized(error));
       },
     });
   }

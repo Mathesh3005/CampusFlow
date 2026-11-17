@@ -117,6 +117,30 @@ class ApplicationServiceTest {
         verify(applicationRepository, never()).saveAndFlush(any(Application.class));
     }
 
+    @Test
+    void studentCanWithdrawAnApplicationBeforeAFinalDecision() {
+        Application application = new Application(null, null, null);
+        application.setStatus(ApplicationStatus.SHORTLISTED);
+        when(applicationRepository.findByIdAndStudentId(71L, 31L)).thenReturn(Optional.of(application));
+        when(applicationRepository.save(application)).thenReturn(application);
+
+        Application withdrawn = service.withdrawApplication(71L, 31L);
+
+        assertEquals(ApplicationStatus.WITHDRAWN, withdrawn.getStatus());
+        verify(applicationRepository).save(application);
+    }
+
+    @Test
+    void studentCannotWithdrawAfterASelectionDecision() {
+        Application application = new Application(null, null, null);
+        application.setStatus(ApplicationStatus.SELECTED);
+        when(applicationRepository.findByIdAndStudentId(71L, 31L)).thenReturn(Optional.of(application));
+
+        assertThrows(InvalidApplicationTransitionException.class,
+                () -> service.withdrawApplication(71L, 31L));
+        verify(applicationRepository, never()).save(any(Application.class));
+    }
+
     private static Job job(JobStatus status, BigDecimal minimumCgpa, OffsetDateTime deadline) {
         Job job = new Job(null, "Example Co", "Backend Engineer", "Job description",
                 EmploymentType.FULL_TIME, WorkMode.REMOTE, deadline);

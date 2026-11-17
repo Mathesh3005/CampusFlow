@@ -19,3 +19,8 @@ export interface StudentProjectRequest {
   startDate: string | null;
   endDate: string | null;
 }
+
+export interface ProjectTechnology {
+  skillId: number;
+  skillName: string;
+}

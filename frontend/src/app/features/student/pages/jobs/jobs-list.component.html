@@ -41,8 +41,14 @@
       </div>
     } @else if (currentState.status === 'ready' && currentState.page.content.length === 0) {
       <div class="state-message empty-message">
-        <h2>No matching jobs</h2>
-        <p>There are no published jobs matching these filters.</p>
+        @if (hasActiveFilters()) {
+          <h2>No matching jobs</h2>
+          <p>There are no published jobs matching your current filters.</p>
+          <button class="text-button" type="button" (click)="clearFilters()">Clear filters and try again</button>
+        } @else {
+          <h2>No published jobs yet</h2>
+          <p>Published opportunities will appear here when they become available.</p>
+        }
       </div>
     } @else {
       <div class="results-summary" aria-live="polite">{{ currentState.page.totalElements }} published jobs</div>

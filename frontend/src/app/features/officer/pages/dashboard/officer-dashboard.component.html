@@ -1,14 +1,17 @@
 <main class="dashboard-page">
   @let current = state();
-  <header class="page-heading">
+  <header class="page-heading dashboard-hero">
     <div>
-      <p class="eyebrow">PLACEMENT OFFICER WORKSPACE</p>
+      <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span> PLACEMENT OPERATIONS</p>
       <h1>Dashboard</h1>
-      <p class="intro">A live overview of jobs, applications, interviews and placement updates.</p>
+      <p class="intro">Your placement activity at a glance. Manage opportunities and keep applications moving.</p>
     </div>
+    <div class="hero-actions">
+    <a class="primary-button create-job-link" routerLink="/officer/jobs/new"><mat-icon aria-hidden="true">add</mat-icon>Create a job</a>
     <button class="secondary-button" type="button" (click)="load()" [disabled]="loading()">
       {{ loading() ? 'Refreshing…' : 'Refresh' }}
     </button>
+    </div>
   </header>
 
   @if (allSectionsFailed()) {
@@ -28,9 +31,13 @@
     </section>
   }
 
+  <section class="overview-heading" aria-labelledby="overview-heading">
+    <div><h2 id="overview-heading">Placement overview</h2><p>Live totals for jobs, candidates, and interviews</p></div>
+    <span class="live-summary"><span aria-hidden="true"></span> Live data</span>
+  </section>
   <section class="metrics-grid" aria-label="Dashboard statistics">
-    @for (metric of metrics(); track metric.label) {
-      <article class="metric-card" [attr.aria-busy]="metric.loading">
+    @for (metric of metrics(); track metric.label; let index = $index) {
+      <article class="metric-card" [class.metric-jobs]="index < 4" [class.metric-applications]="index >= 4 && index < 8" [class.metric-interviews]="index === 8" [attr.aria-busy]="metric.loading">
         <span class="metric-icon"><mat-icon aria-hidden="true">{{ metric.icon }}</mat-icon></span>
         <div class="metric-copy">
           <span class="metric-label">{{ metric.label }}</span>
@@ -75,7 +82,7 @@
               <div class="activity-copy">
                 <strong>{{ application.jobTitle }}</strong>
                 <span>{{ application.studentName }} · {{ application.companyName }}</span>
-                <span class="status-text">{{ application.status.replace('_', ' ') }}</span>
+                <span class="status-text" [class.status-positive]="application.status === 'SHORTLISTED' || application.status === 'SELECTED'" [class.status-pending]="application.status === 'APPLIED' || application.status === 'UNDER_REVIEW'" [class.status-negative]="application.status === 'REJECTED' || application.status === 'WITHDRAWN'">{{ application.status.replace('_', ' ') }}</span>
               </div>
               <div class="activity-meta">
                 <time [attr.datetime]="application.appliedAt">

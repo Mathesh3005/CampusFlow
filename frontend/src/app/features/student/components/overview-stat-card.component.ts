@@ -16,12 +16,14 @@ import { MatIconModule } from '@angular/material/icon';
     </article>
   `,
   styles: [`
-    .stat-card { display: flex; min-height: 112px; align-items: center; gap: 16px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgb(15 23 42 / 5%); }
-    .stat-icon { display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; border-radius: 11px; background: #eff6ff; color: #2563eb; }
+    .stat-card { display: flex; min-width: 0; min-height: 104px; align-items: center; gap: 12px; padding: 15px; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface); box-shadow: var(--cf-shadow-xs); transition: border-color var(--cf-motion-fast), box-shadow var(--cf-motion-fast); }
+    .stat-card:hover { border-color: var(--cf-primary-border); box-shadow: var(--cf-shadow-sm); }
+    .stat-icon { display: grid; width: 39px; height: 39px; flex: 0 0 39px; place-items: center; border-radius: 11px; background: var(--cf-primary-soft); color: var(--cf-primary); }
     .stat-copy { display: grid; gap: 4px; min-width: 0; }
-    .stat-label { color: #64748b; font-size: 12px; font-weight: 600; }
-    strong { color: #0f172a; font-size: 25px; line-height: 1.1; }
-    .stat-caption { color: #94a3b8; font-size: 11px; }
+    .stat-label { overflow: hidden; color: var(--cf-text-secondary); font-size: 10px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    strong { color: var(--cf-text-primary); font-size: 23px; font-weight: 720; letter-spacing: -.5px; line-height: 1.1; }
+    .stat-caption { color: var(--cf-text-tertiary); font-size: 9px; line-height: 1.35; }
+    @media (max-width: 600px) { .stat-card { min-height: 90px; gap: 9px; padding: 11px; } .stat-icon { width: 32px; height: 32px; flex-basis: 32px; } .stat-icon mat-icon { width: 18px; height: 18px; font-size: 18px; } strong { font-size: 20px; } }
   `],
 })
 export class OverviewStatCard {

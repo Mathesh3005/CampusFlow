@@ -100,7 +100,7 @@ describe('StudentApplicationsService', () => {
 
 function application(): ApplicationResponse {
   return {
-    id: 789, studentId: 12, jobId: 123, resumeId: null, companyName: 'Example Company',
+    id: 789, studentId: 12, studentName: 'Student One', studentRegisterNumber: 'REG-001', studentDepartment: 'Computer Science', studentCgpa: 8.5, jobId: 123, resumeId: null, resumeFileName: null, companyName: 'Example Company',
     jobTitle: 'Graduate Engineer', coverLetter: 'A short note.', status: ApplicationStatus.Applied,
     appliedAt: '2026-11-14T10:00:00Z', updatedAt: '2026-11-14T10:00:00Z',
   };

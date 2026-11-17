@@ -69,4 +69,72 @@ describe('StudentProjectsComponent', () => {
     expect(component.formError()).toBe('The end date must be on or after the start date.');
     http.expectNone(endpoint);
   });
+
+  it('rejects malformed project links before submitting', () => {
+    http.expectOne(endpoint).flush([]);
+    const component = fixture.componentInstance;
+    component.startCreate();
+    component.form.patchValue({ title: 'Placement Portal', githubUrl: 'not-a-url' });
+
+    component.save();
+
+    expect(component.form.controls.githubUrl.hasError('pattern')).toBe(true);
+    http.expectNone(endpoint);
+  });
+
+  it('updates an existing project using the signed-in student endpoint', () => {
+    http.expectOne(endpoint).flush([project]);
+    const component = fixture.componentInstance;
+    component.startEdit(project);
+    component.form.patchValue({ description: 'Updated project summary' });
+    component.save();
+
+    const request = http.expectOne(`${endpoint}/${project.id}`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body.description).toBe('Updated project summary');
+    request.flush({ ...project, description: 'Updated project summary' });
+    expect(component.projects()[0].description).toBe('Updated project summary');
+  });
+
+  it('deletes a project only after the component receives the confirmed action', () => {
+    http.expectOne(endpoint).flush([project]);
+    fixture.componentInstance.deleteProject(project.id);
+
+    const request = http.expectOne(`${endpoint}/${project.id}`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+    expect(fixture.componentInstance.projects()).toEqual([]);
+  });
+
+  it('loads technologies from the catalog and supports adding a project technology', () => {
+    http.expectOne(endpoint).flush([project]);
+    const component = fixture.componentInstance;
+    component.manageTechnologies(project.id);
+    http.expectOne(`${endpoint}/${project.id}/skills`).flush([]);
+    http.expectOne(`${environment.apiBaseUrl}/skills`).flush([{ id: 4, name: 'Angular' }]);
+    expect(component.availableTechnologies).toEqual([{ id: 4, name: 'Angular' }]);
+
+    component.selectedTechnologyId.set('4');
+    component.addTechnology(project.id);
+    const addRequest = http.expectOne(`${endpoint}/${project.id}/skills`);
+    expect(addRequest.request.method).toBe('POST');
+    expect(addRequest.request.body).toEqual({ skillId: 4 });
+    addRequest.flush({ skillId: 4, skillName: 'Angular' });
+    expect(component.technologies()).toEqual([{ skillId: 4, skillName: 'Angular' }]);
+    expect(component.availableTechnologies).toEqual([]);
+  });
+
+  it('removes a technology from its project', () => {
+    http.expectOne(endpoint).flush([project]);
+    const component = fixture.componentInstance;
+    component.manageTechnologies(project.id);
+    http.expectOne(`${endpoint}/${project.id}/skills`).flush([{ skillId: 4, skillName: 'Angular' }]);
+    http.expectOne(`${environment.apiBaseUrl}/skills`).flush([{ id: 4, name: 'Angular' }]);
+
+    component.removeTechnology(project.id, 4);
+    const request = http.expectOne(`${endpoint}/${project.id}/skills/4`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+    expect(component.technologies()).toEqual([]);
+  });
 });

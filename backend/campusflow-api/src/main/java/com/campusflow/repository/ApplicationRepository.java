@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 
 import com.campusflow.entity.Application;
@@ -16,6 +17,10 @@ import com.campusflow.entity.ApplicationStatus;
 
 public interface ApplicationRepository
         extends JpaRepository<Application, Long>, JpaSpecificationExecutor<Application> {
+
+    @Override
+    @EntityGraph(attributePaths = {"student", "job", "resume"})
+    Page<Application> findAll(Specification<Application> specification, Pageable pageable);
 
     List<Application> findByStudentId(Long studentId);
 

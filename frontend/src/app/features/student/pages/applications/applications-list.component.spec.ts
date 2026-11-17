@@ -34,6 +34,7 @@ describe('StudentApplicationsList', () => {
     expect(text).toContain('Graduate Developer');
     expect(text).toContain('CampusFlow Labs');
     expect(text).toContain('APPLIED');
+    expect(text).toContain('Resume: Student resume.pdf');
     expect(text).toContain('Nov 14, 2026');
     expect(fixture.nativeElement.querySelector('a[href="/student/applications/789"]')).toBeTruthy();
   });
@@ -211,7 +212,7 @@ function page(
 
 function application(status = ApplicationStatus.Applied, id = 789): ApplicationResponse {
   return {
-    id, studentId: 12, jobId: 22, resumeId: null, companyName: 'CampusFlow Labs',
+    id, studentId: 12, studentName: 'Student One', studentRegisterNumber: 'REG-001', studentDepartment: 'Computer Science', studentCgpa: 8.5, jobId: 22, resumeId: 44, resumeFileName: 'Student resume.pdf', companyName: 'CampusFlow Labs',
     jobTitle: 'Graduate Developer', coverLetter: null, status,
     appliedAt: '2026-11-14T10:00:00Z', updatedAt: '2026-11-14T10:00:00Z',
   };

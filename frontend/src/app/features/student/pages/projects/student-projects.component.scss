@@ -1,36 +1,36 @@
-:host { display: block; color: #172033; }
+:host { display: block; color: var(--cf-text-primary); }
 .projects-page { width: min(100%, 1040px); margin: 0 auto; }
 .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 22px; margin-bottom: 25px; }
-.eyebrow { margin: 0 0 8px; color: #4f46e5; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.eyebrow { margin: 0 0 8px; color: var(--cf-primary); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
 h1 { margin: 0; font-size: clamp(26px, 3vw, 34px); letter-spacing: -.035em; }
-.subheading { margin: 9px 0 0; color: #64748b; line-height: 1.55; }
-.primary-button, .secondary-button { min-height: 43px; padding: 0 16px; border: 0; border-radius: 10px; background: #4338ca; color: white; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-.primary-button:hover:not(:disabled) { background: #3730a3; }
+.subheading { margin: 9px 0 0; color: var(--cf-text-secondary); line-height: 1.55; }
+.primary-button, .secondary-button { min-height: 43px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--cf-primary); color: white; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.primary-button:hover:not(:disabled) { background: var(--cf-primary-dark); }
 .primary-button:disabled { cursor: not-allowed; opacity: .55; }
 .secondary-button { border: 1px solid #cbd5e1; background: white; color: #334155; }
-.state-card, .empty-state, .project-form, .project-card { padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; box-shadow: 0 8px 26px rgb(15 23 42 / 4%); }
+.state-card, .empty-state, .project-form, .project-card { padding: 24px; border: 1px solid var(--cf-border); border-radius: 16px; background: #fff; box-shadow: 0 8px 26px rgb(15 23 42 / 4%); }
 .empty-state { display: grid; justify-items: center; padding: 52px 22px; text-align: center; }
-.empty-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; background: #eef2ff; color: #4338ca; font-size: 26px; }
+.empty-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; background: var(--cf-primary-soft); color: var(--cf-primary); font-size: 26px; }
 .empty-state h2 { margin: 18px 0 7px; font-size: 19px; }
-.empty-state p { max-width: 450px; margin: 0 0 20px; color: #64748b; font-size: 14px; line-height: 1.55; }
+.empty-state p { max-width: 450px; margin: 0 0 20px; color: var(--cf-text-secondary); font-size: 14px; line-height: 1.55; }
 .project-list { display: grid; gap: 14px; }
 .project-top, .form-heading, .form-actions, .project-actions, .project-links, .delete-confirm { display: flex; align-items: center; gap: 13px; }
 .project-top, .form-heading { justify-content: space-between; align-items: flex-start; }
 .project-card h2, .form-heading h2 { margin: 0; font-size: 18px; }
-.project-dates { margin: 7px 0 0; color: #64748b; font-size: 12px; }
+.project-dates { margin: 7px 0 0; color: var(--cf-text-secondary); font-size: 12px; }
 .description { margin: 19px 0; color: #475569; font-size: 14px; line-height: 1.65; white-space: pre-line; }
 .project-links { flex-wrap: wrap; margin-top: 18px; }
-.project-links a { color: #4338ca; font-size: 13px; font-weight: 700; text-decoration: none; }
+.project-links a { color: var(--cf-primary); font-size: 13px; font-weight: 700; text-decoration: none; }
 .project-links a:hover { text-decoration: underline; }
-.text-button, .close-button { padding: 7px 9px; border: 0; background: transparent; color: #4338ca; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.text-button, .close-button { padding: 7px 9px; border: 0; background: transparent; color: var(--cf-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .text-button:hover { text-decoration: underline; }
 .danger { color: #b91c1c; }
 .project-form { margin-bottom: 18px; }
 .form-heading { margin-bottom: 22px; }
-.form-heading p { margin: 6px 0 0; color: #64748b; font-size: 13px; }
-.close-button { padding: 0 4px; color: #64748b; font-size: 26px; line-height: 1; }
+.form-heading p { margin: 6px 0 0; color: var(--cf-text-secondary); font-size: 13px; }
+.close-button { padding: 0 4px; color: var(--cf-text-secondary); font-size: 26px; line-height: 1; }
 .field { display: grid; gap: 7px; margin-bottom: 16px; color: #334155; font-size: 13px; font-weight: 650; }
-.field input, .field textarea { width: 100%; box-sizing: border-box; min-height: 43px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; color: #172033; font: inherit; font-size: 14px; }
+.field input, .field textarea { width: 100%; box-sizing: border-box; min-height: 43px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; color: var(--cf-text-primary); font: inherit; font-size: 14px; }
 .field textarea { resize: vertical; }
 .field input:focus, .field textarea:focus { border-color: #6366f1; outline: 0; box-shadow: 0 0 0 3px rgb(99 102 241 / 14%); }
 .field small, .form-error { color: #b91c1c; font-size: 12px; }
@@ -38,6 +38,6 @@ h1 { margin: 0; font-size: clamp(26px, 3vw, 34px); letter-spacing: -.035em; }
 .form-actions { justify-content: flex-end; margin-top: 6px; }
 .delete-confirm { justify-content: flex-end; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eef2f7; color: #475569; font-size: 13px; }
 .error-state { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border: 1px solid #fecaca; border-radius: 10px; background: #fff7f7; color: #b91c1c; font-size: 13px; }
-.error-state button { border: 0; background: transparent; color: #4338ca; font: inherit; font-weight: 700; cursor: pointer; }
+.error-state button { border: 0; background: transparent; color: var(--cf-primary); font: inherit; font-weight: 700; cursor: pointer; }
 .success-message { color: #15803d; font-size: 13px; }
 @media (max-width: 640px) { .page-heading { align-items: flex-start; flex-direction: column; } .form-grid { grid-template-columns: 1fr; } .project-top { align-items: flex-start; flex-direction: column; } .project-actions { margin-left: -9px; } .delete-confirm { flex-wrap: wrap; justify-content: flex-start; } .delete-confirm span { width: 100%; } }

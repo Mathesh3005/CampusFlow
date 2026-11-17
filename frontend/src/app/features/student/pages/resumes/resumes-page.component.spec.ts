@@ -13,6 +13,7 @@ interface ResumePageTestServices {
   uploadResume?: (file: File) => Observable<StudentResume>;
   activateResume?: (id: number) => Observable<StudentResume>;
   deactivateResume?: (id: number) => Observable<StudentResume>;
+  downloadResume?: (id: number) => Observable<Blob>;
   deleteResume?: (id: number) => Observable<void>;
   confirmDelete?: boolean;
 }
@@ -125,7 +126,7 @@ describe('StudentResumesPage', () => {
     fixture.detectChanges();
 
     const firstCard = fixture.nativeElement.querySelector('.resume-card') as HTMLElement;
-    (firstCard.querySelector('.secondary-button') as HTMLButtonElement).click();
+    (firstCard.querySelector('[aria-label="Activate resume-1.pdf"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(activateResume).toHaveBeenCalledWith(1);
     const activatedState = fixture.componentInstance.state();
@@ -133,7 +134,7 @@ describe('StudentResumesPage', () => {
     if (activatedState.status === 'ready') expect(activatedState.resumes.filter(item => item.isActive)).toHaveLength(2);
 
     const updatedFirstCard = fixture.nativeElement.querySelector('.resume-card') as HTMLElement;
-    (updatedFirstCard.querySelector('.secondary-button') as HTMLButtonElement).click();
+    (updatedFirstCard.querySelector('[aria-label="Deactivate resume-1.pdf"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(deactivateResume).toHaveBeenCalledWith(1);
     const deactivatedState = fixture.componentInstance.state();
@@ -142,6 +143,34 @@ describe('StudentResumesPage', () => {
       expect(deactivatedState.resumes.find(item => item.id === 1)?.isActive).toBe(false);
       expect(deactivatedState.resumes.find(item => item.id === 2)?.isActive).toBe(true);
     }
+  });
+
+  it('previews a resume from the authorized PDF response in a new tab', () => {
+    vi.useFakeTimers();
+    const previewWindow = {
+      opener: window,
+      location: { replace: vi.fn() },
+      close: vi.fn(),
+    } as unknown as Window;
+    const open = vi.spyOn(window, 'open').mockReturnValue(previewWindow);
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:resume-preview');
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const downloadResume = vi.fn(() => of(new Blob(['%PDF-1.7'], { type: 'application/pdf' })));
+    const fixture = createFixture({ listResumes: () => of([resume(6, true)]), downloadResume });
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.resume-actions button') as HTMLButtonElement).click();
+
+    expect(open).toHaveBeenCalledWith('about:blank', '_blank');
+    expect(previewWindow.opener).toBeNull();
+    expect(downloadResume).toHaveBeenCalledWith(6);
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(previewWindow.location.replace).toHaveBeenCalledWith('blob:resume-preview');
+    expect(fixture.componentInstance.previewingId()).toBeNull();
+    vi.advanceTimersByTime(5 * 60 * 1000);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:resume-preview');
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('requires confirmation before deletion and deletes only after confirmation', () => {
@@ -261,6 +290,7 @@ function createFixture(services: ResumePageTestServices = {}) {
           uploadResume: services.uploadResume ?? (() => of(resume(1, true))),
           activateResume: services.activateResume ?? ((id: number) => of(resume(id, true))),
           deactivateResume: services.deactivateResume ?? ((id: number) => of(resume(id, false))),
+          downloadResume: services.downloadResume ?? (() => of(new Blob(['%PDF-1.7'], { type: 'application/pdf' }))),
           deleteResume: services.deleteResume ?? (() => of(undefined)),
         },
       },

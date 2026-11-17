@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -45,6 +46,18 @@ class AuthServiceTest {
         var result = service.register(new RegisterStudentRequest("A@B.com", "password123", "R1", "Student", "CS", 2030));
         assertEquals(12L, result.userId());
         verify(students).save(any(Student.class));
+    }
+
+    @Test void duplicateRegistrationNumberIsRejectedAsConflictBeforeCreatingUser() {
+        when(users.existsByEmail("a@b.com")).thenReturn(false);
+        when(students.existsByRegisterNumber("R1")).thenReturn(true);
+
+        var error = assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> service.register(new RegisterStudentRequest("A@B.com", "password123", " R1 ", "Student", "CS", 2030)));
+
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+        verify(users, never()).save(any(User.class));
+        verify(students, never()).save(any(Student.class));
     }
 
     @Test void successfulLoginIssuesAccessToken() {

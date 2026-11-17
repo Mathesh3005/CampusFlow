@@ -1,31 +1,31 @@
 :host { display: block; }
 .details-page { max-width: 860px; margin: 0 auto; }
-.back-link { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 18px; color: #1d4ed8; font-size: 13px; font-weight: 600; text-decoration: none; }
+.back-link { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 18px; color: var(--cf-primary-dark); font-size: 13px; font-weight: 600; text-decoration: none; }
 .back-link mat-icon { width: 18px; height: 18px; font-size: 18px; }
-.details-panel { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 4%); }
-.notification-header { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 26px; border-bottom: 1px solid #e2e8f0; }
+.details-panel { overflow: hidden; border: 1px solid var(--cf-border); border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 4%); }
+.notification-header { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 26px; border-bottom: 1px solid var(--cf-border); }
 .notification-header.unread { background: #f8fbff; }
-.type-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 14px; background: #eff6ff; color: #2563eb; }
-.eyebrow { margin: 0 0 7px; color: #2563eb; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
-h1 { margin: 0; color: #0f172a; font-size: clamp(20px, 3vw, 26px); }
-.notification-header time { display: inline-block; margin-top: 8px; color: #64748b; font-size: 12px; }
-.read-badge { padding: 5px 9px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; }
-.read-badge.unread-badge { background: #dbeafe; color: #1d4ed8; }
+.type-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 14px; background: var(--cf-primary-soft); color: var(--cf-primary); }
+.eyebrow { margin: 0 0 7px; color: var(--cf-primary); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+h1 { margin: 0; color: var(--cf-text-primary); font-size: clamp(20px, 3vw, 26px); }
+.notification-header time { display: inline-block; margin-top: 8px; color: var(--cf-text-secondary); font-size: 12px; }
+.read-badge { padding: 5px 9px; border-radius: 999px; background: #f1f5f9; color: var(--cf-text-secondary); font-size: 11px; font-weight: 600; }
+.read-badge.unread-badge { background: #dbeafe; color: var(--cf-primary-dark); }
 .notification-body { min-height: 120px; padding: 24px 28px; color: #334155; font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .notification-body p { margin: 0; }
-.notification-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid #e2e8f0; }
+.notification-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--cf-border); }
 .primary-button, .delete-button { min-height: 40px; padding: 0 14px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.primary-button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #2563eb; background: #2563eb; color: #fff; text-decoration: none; }
+.primary-button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--cf-primary); background: var(--cf-primary); color: #fff; text-decoration: none; }
 .delete-button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; }
 .primary-button:disabled, .delete-button:disabled { cursor: not-allowed; opacity: .55; }
 .action-message { margin: 0 0 14px; color: #166534; font-size: 14px; }
 .action-message.action-error { color: #b91c1c; }
-.state-message { display: grid; justify-items: center; gap: 10px; padding: 56px 20px; color: #64748b; text-align: center; }
+.state-message { display: grid; justify-items: center; gap: 10px; padding: 56px 20px; color: var(--cf-text-secondary); text-align: center; }
 .state-message h1 { font-size: 19px; }
 .state-message p { margin: 0; font-size: 14px; }
 .state-message mat-icon { width: 38px; height: 38px; color: #16a34a; font-size: 38px; }
 .error-state h1 { color: #991b1b; }
-.error-state a { color: #1d4ed8; }
+.error-state a { color: var(--cf-primary-dark); }
 @media (max-width: 600px) {
   .notification-header { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 20px; }
   .type-icon { width: 40px; height: 40px; }

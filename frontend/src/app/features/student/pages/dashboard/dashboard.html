@@ -1,31 +1,48 @@
 <div class="dashboard-page">
-  <header class="welcome-section">
-    <div>
-      <p class="eyebrow">STUDENT WORKSPACE</p>
-      <h1>Welcome back</h1>
-      <p class="welcome-meta">{{ user()?.email }} <span aria-hidden="true">·</span> {{ today }} UTC</p>
+  <header class="dashboard-hero">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span> STUDENT WORKSPACE</p>
+      <h1>Welcome back, {{ welcomeName() }}</h1>
+      <p class="hero-description">Your next opportunity starts with one good step. Here's your placement progress.</p>
+      <p class="welcome-meta"><span>{{ user()?.email }}</span><span class="meta-separator" aria-hidden="true">·</span><time>{{ today }} UTC</time></p>
     </div>
-    <button class="refresh-button" type="button" [disabled]="loading()" (click)="load()">{{ loading() ? 'Refreshing…' : 'Refresh' }}</button>
+    <div class="hero-actions">
+      <div class="resume-status" [class.ready]="hasActiveResume()">
+        <span class="resume-status-icon" aria-hidden="true"><mat-icon>{{ hasActiveResume() ? 'task_alt' : 'description' }}</mat-icon></span>
+        <span><strong>{{ hasActiveResume() ? 'Resume ready' : 'Add a resume' }}</strong><small>{{ hasActiveResume() ? 'Available for job applications' : 'Upload one to apply faster' }}</small></span>
+        <a routerLink="/student/resumes" [attr.aria-label]="hasActiveResume() ? 'Manage your resumes' : 'Upload a resume'" class="resume-link"><mat-icon aria-hidden="true">arrow_forward</mat-icon></a>
+      </div>
+      <button class="refresh-button" type="button" [disabled]="loading()" (click)="load()">
+        <mat-icon aria-hidden="true">refresh</mat-icon>{{ loading() ? 'Refreshing…' : 'Refresh' }}
+      </button>
+    </div>
   </header>
+
+  <nav class="quick-links" aria-label="Quick actions">
+    <a routerLink="/student/jobs"><span class="quick-icon jobs-icon"><mat-icon aria-hidden="true">work_outline</mat-icon></span><span><strong>Explore jobs</strong><small>Find a good fit</small></span><mat-icon class="quick-arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+    <a routerLink="/student/profile"><span class="quick-icon profile-icon"><mat-icon aria-hidden="true">person_outline</mat-icon></span><span><strong>Update profile</strong><small>Keep your details current</small></span><mat-icon class="quick-arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+    <a routerLink="/student/skills"><span class="quick-icon skills-icon"><mat-icon aria-hidden="true">auto_awesome</mat-icon></span><span><strong>Build your skills</strong><small>Show what you know</small></span><mat-icon class="quick-arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+  </nav>
 
   @if (state().status === 'error') {
     <section class="page-error" role="alert">
-      <p>{{ state().error }}</p>
-      <button type="button" (click)="load()">Try again</button>
+      <span class="error-icon"><mat-icon aria-hidden="true">cloud_off</mat-icon></span>
+      <div><strong>Dashboard unavailable</strong><p>{{ state().error }}</p></div>
+      <button type="button" (click)="load()"><mat-icon aria-hidden="true">refresh</mat-icon> Try again</button>
     </section>
   } @else {
     @if (data()?.summaryError) {
-      <p class="summary-warning" role="status">Summary metrics are temporarily unavailable. Sections below are still up to date.</p>
+      <p class="summary-warning" role="status"><mat-icon aria-hidden="true">info</mat-icon><span>Summary metrics are temporarily unavailable. Your activity sections are still up to date.</span></p>
     }
-    <section class="stats-grid" aria-label="Overview">
-      <app-overview-stat-card label="Applications" icon="description" caption="All submitted applications" [value]="applicationsCount()" [loading]="loading()" />
-      <app-overview-stat-card label="Shortlisted" icon="task_alt" caption="Applications moved forward" [value]="shortlistedCount()" [loading]="loading()" />
+    <section class="stats-grid" aria-label="Placement overview">
+      <app-overview-stat-card label="Applications" icon="description" caption="Submitted to employers" [value]="applicationsCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Shortlisted" icon="task_alt" caption="Moved forward" [value]="shortlistedCount()" [loading]="loading()" />
       <app-overview-stat-card label="Selected" icon="verified" caption="Offers received" [value]="selectedCount()" [loading]="loading()" />
-      <app-overview-stat-card label="Upcoming interviews" icon="event" caption="Scheduled in the future" [value]="upcomingInterviewCount()" [loading]="loading()" />
-      <app-overview-stat-card label="Available jobs" icon="work_outline" caption="Published and eligible for you" [value]="jobsCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Upcoming interviews" icon="event" caption="Scheduled ahead" [value]="upcomingInterviewCount()" [loading]="loading()" />
+      <app-overview-stat-card label="Available jobs" icon="work_outline" caption="Eligible opportunities" [value]="jobsCount()" [loading]="loading()" />
     </section>
 
-    <section class="dashboard-grid" aria-label="Dashboard details">
+    <section class="dashboard-grid" aria-label="Your placement activity">
       <app-recent-applications [applications]="applications()" [error]="data()?.applications.error ?? null" [loading]="loading()" />
       <app-available-jobs [jobs]="jobs()" [error]="data()?.jobs.error ?? null" [loading]="loading()" />
       <app-upcoming-interviews [interviews]="interviews()" [error]="data()?.interviews.error ?? null" [partialResults]="data()?.interviews.partialResults ?? false" [loading]="loading()" />

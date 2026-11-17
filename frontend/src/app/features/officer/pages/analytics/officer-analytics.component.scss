@@ -27,7 +27,7 @@
 }
 
 .eyebrow {
-  color: #6478db;
+  color: var(--cf-primary);
   font-size: 11px;
   font-weight: 750;
   letter-spacing: 1.5px;
@@ -76,8 +76,8 @@
   display: grid;
   place-items: center;
   border-radius: 10px;
-  background: #eef0ff;
-  color: #6478db;
+  background: var(--cf-primary-soft);
+  color: var(--cf-primary);
 }
 
 .metric-card h2 {
@@ -162,7 +162,7 @@ table {
 .progress-fill,
 .trend-fill {
   height: 100%;
-  background: #6478db;
+  background: var(--cf-primary);
   border-radius: 20px;
   transition: width 0.3s ease;
 }
@@ -208,8 +208,8 @@ table {
   height: 32px;
   display: grid;
   place-items: center;
-  background: #eef0ff;
-  color: #6478db;
+  background: var(--cf-primary-soft);
+  color: var(--cf-primary);
   border-radius: 9px;
   font-weight: 700;
 }
@@ -258,7 +258,7 @@ table {
   width: 32px;
   height: 32px;
   border: 3px solid #e6e8f2;
-  border-top-color: #6478db;
+  border-top-color: var(--cf-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -273,7 +273,7 @@ table {
   padding: 10px 18px;
   border: none;
   border-radius: 8px;
-  background: #6478db;
+  background: var(--cf-primary);
   color: white;
   cursor: pointer;
 }

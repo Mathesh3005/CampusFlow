@@ -25,7 +25,7 @@
       <dl class="application-metadata">
         <div><dt>Applied</dt><dd><time [attr.datetime]="current.application.appliedAt">{{ current.application.appliedAt | date:'medium':'UTC' }} UTC</time></dd></div>
         <div><dt>Last updated</dt><dd><time [attr.datetime]="current.application.updatedAt">{{ current.application.updatedAt | date:'medium':'UTC' }} UTC</time></dd></div>
-        @if (current.application.resumeId !== null) { <div><dt>Resume</dt><dd>Resume #{{ current.application.resumeId }}</dd></div> }
+        @if (current.application.resumeId !== null) { <div><dt>Resume</dt><dd>{{ current.application.resumeFileName || 'Resume #' + current.application.resumeId }}</dd></div> }
       </dl>
       @if (current.application.coverLetter) {
         <section class="cover-letter"><h2>Cover letter</h2><p>{{ current.application.coverLetter }}</p></section>

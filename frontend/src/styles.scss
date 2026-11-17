@@ -1,4 +1,15 @@
 @use '@angular/material' as mat;
+@use './app/shared/layout/workspace-layout.shared';
+@use './app/features/student/pages/dashboard/dashboard.shared';
+@use './app/features/officer/pages/dashboard/officer-dashboard.shared';
+@use './app/features/admin/pages/officers/admin-officers.shared';
+@use './app/features/officer/pages/applications/applications-list.component.shared';
+@use './app/features/officer/pages/applications/application-details.component.shared';
+@use './app/features/officer/pages/jobs/jobs-list.component.shared';
+@use './app/features/student/pages/jobs/job-details.component.shared';
+@use './app/features/student/pages/resumes/resumes-page.component.shared';
+@use './app/features/officer/pages/students/student-detail.component.shared';
+@use './app/features/officer/pages/interviews/interview-details.component.shared';
 
 html {
   color-scheme: light;
@@ -13,34 +24,76 @@ html {
 }
 
 :root {
-  --cf-primary: #2563eb;
-  --cf-primary-dark: #1d4ed8;
-  --cf-background: #f8fafc;
-  --cf-surface: #ffffff;
-  --cf-text-primary: #0f172a;
-  --cf-text-secondary: #64748b;
-  --cf-border: #e2e8f0;
-  --cf-success: #16a34a;
-  --cf-warning: #d97706;
-  --cf-danger: #dc2626;
+  color-scheme: light;
 
-  --cf-radius-sm: 6px;
-  --cf-radius-md: 10px;
+  --cf-primary: #2854c5;
+  --cf-primary-dark: #1e429e;
+  --cf-primary-soft: #edf3ff;
+  --cf-primary-border: #d5e2ff;
+  --cf-background: #f5f7fb;
+  --cf-surface: #fff;
+  --cf-surface-muted: #f8faff;
+  --cf-text-primary: #17243a;
+  --cf-text-secondary: #617089;
+  --cf-text-tertiary: #8793a7;
+  --cf-border: #e1e7f0;
+  --cf-border-strong: #cbd5e3;
+  --cf-success: #16825d;
+  --cf-success-soft: #eaf7f1;
+  --cf-warning: #a9690b;
+  --cf-warning-soft: #fff5df;
+  --cf-danger: #c3424d;
+  --cf-danger-soft: #fff0f1;
+  --cf-info: #2666a8;
+  --cf-info-soft: #edf6ff;
+
+  --cf-font-sans: Inter, 'Segoe UI', Roboto, Arial, sans-serif;
+  --cf-radius-xs: 6px;
+  --cf-radius-sm: 8px;
+  --cf-radius-md: 12px;
   --cf-radius-lg: 16px;
+  --cf-radius-xl: 20px;
 
-  --cf-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
-  --cf-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --cf-shadow-xs: 0 1px 2px rgb(24 39 75 / 4%);
+  --cf-shadow-sm: 0 2px 8px rgb(24 39 75 / 5%);
+  --cf-shadow-md: 0 8px 24px rgb(24 39 75 / 8%);
+  --cf-shadow-overlay: 0 20px 48px rgb(24 39 75 / 16%);
+
+  --cf-space-1: 4px;
+  --cf-space-2: 8px;
+  --cf-space-3: 12px;
+  --cf-space-4: 16px;
+  --cf-space-5: 20px;
+  --cf-space-6: 24px;
+  --cf-space-8: 32px;
+  --cf-space-10: 40px;
+  --cf-control-height: 42px;
+  --cf-motion-fast: 140ms ease;
+  --cf-motion-standard: 200ms ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-width: 320px;
+  min-height: 100%;
+  scroll-behavior: smooth;
+  background: var(--cf-background);
+}
+
 body {
+  min-width: 320px;
+  min-height: 100vh;
   margin: 0;
-  font-family: Roboto, sans-serif;
   background: var(--cf-background);
   color: var(--cf-text-primary);
+  font-family: var(--cf-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -49,3 +102,69 @@ textarea,
 select {
   font: inherit;
 }
+
+button {
+  color: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input:not([type='checkbox'], [type='radio'], [type='file']),
+select,
+textarea {
+  color: var(--cf-text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--cf-text-tertiary);
+  opacity: 1;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--cf-primary);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--cf-primary) 35%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #dce8ff;
+  color: #173775;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Project technology controls share the application-wide style budget. */
+.projects-page .technology-section { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--cf-border); }
+.projects-page .technology-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.projects-page .technology-heading h3 { margin: 0; color: var(--cf-text-secondary); font-size: 11px; font-weight: 700; }
+.projects-page .technology-heading .text-button { min-height: 32px; }
+.projects-page .technology-list { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; padding: 0; list-style: none; }
+.projects-page .technology-list li { display: inline-flex; align-items: center; gap: 7px; padding: 4px 8px; border: 1px solid var(--cf-primary-border); border-radius: 999px; background: var(--cf-primary-soft); color: var(--cf-primary-dark); font-size: 11px; }
+.projects-page .technology-list .text-button { padding: 2px 3px; font-size: 10px; }
+.projects-page .technology-add { display: flex; max-width: 440px; gap: 8px; margin-top: 10px; }
+.projects-page .technology-add select { min-width: 0; flex: 1; min-height: 40px; padding: 0 10px; border: 1px solid var(--cf-border); border-radius: 8px; background: #fff; color: var(--cf-text-primary); font: inherit; font-size: 12px; }
+.projects-page .technology-add select:focus-visible { outline: 3px solid #92b4ff; outline-offset: 2px; }
+.projects-page .technology-add .secondary-button { min-height: 40px; }
+.projects-page .technology-state { margin: 9px 0; color: var(--cf-text-secondary); font-size: 11px; }
+.projects-page .technology-error { margin: 9px 0; color: var(--cf-danger); font-size: 12px; }
+.projects-page .technology-add button:disabled { cursor: not-allowed; opacity: .6; }

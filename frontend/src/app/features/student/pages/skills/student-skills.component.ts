@@ -71,10 +71,17 @@ export class StudentSkillsComponent implements OnInit {
   updateProficiency(skillId: number, event: Event): void {
     const value = (event.target as HTMLSelectElement).value as ProficiencyLevel;
     if (!this.levels.includes(value)) return;
+    const current = this.skills().find(skill => skill.skillId === skillId);
+    if (!current || current.proficiencyLevel === value) return;
+    const previousLevel = current.proficiencyLevel;
     this.errorMessage.set(null);
+    this.successMessage.set(null);
     this.skillsApi.update(skillId, value).subscribe({
       next: saved => this.skills.update(current => current.map(skill => skill.skillId === skillId ? saved : skill)),
-      error: error => this.errorMessage.set(this.message(error, 'Could not update proficiency.')),
+      error: error => {
+        (event.target as HTMLSelectElement).value = previousLevel;
+        this.errorMessage.set(this.message(error, 'Could not update proficiency.'));
+      },
     });
   }
 

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { provideRouter } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { ApiError } from '../../../../core/http/api-error.handler';
 import { EmploymentType, JobResponse, JobStatus, PageResponse, WorkMode } from '../../../../core/models/domain.models';
@@ -325,15 +326,18 @@ function createFixture(listJobs: ReturnType<typeof vi.fn>, overrides: JobsListTe
   };
   TestBed.configureTestingModule({
     imports: [OfficerJobsList],
-    providers: [{
-      provide: OfficerJobsService,
-      useValue: {
-        listJobs,
-        publishJob: overrides.publishJob ?? vi.fn(() => of(job())),
-        closeJob: overrides.closeJob ?? vi.fn(() => of(job())),
-        deleteJob: overrides.deleteJob ?? vi.fn(() => of(void 0)),
+    providers: [
+      provideRouter([]),
+      {
+        provide: OfficerJobsService,
+        useValue: {
+          listJobs,
+          publishJob: overrides.publishJob ?? vi.fn(() => of(job())),
+          closeJob: overrides.closeJob ?? vi.fn(() => of(job())),
+          deleteJob: overrides.deleteJob ?? vi.fn(() => of(void 0)),
+        },
       },
-    }],
+    ],
   });
   TestBed.overrideProvider(MatDialog, { useValue: dialog });
   return Object.assign(TestBed.createComponent(OfficerJobsList), { dialog });

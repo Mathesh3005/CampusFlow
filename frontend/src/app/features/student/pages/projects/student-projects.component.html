@@ -13,8 +13,8 @@
       <label class="field"><span>Project title</span><input formControlName="title" maxlength="150" required />@if (form.controls.title.touched && form.controls.title.invalid) { <small>Enter a title up to 150 characters.</small> }</label>
       <label class="field"><span>Description</span><textarea formControlName="description" rows="4" maxlength="10000"></textarea></label>
       <div class="form-grid">
-        <label class="field"><span>Source code URL</span><input type="url" formControlName="githubUrl" maxlength="500" placeholder="https://github.com/…" /></label>
-        <label class="field"><span>Live demo URL</span><input type="url" formControlName="liveDemoUrl" maxlength="500" placeholder="https://…" /></label>
+      <label class="field"><span>Source code URL</span><input type="url" formControlName="githubUrl" maxlength="500" placeholder="https://github.com/…" />@if (form.controls.githubUrl.touched && form.controls.githubUrl.hasError('pattern')) { <small>Enter a valid HTTP or HTTPS URL.</small> }</label>
+      <label class="field"><span>Live demo URL</span><input type="url" formControlName="liveDemoUrl" maxlength="500" placeholder="https://…" />@if (form.controls.liveDemoUrl.touched && form.controls.liveDemoUrl.hasError('pattern')) { <small>Enter a valid HTTP or HTTPS URL.</small> }</label>
         <label class="field"><span>Start date</span><input type="date" formControlName="startDate" /></label>
         <label class="field"><span>End date</span><input type="date" formControlName="endDate" /></label>
       </div>
@@ -33,6 +33,31 @@
           <div class="project-top"><div><h2>{{ project.title }}</h2><p class="project-dates">{{ project.startDate || 'Date not set' }} @if (project.endDate) { <span>— {{ project.endDate }}</span> }</p></div><div class="project-actions"><button class="text-button" type="button" (click)="startEdit(project)">Edit</button><button class="text-button danger" type="button" (click)="deletingId.set(project.id)">Remove</button></div></div>
           @if (project.description) { <p class="description">{{ project.description }}</p> }
           <div class="project-links">@if (project.githubUrl) { <a [href]="project.githubUrl" target="_blank" rel="noopener noreferrer">Source code <span aria-hidden="true">↗</span></a> } @if (project.liveDemoUrl) { <a [href]="project.liveDemoUrl" target="_blank" rel="noopener noreferrer">Live demo <span aria-hidden="true">↗</span></a> }</div>
+          <section class="technology-section" [attr.aria-label]="'Technologies for ' + project.title">
+            <div class="technology-heading"><h3>Technologies</h3><button class="text-button" type="button" (click)="manageTechnologies(project.id)" [attr.aria-expanded]="technologyProjectId() === project.id">{{ technologyProjectId() === project.id ? 'Done' : 'Manage' }}</button></div>
+            @if (technologyProjectId() === project.id) {
+              @if (technologyLoading()) { <p class="technology-state" role="status">Loading technologies...</p> }
+              @else {
+                @if (technologyError()) { <p class="technology-error" role="alert">{{ technologyError() }}</p> }
+                @if (technologies().length) {
+                  <ul class="technology-list">
+                    @for (technology of technologies(); track technology.skillId) {
+                      <li><span>{{ technology.skillName }}</span><button class="text-button danger" type="button" (click)="removeTechnology(project.id, technology.skillId)" [disabled]="technologySaving()">Remove<span class="visually-hidden"> {{ technology.skillName }}</span></button></li>
+                    }
+                  </ul>
+                } @else { <p class="technology-state">No technologies added yet.</p> }
+                <div class="technology-add">
+                  <label class="visually-hidden" [for]="'technology-' + project.id">Choose a technology</label>
+                  <select [id]="'technology-' + project.id" [value]="selectedTechnologyId()" (change)="selectedTechnologyId.set($any($event.target).value)">
+                    <option value="">Choose technology</option>
+                    @for (technology of availableTechnologies; track technology.id) { <option [value]="technology.id">{{ technology.name }}</option> }
+                  </select>
+                  <button class="secondary-button" type="button" (click)="addTechnology(project.id)" [disabled]="technologySaving() || !selectedTechnologyId()">{{ technologySaving() ? 'Saving...' : 'Add' }}</button>
+                </div>
+                @if (!availableTechnologies.length && technologies().length) { <p class="technology-state">All available skills are already linked.</p> }
+              }
+            }
+          </section>
           @if (deletingId() === project.id) { <div class="delete-confirm" role="group" aria-label="Confirm project removal"><span>Remove this project?</span><button class="text-button" type="button" (click)="deletingId.set(null)">Keep it</button><button class="text-button danger" type="button" (click)="deleteProject(project.id)">Remove</button></div> }
         </article>
       }

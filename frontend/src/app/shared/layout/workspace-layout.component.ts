@@ -57,8 +57,12 @@ export class WorkspaceLayout implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   readonly role = this.route.snapshot.data['role'] as UserRole;
   readonly user = this.auth.user;
+  readonly userInitial = computed(() => this.user()?.email?.trim().charAt(0).toUpperCase() || 'U');
+  readonly roleDescription = computed(() => this.role === UserRole.Student ? 'Student portal'
+    : this.role === UserRole.Admin ? 'Campus administration' : 'Placement team');
   readonly navigation = this.role === UserRole.Student ? studentNavigation
     : this.role === UserRole.Admin ? adminNavigation : officerNavigation;
+  readonly showNotifications = this.navigation.some(item => item.path === 'notifications');
   readonly roleLabel = computed(() => this.role === UserRole.Student ? 'Student'
     : this.role === UserRole.Admin ? 'Administrator' : 'Placement Officer');
   readonly workspacePrefix = this.role === UserRole.Student ? 'student'

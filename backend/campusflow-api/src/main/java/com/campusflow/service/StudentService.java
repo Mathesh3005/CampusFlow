@@ -105,7 +105,10 @@ public class StudentService {
         student.setGraduationYear(request.graduationYear());
         student.setCgpa(request.cgpa());
         student.setPhone(request.phone() == null || request.phone().isBlank() ? null : request.phone().trim());
-        return studentRepository.save(student);
+        Long userId = student.getUser().getId();
+        studentRepository.save(student);
+        return studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Student profile not found after update"));
     }
 
     public void deleteStudent(Long studentId) {

@@ -1,11 +1,18 @@
 <div class="workspace-shell" [class.nav-open]="mobileNavOpen()">
   <aside id="workspace-sidebar" class="workspace-sidebar" aria-label="Main navigation" (keydown.escape)="onSidebarEscape($event)">
     <a class="brand" [routerLink]="['/', workspacePrefix, 'dashboard']" (click)="closeMobileNavigation()">
-      <span class="brand-mark">C</span>
-      <span>CampusFlow</span>
+      <span class="brand-mark" aria-hidden="true"><mat-icon>account_tree</mat-icon></span>
+      <span class="brand-copy"><strong>CampusFlow</strong><small>Placement platform</small></span>
     </a>
 
+    <section class="workspace-context" aria-label="Current workspace">
+      <span class="context-indicator" aria-hidden="true"></span>
+      <div><span class="context-label">Workspace</span><strong>{{ roleLabel() }}</strong></div>
+      <mat-icon aria-hidden="true">expand_more</mat-icon>
+    </section>
+
     <nav #navigationElement class="navigation-list">
+      <span class="navigation-caption">WORKSPACE</span>
       @for (item of navigation; track item.path) {
         <a
           class="navigation-link"
@@ -31,7 +38,13 @@
       }
     </nav>
 
-    <div class="sidebar-role">{{ roleLabel() }}</div>
+    <div class="sidebar-bottom">
+      <a class="sidebar-help" [routerLink]="['/', workspacePrefix, 'settings']" (click)="closeMobileNavigation()"><mat-icon aria-hidden="true">settings</mat-icon><span><strong>Account settings</strong><small>Manage your account</small></span><mat-icon class="help-arrow" aria-hidden="true">arrow_forward</mat-icon></a>
+      <div class="sidebar-role">
+        <span class="profile-avatar" aria-hidden="true">{{ userInitial() }}</span>
+        <span class="profile-copy"><strong>{{ user()?.email }}</strong><small>{{ roleDescription() }}</small></span>
+      </div>
+    </div>
   </aside>
 
   @if (mobileNavOpen()) {
@@ -43,15 +56,28 @@
       <button #menuToggle class="menu-toggle" type="button" aria-label="Toggle navigation" aria-controls="workspace-sidebar" [attr.aria-expanded]="mobileNavOpen()" (click)="toggleMobileNavigation()">
         <mat-icon>menu</mat-icon>
       </button>
-      <span class="topbar-role">{{ roleLabel() }} workspace</span>
-      <div class="user-summary">
-        <span class="user-email">{{ user()?.email }}</span>
-        <span class="user-role">{{ user()?.role }}</span>
+      <div class="topbar-heading">
+        <span class="topbar-kicker">CAMPUSFLOW</span>
+        <span class="topbar-role">{{ roleLabel() }}</span>
       </div>
-      <button class="logout-button" type="button" (click)="logOut()" aria-label="Log out of CampusFlow">
+      <div class="topbar-actions">
+        @if (showNotifications) {
+          <a class="topbar-notifications" [routerLink]="['/', workspacePrefix, 'notifications']" (click)="closeMobileNavigation()" [attr.aria-label]="unreadCount() ? 'View notifications, ' + unreadCount() + ' unread on latest page' : 'View notifications'">
+            <mat-icon aria-hidden="true">notifications_none</mat-icon>
+            @let unread = unreadCount();
+            @if (unread !== null && unread > 0) { <span class="topbar-unread-dot" aria-hidden="true"></span> }
+          </a>
+        }
+        <div class="topbar-user" [attr.aria-label]="user()?.email + ', ' + roleLabel()">
+          <span class="profile-avatar topbar-avatar" aria-hidden="true">{{ userInitial() }}</span>
+          <span class="user-summary"><strong class="user-email">{{ user()?.email }}</strong><small class="user-role">{{ user()?.role }}</small></span>
+        </div>
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <button class="logout-button" type="button" (click)="logOut()" aria-label="Log out of CampusFlow">
         <mat-icon aria-hidden="true">logout</mat-icon>
-        <span>Log out</span>
-      </button>
+          <span>Sign out</span>
+        </button>
+      </div>
     </header>
 
     <main class="workspace-content">

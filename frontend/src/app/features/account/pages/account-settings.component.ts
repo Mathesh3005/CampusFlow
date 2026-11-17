@@ -54,6 +54,9 @@ import { ApiError } from '../../../core/http/api-error.handler';
                 @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) {
                   <mat-error>Use between 8 and 72 characters.</mat-error>
                 }
+                @if (form.controls.newPassword.touched && form.hasError('passwordUnchanged')) {
+                  <mat-error>Choose a password different from your current password.</mat-error>
+                }
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -153,7 +156,9 @@ export class AccountSettingsComponent {
 }
 
 function passwordsMatch(control: AbstractControl): ValidationErrors | null {
+  const currentPassword = control.get('currentPassword')?.value;
   const password = control.get('newPassword')?.value;
   const confirmation = control.get('confirmPassword')?.value;
+  if (currentPassword && password && currentPassword === password) return { passwordUnchanged: true };
   return password && confirmation && password !== confirmation ? { passwordMismatch: true } : null;
 }

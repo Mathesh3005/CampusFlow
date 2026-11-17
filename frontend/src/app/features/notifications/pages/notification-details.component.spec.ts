@@ -114,6 +114,7 @@ interface TestOverrides {
 function createFixture(id: string, workspace: string, overrides: TestOverrides = {}) {
   const api: NotificationsApi = {
     unreadOnLatestPage: signal<number | null>(0).asReadonly(),
+    refreshUnreadCount: () => of(0),
     listNotifications: () => of({
       content: [], page: 0, size: 20, totalElements: 0, totalPages: 0,
       first: true, last: true, hasNext: false, hasPrevious: false,

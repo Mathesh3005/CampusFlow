@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { throwError, of } from 'rxjs';
 import {
@@ -21,9 +23,10 @@ import {
   OFFICER_INTERVIEWS_PAGE_SIZE,
   OfficerInterviewsService,
 } from './officer-interviews.service';
-import { OFFICER_JOBS_DEFAULT_SORT, OfficerJobsService } from './officer-jobs.service';
+import { OfficerJobsService } from './officer-jobs.service';
 import { OfficerNotificationsService } from './officer-notifications.service';
 import { OfficerDashboardService } from './officer-dashboard.service';
+import { environment } from '../../../../environments/environment';
 
 describe('OfficerDashboardService', () => {
   let service: OfficerDashboardService;
@@ -31,6 +34,7 @@ describe('OfficerDashboardService', () => {
   let applications: { listApplications: ReturnType<typeof vi.fn> };
   let interviews: { listInterviews: ReturnType<typeof vi.fn> };
   let notifications: { listNotifications: ReturnType<typeof vi.fn> };
+  let requests: HttpTestingController;
 
   beforeEach(() => {
     jobs = { listJobs: vi.fn(() => of(page<JobResponse>([], 0, 0))) };
@@ -41,6 +45,8 @@ describe('OfficerDashboardService', () => {
     TestBed.configureTestingModule({
       providers: [
         OfficerDashboardService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: OfficerJobsService, useValue: jobs },
         { provide: OfficerApplicationsService, useValue: applications },
         { provide: OfficerInterviewsService, useValue: interviews },
@@ -48,38 +54,41 @@ describe('OfficerDashboardService', () => {
       ],
     });
     service = TestBed.inject(OfficerDashboardService);
+    requests = TestBed.inject(HttpTestingController);
   });
 
-  it('uses the exact jobs total and leaves unsupported status aggregates unavailable', () => {
-    jobs.listJobs.mockReturnValue(of(page([], 0, 42)));
+  afterEach(() => requests.verify());
+
+  it('uses the backend dashboard totals for jobs and job statuses', () => {
     let result: unknown;
     service.loadJobsOverview().subscribe(value => result = value);
-
-    expect(jobs.listJobs).toHaveBeenCalledWith({
-      page: 0,
-      size: 1,
-      sort: OFFICER_JOBS_DEFAULT_SORT,
-    });
+    requests.expectOne(`${environment.apiBaseUrl}/officer/dashboard`).flush(dashboard({
+      totalJobs: 42, publishedJobs: 30, draftJobs: 8, closedJobs: 4,
+    }));
     expect(result).toEqual({
       totalJobs: 42,
-      statusTotals: { published: null, draft: null, closed: null },
+      statusTotals: { published: 30, draft: 8, closed: 4 },
     });
   });
 
   it('reports zero job status totals only when there are no jobs', () => {
     let result: unknown;
     service.loadJobsOverview().subscribe(value => result = value);
+    requests.expectOne(`${environment.apiBaseUrl}/officer/dashboard`).flush(dashboard());
     expect(result).toEqual({
       totalJobs: 0,
       statusTotals: { published: 0, draft: 0, closed: 0 },
     });
   });
 
-  it('requests recent applications in newest-first order and keeps status aggregates unavailable', () => {
+  it('requests recent applications in newest-first order with backend status totals', () => {
     const recent = [application(9), application(8)];
     applications.listApplications.mockReturnValue(of(page(recent, 0, 26)));
     let result: unknown;
     service.loadApplicationsOverview().subscribe(value => result = value);
+    requests.expectOne(`${environment.apiBaseUrl}/officer/dashboard`).flush(dashboard({
+      totalApplications: 26, pendingApplications: 5, shortlistedApplications: 4, selectedApplications: 2,
+    }));
 
     expect(applications.listApplications).toHaveBeenCalledWith({
       page: 0,
@@ -88,7 +97,7 @@ describe('OfficerDashboardService', () => {
     });
     expect(result).toEqual({
       totalApplications: 26,
-      statusTotals: { awaitingReview: null, shortlisted: null, selected: null },
+      statusTotals: { awaitingReview: 5, shortlisted: 4, selected: 2 },
       recentApplications: recent,
     });
   });
@@ -96,6 +105,7 @@ describe('OfficerDashboardService', () => {
   it('reports zero application statuses only when the exact total is zero', () => {
     let result: unknown;
     service.loadApplicationsOverview().subscribe(value => result = value);
+    requests.expectOne(`${environment.apiBaseUrl}/officer/dashboard`).flush(dashboard());
     expect(result).toEqual({
       totalApplications: 0,
       statusTotals: { awaitingReview: 0, shortlisted: 0, selected: 0 },
@@ -205,14 +215,37 @@ function application(id: number): ApplicationResponse {
   return {
     id,
     studentId: id + 100,
-    jobId: 3,
+    studentName: 'Student One', studentRegisterNumber: 'REG-001', studentDepartment: 'Computer Science', studentCgpa: 8.5, jobId: 3,
     resumeId: null,
-    companyName: 'CampusFlow Inc.',
+    resumeFileName: null, companyName: 'CampusFlow Inc.',
     jobTitle: 'Graduate Engineer',
     coverLetter: null,
     status: ApplicationStatus.Applied,
     appliedAt: `2026-10-${String(id).padStart(2, '0')}T12:00:00Z`,
     updatedAt: '2026-10-10T12:00:00Z',
+  };
+}
+
+function dashboard(overrides: Partial<{
+  totalJobs: number;
+  publishedJobs: number;
+  draftJobs: number;
+  closedJobs: number;
+  totalApplications: number;
+  pendingApplications: number;
+  underReviewApplications: number;
+  shortlistedApplications: number;
+  selectedApplications: number;
+  rejectedApplications: number;
+  withdrawnApplications: number;
+  scheduledInterviews: number;
+}> = {}) {
+  return {
+    totalJobs: 0, publishedJobs: 0, draftJobs: 0, closedJobs: 0,
+    totalApplications: 0, pendingApplications: 0, underReviewApplications: 0,
+    shortlistedApplications: 0, selectedApplications: 0, rejectedApplications: 0,
+    withdrawnApplications: 0, scheduledInterviews: 0,
+    ...overrides,
   };
 }
 

@@ -124,9 +124,9 @@ function application(): ApplicationResponse {
   return {
     id: 789,
     studentId: 12,
-    jobId: 123,
+    studentName: 'Student One', studentRegisterNumber: 'REG-001', studentDepartment: 'Computer Science', studentCgpa: 8.5, jobId: 123,
     resumeId: null,
-    companyName: 'CampusFlow Labs',
+    resumeFileName: null, companyName: 'CampusFlow Labs',
     jobTitle: 'Graduate Engineer',
     coverLetter: 'A short note.',
     status: ApplicationStatus.Applied,

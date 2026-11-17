@@ -1,7 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiError } from '../../../../core/http/api-error.handler';
-import { StudentProject, StudentProjectRequest } from '../../models/student-project.model';
+import { ProjectTechnology, StudentProject, StudentProjectRequest } from '../../models/student-project.model';
+import { SkillOption } from '../../models/student-skill.model';
 import { StudentProjectsService } from '../../services/student-projects.service';
 
 @Component({
@@ -23,14 +25,26 @@ export class StudentProjectsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly formError = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+  readonly technologyProjectId = signal<number | null>(null);
+  readonly technologies = signal<ProjectTechnology[]>([]);
+  readonly technologyCatalog = signal<SkillOption[]>([]);
+  readonly selectedTechnologyId = signal('');
+  readonly technologyLoading = signal(false);
+  readonly technologySaving = signal(false);
+  readonly technologyError = signal<string | null>(null);
   readonly form = this.formBuilder.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(150)]],
     description: ['', Validators.maxLength(10000)],
-    githubUrl: ['', Validators.maxLength(500)],
-    liveDemoUrl: ['', Validators.maxLength(500)],
+    githubUrl: ['', [Validators.maxLength(500), Validators.pattern(/^https?:\/\/\S+$/i)]],
+    liveDemoUrl: ['', [Validators.maxLength(500), Validators.pattern(/^https?:\/\/\S+$/i)]],
     startDate: [''],
     endDate: [''],
   });
+
+  get availableTechnologies(): SkillOption[] {
+    const assigned = new Set(this.technologies().map(technology => technology.skillId));
+    return this.technologyCatalog().filter(skill => !assigned.has(skill.id));
+  }
 
   ngOnInit(): void { this.load(); }
 
@@ -65,6 +79,69 @@ export class StudentProjectsComponent implements OnInit {
   }
 
   cancelEdit(): void { this.formOpen.set(false); this.formError.set(null); }
+
+  manageTechnologies(projectId: number): void {
+    if (this.technologyProjectId() === projectId) {
+      this.technologyProjectId.set(null);
+      return;
+    }
+    this.technologyProjectId.set(projectId);
+    this.selectedTechnologyId.set('');
+    this.technologyError.set(null);
+    this.technologyLoading.set(true);
+    forkJoin({
+      technologies: this.projectsApi.technologies(projectId),
+      catalog: this.projectsApi.skillCatalog(),
+    }).subscribe({
+      next: result => {
+        this.technologies.set(result.technologies);
+        this.technologyCatalog.set(result.catalog);
+        this.technologyLoading.set(false);
+      },
+      error: error => {
+        this.technologyError.set(this.message(error, 'Could not load project technologies.'));
+        this.technologyLoading.set(false);
+      },
+    });
+  }
+
+  addTechnology(projectId: number): void {
+    const skillId = Number(this.selectedTechnologyId());
+    if (!Number.isSafeInteger(skillId) || skillId <= 0 || this.technologySaving()) return;
+    this.technologySaving.set(true);
+    this.technologyError.set(null);
+    this.successMessage.set(null);
+    this.projectsApi.addTechnology(projectId, skillId).subscribe({
+      next: technology => {
+        this.technologies.update(current => [...current, technology].sort((a, b) => a.skillName.localeCompare(b.skillName)));
+        this.selectedTechnologyId.set('');
+        this.technologySaving.set(false);
+        this.successMessage.set(`${technology.skillName} added to this project.`);
+      },
+      error: error => {
+        this.technologyError.set(this.message(error, 'Could not add this technology.'));
+        this.technologySaving.set(false);
+      },
+    });
+  }
+
+  removeTechnology(projectId: number, skillId: number): void {
+    if (this.technologySaving()) return;
+    this.technologySaving.set(true);
+    this.technologyError.set(null);
+    this.projectsApi.removeTechnology(projectId, skillId).subscribe({
+      next: () => {
+        const removed = this.technologies().find(technology => technology.skillId === skillId)?.skillName;
+        this.technologies.update(current => current.filter(technology => technology.skillId !== skillId));
+        this.technologySaving.set(false);
+        if (removed) this.successMessage.set(`${removed} removed from this project.`);
+      },
+      error: error => {
+        this.technologyError.set(this.message(error, 'Could not remove this technology.'));
+        this.technologySaving.set(false);
+      },
+    });
+  }
 
   save(): void {
     if (this.form.invalid || this.saving()) { this.form.markAllAsTouched(); return; }

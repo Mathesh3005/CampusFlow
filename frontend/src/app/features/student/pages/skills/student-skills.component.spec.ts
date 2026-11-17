@@ -63,4 +63,17 @@ describe('StudentSkillsComponent', () => {
     request.flush({ ...javaSkill, proficiencyLevel: 'INTERMEDIATE' });
     expect(fixture.componentInstance.skills()[0].proficiencyLevel).toBe('INTERMEDIATE');
   });
+
+  it('restores the selected proficiency when the API update fails', () => {
+    http.expectOne(studentSkillsUrl).flush([javaSkill]);
+    http.expectOne(catalogUrl).flush([{ id: 1, name: 'Java' }]);
+    const select = { value: 'BEGINNER' } as HTMLSelectElement;
+
+    fixture.componentInstance.updateProficiency(1, { target: select } as unknown as Event);
+    http.expectOne(`${studentSkillsUrl}/1`).flush({ detail: 'Unavailable' }, { status: 503, statusText: 'Service Unavailable' });
+
+    expect(select.value).toBe('ADVANCED');
+    expect(fixture.componentInstance.skills()[0].proficiencyLevel).toBe('ADVANCED');
+    expect(fixture.componentInstance.errorMessage()).toBeTruthy();
+  });
 });

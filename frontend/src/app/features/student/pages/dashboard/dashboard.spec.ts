@@ -56,7 +56,8 @@ describe('StudentDashboard', () => {
     fixture.detectChanges();
     const data = emptyDashboard();
     data.applications.page = page([{
-      id: 9, studentId: 1, jobId: 3, resumeId: null, companyName: 'Northwind',
+      id: 9, studentId: 1, studentName: 'Student One', studentRegisterNumber: 'REG-001',
+      studentDepartment: 'Computer Science', studentCgpa: 8.5, jobId: 3, resumeId: null, resumeFileName: null, companyName: 'Northwind',
       jobTitle: 'Graduate Analyst', coverLetter: null, status: ApplicationStatus.Shortlisted,
       appliedAt: '2026-10-10T12:00:00Z', updatedAt: '2026-10-11T12:00:00Z',
     }], 7);
@@ -123,6 +124,8 @@ describe('StudentDashboard', () => {
 
 function emptyDashboard(): StudentDashboardData {
   return {
+    summary: null,
+    summaryError: null,
     applications: { page: page([]), error: null },
     jobs: { page: page([]), error: null },
     interviews: { interviews: [], error: null, partialResults: false },

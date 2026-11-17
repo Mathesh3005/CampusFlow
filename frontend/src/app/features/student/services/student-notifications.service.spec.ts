@@ -82,6 +82,25 @@ describe('StudentNotificationsService', () => {
     deletion.flush(null, { status: 204, statusText: 'No Content' });
   });
 
+  it('keeps the server unread total when page zero is fetched again', () => {
+    service.refreshUnreadCount().subscribe();
+    requests.expectOne(`${root}/unread-count`).flush({ count: 47 });
+    service.listNotifications().subscribe();
+    requests.expectOne(`${root}?page=0&size=20&sort=createdAt,desc`)
+      .flush(page([notification(1, false), notification(2, true)]));
+    expect(service.unreadOnLatestPage()).toBe(47);
+  });
+
+  it('tracks notification state loaded directly so marking it read adjusts the total', () => {
+    service.refreshUnreadCount().subscribe();
+    requests.expectOne(`${root}/unread-count`).flush({ count: 3 });
+    service.getNotification(91).subscribe();
+    requests.expectOne(`${root}/91`).flush(notification(91, false));
+    service.markNotificationRead(91).subscribe();
+    requests.expectOne(`${root}/91/read`).flush(notification(91, true));
+    expect(service.unreadOnLatestPage()).toBe(2);
+  });
+
   it('decrements the latest-page unread count when an unread item is deleted', () => {
     service.listNotifications().subscribe();
     requests.expectOne(`${root}?page=0&size=20&sort=createdAt,desc`)

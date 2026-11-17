@@ -41,10 +41,10 @@ describe('authentication route guards', () => {
     expect(router.serializeUrl(result as UrlTree)).toBe('/student/dashboard');
   });
 
-  it('sends unsupported roles to the safe access-denied route', () => {
+  it('redirects an admin from login to the admin dashboard', () => {
     setUser(UserRole.Admin);
     const result = TestBed.runInInjectionContext(() => loginGuard(route, state));
-    expect(router.serializeUrl(result as UrlTree)).toBe('/access-denied');
+    expect(router.serializeUrl(result as UrlTree)).toBe('/admin/dashboard');
   });
 
   it('preserves a valid student deep link including query and fragment', () => {

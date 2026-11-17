@@ -3,6 +3,7 @@ package com.campusflow.service;
 import com.campusflow.entity.Project;
 import com.campusflow.entity.Student;
 import com.campusflow.repository.ProjectRepository;
+import com.campusflow.repository.ProjectSkillRepository;
 import com.campusflow.repository.StudentRepository;
 
 import org.springframework.stereotype.Service;
@@ -19,13 +20,16 @@ import java.util.List;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final ProjectSkillRepository projectSkillRepository;
     private final StudentRepository studentRepository;
 
     public ProjectService(
             ProjectRepository projectRepository,
+            ProjectSkillRepository projectSkillRepository,
             StudentRepository studentRepository) {
 
         this.projectRepository = projectRepository;
+        this.projectSkillRepository = projectSkillRepository;
         this.studentRepository = studentRepository;
     }
 
@@ -134,6 +138,7 @@ public class ProjectService {
             throw new AccessDeniedException("You cannot delete another student's project");
         }
 
+        projectSkillRepository.deleteAllByProjectId(projectId);
         projectRepository.delete(project);
     }
 }

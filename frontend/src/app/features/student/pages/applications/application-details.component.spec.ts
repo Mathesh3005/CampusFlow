@@ -17,6 +17,7 @@ describe('StudentApplicationDetails', () => {
     expect(text).toContain('Graduate Developer');
     expect(text).toContain('CampusFlow Labs');
     expect(text).toContain('APPLIED');
+    expect(text).toContain('Student resume.pdf');
     expect(text).toContain('UTC');
   });
 
@@ -59,7 +60,7 @@ function createFixture(id: string, getApplication: StudentApplicationsService['g
 
 function application(): ApplicationResponse {
   return {
-    id: 789, studentId: 12, jobId: 22, resumeId: 44, companyName: 'CampusFlow Labs',
+    id: 789, studentId: 12, studentName: 'Student One', studentRegisterNumber: 'REG-001', studentDepartment: 'Computer Science', studentCgpa: 8.5, jobId: 22, resumeId: 44, resumeFileName: 'Student resume.pdf', companyName: 'CampusFlow Labs',
     jobTitle: 'Graduate Developer', coverLetter: 'A short note.', status: ApplicationStatus.Applied,
     appliedAt: '2026-11-14T10:00:00Z', updatedAt: '2026-11-14T10:00:00Z',
   };

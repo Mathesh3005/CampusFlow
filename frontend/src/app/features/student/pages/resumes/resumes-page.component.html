@@ -90,15 +90,18 @@
               <span class="status-chip" [class.inactive-chip]="!resume.isActive">{{ resume.isActive ? 'Active' : 'Inactive' }}</span>
             </div>
             <div class="resume-actions">
+              <button class="secondary-button" type="button" (click)="preview(resume)" [disabled]="downloadingId() !== null">
+                {{ previewingId() === resume.id ? 'Opening preview...' : 'Preview' }}
+              </button>
               <button class="secondary-button" type="button" (click)="download(resume)" [disabled]="downloadingId() !== null">
                 {{ downloadingId() === resume.id ? 'Downloading…' : 'Download' }}
               </button>
               @if (resume.isActive) {
-                <button class="secondary-button" type="button" (click)="deactivate(resume)" [disabled]="operation() !== null || uploading()">
+                <button class="secondary-button" type="button" (click)="deactivate(resume)" [attr.aria-label]="'Deactivate ' + resume.fileName" [disabled]="operation() !== null || uploading()">
                   {{ operation()?.resumeId === resume.id && operation()?.action === 'deactivate' ? 'Deactivating…' : 'Deactivate' }}
                 </button>
               } @else {
-                <button class="secondary-button" type="button" (click)="activate(resume)" [disabled]="operation() !== null || uploading()">
+                <button class="secondary-button" type="button" (click)="activate(resume)" [attr.aria-label]="'Activate ' + resume.fileName" [disabled]="operation() !== null || uploading()">
                   {{ operation()?.resumeId === resume.id && operation()?.action === 'activate' ? 'Activating…' : 'Activate' }}
                 </button>
               }

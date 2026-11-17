@@ -80,6 +80,11 @@ export class StudentJobsList implements OnInit {
     this.load();
   }
 
+  hasActiveFilters(): boolean {
+    const values = this.filters.getRawValue();
+    return Boolean(values.location.trim() || values.employmentType || values.workMode);
+  }
+
   changePage(page: number): void {
     const result = this.state();
     if (result.status !== 'ready' || page < 0 || page >= result.page.totalPages || page === this.pageIndex()) return;

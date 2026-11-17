@@ -18,20 +18,16 @@ describe('OfficerApplicationDetails', () => {
     expect(getApplicationById).toHaveBeenCalledWith(42);
 
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Application #42');
-    expect(text).toContain('Application ID');
-    expect(text).toContain('Student ID');
-    expect(text).toContain('735');
-    expect(text).toContain('Job ID');
-    expect(text).toContain('902');
+    expect(text).toContain('Application#42');
+    expect(text).toContain('Student One');
+    expect(text).toContain('REG-735');
+    expect(text).toContain('Job#902');
     expect(text).toContain('UNDER REVIEW');
     expect(text).toContain('Applied');
-    expect(text).toContain('Resume ID');
-    expect(text).toContain('18');
+    expect(text).toContain('resume.pdf');
     expect(text).toContain('Cover letter');
     expect(text).toContain('I am interested in this role.');
-    expect(text).not.toContain('Student Name');
-    expect(text).not.toContain('Graduate Engineer');
+    expect(text).toContain('Graduate Engineer');
     expect(text).toContain('Choose the next status for this application.');
     expect(fixture.nativeElement.querySelector('[data-status="SHORTLISTED"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-status="REJECTED"]')).not.toBeNull();
@@ -89,7 +85,7 @@ describe('OfficerApplicationDetails', () => {
 
     expect(getApplicationById).toHaveBeenCalledTimes(2);
     expect(getApplicationById).toHaveBeenLastCalledWith(42);
-    expect(fixture.nativeElement.textContent).toContain('Application #42');
+    expect(fixture.nativeElement.textContent).toContain('Application#42');
   });
 
   it('provides a back-to-applications navigation link', () => {
@@ -242,7 +238,7 @@ describe('OfficerApplicationDetails', () => {
 
     expect(fixture.nativeElement.textContent).toContain(message);
     expect(fixture.nativeElement.textContent).not.toContain('Untrusted server detail');
-    expect(fixture.nativeElement.querySelector('.secondary-button') !== null).toBe(canRefresh);
+    expect(fixture.nativeElement.querySelector('.feedback.error-message .secondary-button') !== null).toBe(canRefresh);
     expect(fixture.componentInstance.actionPending()).toBe(false);
   });
 
@@ -331,8 +327,13 @@ function application(
   return {
     id: 42,
     studentId: 735,
+    studentName: 'Student One',
+    studentRegisterNumber: 'REG-735',
+    studentDepartment: 'Computer Science',
+    studentCgpa: 8.5,
     jobId: 902,
     resumeId: 18,
+    resumeFileName: 'resume.pdf',
     companyName: 'CampusFlow Labs',
     jobTitle: 'Graduate Engineer',
     coverLetter: 'I am interested in this role.',

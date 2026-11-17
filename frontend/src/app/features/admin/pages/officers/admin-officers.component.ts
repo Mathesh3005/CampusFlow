@@ -3,20 +3,24 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { filter, switchMap } from 'rxjs';
 import { ApiError } from '../../../../core/http/api-error.handler';
 import { PageResponse } from '../../../../core/models/domain.models';
 import { PlacementOfficerAdmin } from '../../models/admin.models';
 import { AdminOfficersService } from '../../services/admin-officers.service';
+import { OfficerAccessConfirmationDialog } from './officer-access-confirmation-dialog.component';
 
 @Component({
   selector: 'app-admin-officers',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, MatButtonModule, MatIconModule],
+  imports: [DatePipe, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule],
   templateUrl: './admin-officers.component.html',
   styleUrl: './admin-officers.component.scss',
 })
 export class AdminOfficersComponent implements OnInit {
   private readonly admin = inject(AdminOfficersService);
+  private readonly dialog = inject(MatDialog);
   private readonly fb = new FormBuilder();
 
   readonly page = signal<PageResponse<PlacementOfficerAdmin> | null>(null);
@@ -107,8 +111,16 @@ export class AdminOfficersComponent implements OnInit {
   }
 
   setActive(officer: PlacementOfficerAdmin): void {
-    this.togglingId.set(officer.id);
-    this.admin.setActive(officer.id, !officer.active).subscribe({
+    this.dialog.open(OfficerAccessConfirmationDialog, {
+      data: { officerName: officer.fullName, activate: !officer.active },
+      role: 'alertdialog',
+    }).afterClosed().pipe(
+      filter(confirmed => confirmed === true),
+      switchMap(() => {
+        this.togglingId.set(officer.id);
+        return this.admin.setActive(officer.id, !officer.active);
+      }),
+    ).subscribe({
       next: updated => {
         this.togglingId.set(null);
         this.page.update(page => page

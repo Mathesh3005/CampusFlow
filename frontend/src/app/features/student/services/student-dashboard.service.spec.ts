@@ -102,6 +102,7 @@ describe('StudentDashboardService', () => {
     service.loadDashboard().subscribe(data => result = data);
     requests.expectOne(`${root}/student/applications?page=0&size=5&sort=appliedAt,desc`).flush(page([], 8));
     requests.expectOne(`${root}/student/jobs?page=0&size=4&sort=createdAt,desc`).flush(page<JobResponse>([], 14));
+    requests.expectOne(`${root}/student/dashboard`).flush(summary());
     requests.expectOne(`${interviewsUrl}?page=0&size=20&sort=scheduledAt,asc`)
       .flush({ detail: 'Interview service unavailable' }, { status: 500, statusText: 'Server Error' });
     requests.expectOne(`${root}/student/notifications?page=0&size=20&sort=createdAt,desc`).flush(page<NotificationResponse>([], 3));
@@ -111,6 +112,7 @@ describe('StudentDashboardService', () => {
   });
 
   function flushOtherSections(): void {
+    requests.expectOne(`${root}/student/dashboard`).flush(summary());
     requests.expectOne(`${root}/student/applications?page=0&size=5&sort=appliedAt,desc`).flush(page<ApplicationResponse>([], 0));
     requests.expectOne(`${root}/student/jobs?page=0&size=4&sort=createdAt,desc`).flush(page<JobResponse>([], 0));
     requests.expectOne(`${root}/student/notifications?page=0&size=20&sort=createdAt,desc`).flush(page<NotificationResponse>([], 0));
@@ -121,6 +123,14 @@ function page<T>(content: T[], totalElements = content.length, pageNumber = 0, h
   return {
     content, page: pageNumber, size: 20, totalElements, totalPages: Math.ceil(totalElements / 20),
     first: pageNumber === 0, last: !hasNext, hasNext, hasPrevious: pageNumber > 0,
+  };
+}
+
+function summary() {
+  return {
+    studentName: 'Student One', department: 'CS', graduationYear: 2030, cgpa: 8.5,
+    totalApplications: 0, applicationStats: {}, upcomingInterviews: 0,
+    hasActiveResume: false, unreadNotifications: 0,
   };
 }
 

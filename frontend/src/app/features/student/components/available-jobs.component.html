@@ -4,11 +4,11 @@
     <a routerLink="/student/jobs">Browse jobs</a>
   </header>
   @if (loading()) {
-    <p class="panel-state" role="status">Loading available jobs…</p>
+    <p class="panel-state loading-state" role="status">Loading available jobs…</p>
   } @else if (error()) {
     <p class="panel-state error-state" role="alert">{{ error() }}</p>
   } @else if (jobs().length === 0) {
-    <p class="panel-state">No eligible published jobs are available right now.</p>
+    <p class="panel-state panel-empty">No eligible published jobs are available right now.</p>
   } @else {
     <ul class="item-list">
       @for (job of jobs(); track job.id) {

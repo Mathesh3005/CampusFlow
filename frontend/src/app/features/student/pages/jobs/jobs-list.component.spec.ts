@@ -22,8 +22,8 @@ describe('StudentJobsList', () => {
 
     response.next(emptyPage());
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('No matching jobs');
-    expect(fixture.nativeElement.textContent).toContain('There are no published jobs matching these filters.');
+    expect(fixture.nativeElement.textContent).toContain('No published jobs yet');
+    expect(fixture.nativeElement.textContent).toContain('Published opportunities will appear here');
   });
 
   it('shows the backend API error and retry control', () => {
@@ -63,6 +63,20 @@ describe('StudentJobsList', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('shows a filter-specific empty state and clear action when the search returns no jobs', () => {
+    TestBed.configureTestingModule({
+      imports: [StudentJobsList],
+      providers: [provideRouter([]), { provide: StudentJobsService, useValue: { listJobs: () => of(emptyPage()) } }],
+    });
+    const fixture = TestBed.createComponent(StudentJobsList);
+    fixture.componentInstance.filters.controls.location.setValue('Pune');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('No matching jobs');
+    expect(fixture.nativeElement.textContent).toContain('current filters');
+    expect(fixture.nativeElement.textContent).toContain('Clear filters and try again');
   });
 });
 

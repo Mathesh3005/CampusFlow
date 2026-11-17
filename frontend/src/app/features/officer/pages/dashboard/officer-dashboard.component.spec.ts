@@ -49,11 +49,11 @@ describe('OfficerDashboard', () => {
     const fixture = createFixture(createService({
       loadJobsOverview: vi.fn(() => of({
         totalJobs: 17,
-        statusTotals: { published: null, draft: null, closed: null },
+        statusTotals: { published: 12, draft: 3, closed: 2 },
       })),
       loadApplicationsOverview: vi.fn(() => of({
         totalApplications: 26,
-        statusTotals: { awaitingReview: null, shortlisted: null, selected: null },
+        statusTotals: { awaitingReview: 4, shortlisted: 2, selected: 1 },
         recentApplications: [application()],
       })),
       loadUpcomingInterviews: vi.fn(() => of({
@@ -69,13 +69,13 @@ describe('OfficerDashboard', () => {
     const text = fixture.nativeElement.textContent as string;
     expect(metricValue(fixture, 'Total jobs')).toBe('17');
     expect(metricValue(fixture, 'Total applications')).toBe('26');
-    expect(metricValue(fixture, 'Published jobs')).toBe('Unavailable');
+    expect(metricValue(fixture, 'Published jobs')).toBe('12');
     expect(metricValue(fixture, 'Upcoming interviews')).toBe('Unavailable');
-    expect(text).toContain('Student #108');
+    expect(text).toContain('Student One');
     expect(text).toContain('Graduate Engineer');
     expect(text).toContain('Northwind');
     expect(text).toContain('SHORTLISTED');
-    expect(text).toContain('Application #8');
+    expect(text).toContain('View application 8');
     expect(text).toContain('Interview #81');
     expect(text).toContain('Application #37');
     expect(text).toContain('ONLINE');
@@ -108,7 +108,7 @@ describe('OfficerDashboard', () => {
       .mockReturnValueOnce(throwError(() => new ApiError(403, 'forbidden', { status: 403 })))
       .mockReturnValueOnce(of({
         totalApplications: 1,
-        statusTotals: { awaitingReview: null, shortlisted: null, selected: null },
+        statusTotals: { awaitingReview: 1, shortlisted: 0, selected: 0 },
         recentApplications: [application()],
       }));
     const fixture = createFixture(createService({ loadApplicationsOverview }));
@@ -188,8 +188,8 @@ describe('OfficerDashboard', () => {
     const fixture = createFixture(createService({ loadJobsOverview }));
     fixture.detectChanges();
     fixture.componentInstance.load();
-    oldResponse.next({ totalJobs: 99, statusTotals: { published: null, draft: null, closed: null } });
-    newResponse.next({ totalJobs: 12, statusTotals: { published: null, draft: null, closed: null } });
+    oldResponse.next({ totalJobs: 99, statusTotals: { published: 90, draft: 5, closed: 4 } });
+    newResponse.next({ totalJobs: 12, statusTotals: { published: 8, draft: 2, closed: 2 } });
     fixture.detectChanges();
 
     expect(loadJobsOverview).toHaveBeenCalledTimes(2);
@@ -240,8 +240,13 @@ function application(): ApplicationResponse {
   return {
     id: 8,
     studentId: 108,
+    studentName: 'Student One',
+    studentRegisterNumber: 'REG-108',
+    studentDepartment: 'Computer Science',
+    studentCgpa: 8.5,
     jobId: 3,
     resumeId: null,
+    resumeFileName: null,
     companyName: 'Northwind',
     jobTitle: 'Graduate Engineer',
     coverLetter: null,

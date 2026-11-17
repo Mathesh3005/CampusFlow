@@ -4,11 +4,11 @@
     <a routerLink="/student/notifications">View all</a>
   </header>
   @if (loading()) {
-    <p class="panel-state" role="status">Loading notifications…</p>
+    <p class="panel-state loading-state" role="status">Loading notifications…</p>
   } @else if (error()) {
     <p class="panel-state error-state" role="alert">{{ error() }}</p>
   } @else if (notifications().length === 0) {
-    <p class="panel-state">You have no notifications yet.</p>
+    <p class="panel-state panel-empty">You have no notifications yet.</p>
   } @else {
     <ul class="item-list">
       @for (notification of notifications(); track notification.id) {

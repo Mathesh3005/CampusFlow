@@ -24,6 +24,7 @@ export const NOTIFICATIONS_API = new InjectionToken<NotificationsApi>('NOTIFICAT
 
 export abstract class NotificationsApiClient implements NotificationsApi {
   private readonly unreadCount = signal<number | null>(null);
+  private hasAuthoritativeUnreadCount = false;
   readonly unreadOnLatestPage = this.unreadCount.asReadonly();
 
   private readonly inFlightPages = new Map<string, Observable<PageResponse<NotificationResponse>>>();
@@ -36,7 +37,10 @@ export abstract class NotificationsApiClient implements NotificationsApi {
 
   refreshUnreadCount(): Observable<number> {
     return this.http.get<{ count: number }>(`${this.baseUrl}/unread-count`).pipe(
-      tap(response => this.unreadCount.set(response.count)),
+      tap(response => {
+        this.hasAuthoritativeUnreadCount = true;
+        this.unreadCount.set(response.count);
+      }),
       map(response => response.count),
     );
   }
@@ -64,6 +68,7 @@ export abstract class NotificationsApiClient implements NotificationsApi {
     request$ = this.http.get<PageResponse<NotificationResponse>>(this.baseUrl, { params }).pipe(
       tap(result => {
         if (page === 0) this.recordLatestPage(result.content);
+        else result.content.forEach(notification => this.latestPageReadState.set(notification.id, notification.isRead));
       }),
       finalize(() => {
         if (this.inFlightPages.get(key) === request$) this.inFlightPages.delete(key);
@@ -117,7 +122,9 @@ export abstract class NotificationsApiClient implements NotificationsApi {
     for (const notification of notifications) {
       this.latestPageReadState.set(notification.id, notification.isRead);
     }
-    this.unreadCount.set(notifications.filter(notification => !notification.isRead).length);
+    if (!this.hasAuthoritativeUnreadCount) {
+      this.unreadCount.set(notifications.filter(notification => !notification.isRead).length);
+    }
   }
 
   private recordReadState(notification: NotificationResponse): void {
@@ -125,7 +132,7 @@ export abstract class NotificationsApiClient implements NotificationsApi {
     if (previousState === false && notification.isRead && this.unreadCount() !== null) {
       this.unreadCount.update(count => Math.max(0, (count ?? 0) - 1));
     }
-    if (previousState !== undefined) this.latestPageReadState.set(notification.id, notification.isRead);
+    this.latestPageReadState.set(notification.id, notification.isRead);
   }
 
   private isValidId(id: number): boolean {
