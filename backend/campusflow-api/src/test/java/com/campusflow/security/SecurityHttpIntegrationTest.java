@@ -45,7 +45,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = {AuthController.class, HealthController.class, SecurityTestEndpoints.class})
 @Import({SecurityConfig.class, AuthenticatedStudentService.class})
 @ImportAutoConfiguration(ServletWebSecurityAutoConfiguration.class)
-@TestPropertySource(properties = "app.jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=")
+@TestPropertySource(properties = {
+        "app.jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+        "app.cors.allowed-origins=https://frontend.campusflowapp.workers.dev"
+})
 class SecurityHttpIntegrationTest {
     private static final Instant NOW = Instant.now();
 
@@ -71,14 +74,21 @@ class SecurityHttpIntegrationTest {
     }
 
     @Test
-    void configuredFrontendOriginCanPreflightApiRequests() throws Exception {
-        mvc.perform(options("/api/v1/student/jobs")
-                        .header("Origin", "http://localhost:4200")
-                        .header("Access-Control-Request-Method", "GET")
-                        .header("Access-Control-Request-Headers", "authorization"))
+    void deployedFrontendOriginCanPreflightApiRequests() throws Exception {
+        mvc.perform(options("/api/v1/auth/login")
+                        .header("Origin", "https://frontend.campusflowapp.workers.dev")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "authorization,content-type"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"))
-                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("GET")));
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://frontend.campusflowapp.workers.dev"))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("GET")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("POST")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PUT")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PATCH")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("DELETE")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("OPTIONS")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("authorization")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("content-type")));
     }
 
     @Test
