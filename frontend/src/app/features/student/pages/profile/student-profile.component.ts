@@ -62,7 +62,9 @@ export class StudentProfileComponent implements OnInit {
       fullName: value.fullName.trim(),
       department: value.department.trim(),
       graduationYear: Number(value.graduationYear),
-      cgpa: value.cgpa.trim() ? Number(value.cgpa) : null,
+     cgpa: value.cgpa != null && String(value.cgpa).trim() !== ''
+  ? Number(value.cgpa)
+  : null,
       phone: value.phone.trim() || null,
     };
     this.saving.set(true);
