@@ -1,23 +1,25 @@
 package com.campusflow;
 
-import com.campusflow.dto.auth.AuthResponse;
-import com.campusflow.dto.auth.RegisterStudentRequest;
-import com.campusflow.dto.resume.ResumeResponseDto;
-import com.campusflow.entity.Resume;
-import com.campusflow.entity.Student;
-import com.campusflow.entity.User;
-import com.campusflow.entity.NotificationType;
-import com.campusflow.service.NotificationService;
-import com.campusflow.dto.job.JobResponseDto;
-import com.campusflow.entity.EmploymentType;
-import com.campusflow.entity.WorkMode;
-import org.springframework.dao.DataIntegrityViolationException;
-import com.campusflow.repository.ResumeRepository;
-import com.campusflow.repository.StudentRepository;
-import com.campusflow.repository.UserRepository;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.AfterAll;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
@@ -25,6 +27,9 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRe
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -40,47 +45,70 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.campusflow.dto.auth.AuthResponse;
+import com.campusflow.dto.auth.RegisterStudentRequest;
+import com.campusflow.dto.job.JobResponseDto;
+import com.campusflow.dto.resume.ResumeResponseDto;
+import com.campusflow.entity.EmploymentType;
+import com.campusflow.entity.NotificationType;
+import com.campusflow.entity.Resume;
+import com.campusflow.entity.Student;
+import com.campusflow.entity.User;
+import com.campusflow.entity.WorkMode;
+import com.campusflow.repository.ResumeRepository;
+import com.campusflow.repository.StudentRepository;
+import com.campusflow.repository.UserRepository;
+import com.campusflow.service.JobService;
+import com.campusflow.service.NotificationService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 @ActiveProfiles("integration")
-@Testcontainers
 class CampusflowApiApplicationTests {
     private static final String POSTGRES_IMAGE = "postgres:18.6-alpine";
+    private static final String EXTERNAL_JDBC_URL = System.getenv("CAMPUSFLOW_IT_JDBC_URL");
+    private static final String EXTERNAL_DB_USERNAME = System.getenv("CAMPUSFLOW_IT_DB_USERNAME");
+    private static final String EXTERNAL_DB_PASSWORD = System.getenv("CAMPUSFLOW_IT_DB_PASSWORD");
+    private static final boolean USE_EXTERNAL_POSTGRES = EXTERNAL_JDBC_URL != null && !EXTERNAL_JDBC_URL.isBlank();
     private static final Path RESUME_STORAGE = Path.of(System.getProperty("java.io.tmpdir"),
             "campusflow-it-" + UUID.randomUUID());
 
-    @Container
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(POSTGRES_IMAGE)
             .withDatabaseName("campusflow_it")
             .withUsername("campusflow_test")
             .withPassword("campusflow_test_only");
 
+    static {
+        if (!USE_EXTERNAL_POSTGRES) POSTGRES.start();
+    }
+
     @DynamicPropertySource
     static void isolatedContainerProperties(DynamicPropertyRegistry properties) {
-        if (POSTGRES.getJdbcUrl().contains("localhost:5432/campusflow_db")) {
-            throw new IllegalStateException("Integration tests must never use the development database");
+        if (USE_EXTERNAL_POSTGRES) {
+            if (!EXTERNAL_JDBC_URL.matches("jdbc:postgresql://(?:localhost|127\\.0\\.0\\.1):[0-9]+/campusflow_it_[A-Za-z0-9_]+(?:\\?.*)?")) {
+                throw new IllegalStateException("External integration tests require a local campusflow_it_* database URL");
+            }
+            if (EXTERNAL_DB_USERNAME == null || EXTERNAL_DB_USERNAME.isBlank()
+                    || EXTERNAL_DB_PASSWORD == null || EXTERNAL_DB_PASSWORD.isBlank()) {
+                throw new IllegalStateException("External integration database credentials are required");
+            }
+            properties.add("spring.datasource.url", () -> EXTERNAL_JDBC_URL);
+            properties.add("spring.datasource.username", () -> EXTERNAL_DB_USERNAME);
+            properties.add("spring.datasource.password", () -> EXTERNAL_DB_PASSWORD);
+            properties.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        } else {
+            if (POSTGRES.getJdbcUrl().contains("localhost:5432/campusflow_db")) {
+                throw new IllegalStateException("Integration tests must never use the development database");
+            }
+            properties.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+            properties.add("spring.datasource.username", POSTGRES::getUsername);
+            properties.add("spring.datasource.password", POSTGRES::getPassword);
+            properties.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
         }
-        properties.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        properties.add("spring.datasource.username", POSTGRES::getUsername);
-        properties.add("spring.datasource.password", POSTGRES::getPassword);
-        properties.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
         properties.add("app.file.storage-location", () -> RESUME_STORAGE.toString());
     }
 
@@ -90,19 +118,28 @@ class CampusflowApiApplicationTests {
     @Autowired UserRepository users;
     @Autowired StudentRepository students;
     @Autowired ResumeRepository resumes;
+    @Autowired JobService jobService;
     @Autowired NotificationService notificationService;
     @Autowired PasswordEncoder passwordEncoder;
     @Autowired JwtEncoder jwtEncoder;
     @org.springframework.boot.test.web.server.LocalServerPort int port;
 
     @Test
-    void contextStartsAgainstDisposablePostgresAndAppliesOnlyV1() {
-        assertTrue(POSTGRES.isRunning(), "PostgreSQL Testcontainer must be running");
-        assertFalse(POSTGRES.getJdbcUrl().contains("localhost:5432/campusflow_db"));
+    void contextStartsAgainstDisposablePostgresAndAppliesMigrations() {
+        if (USE_EXTERNAL_POSTGRES) {
+            assertFalse(POSTGRES.isRunning(), "External database mode must not start a container");
+        } else {
+            assertTrue(POSTGRES.isRunning(), "PostgreSQL Testcontainer must be running");
+            assertFalse(POSTGRES.getJdbcUrl().contains("localhost:5432/campusflow_db"));
+        }
         var applied = flyway.info().applied();
-        assertEquals(1, applied.length, "The fresh test database should have exactly one applied migration");
-        assertEquals(MigrationVersion.fromVersion("1"), applied[0].getVersion());
-        assertEquals("campusflow_it", jdbc.queryForObject("SELECT current_database()", String.class));
+        assertEquals(3, applied.length, "The fresh test database should have all migrations applied");
+        assertEquals(MigrationVersion.fromVersion("3"), applied[2].getVersion());
+        assertTrue(jdbc.queryForObject("SELECT COUNT(*) FROM skills", Integer.class) > 0);
+        String expectedDatabase = USE_EXTERNAL_POSTGRES
+                ? EXTERNAL_JDBC_URL.substring(EXTERNAL_JDBC_URL.lastIndexOf('/') + 1).split("\\?", 2)[0]
+                : "campusflow_it";
+        assertEquals(expectedDatabase, jdbc.queryForObject("SELECT current_database()", String.class));
     }
 
     @Test
@@ -149,11 +186,21 @@ class CampusflowApiApplicationTests {
         assertEquals(200, detail.getStatusCode().value());
         assertEquals(uploadedDto.getId(), detail.getBody().getId());
 
+        ResponseEntity<byte[]> file = http.exchange(url("/api/v1/student/resumes/" + uploadedDto.getId() + "/file"),
+                HttpMethod.GET, bearer(tokenA), byte[].class);
+        assertEquals(200, file.getStatusCode().value());
+        assertEquals(MediaType.APPLICATION_PDF, file.getHeaders().getContentType());
+        assertEquals("private, no-store", file.getHeaders().getCacheControl());
+        assertArrayEquals("%PDF-1.7\nCampusFlow integration resume\n"
+                .getBytes(java.nio.charset.StandardCharsets.US_ASCII), file.getBody());
+
         String resumeUrl = url("/api/v1/student/resumes/" + uploadedDto.getId());
         assertEquals(404, http.exchange(resumeUrl, HttpMethod.GET, bearer(tokenB), String.class)
                 .getStatusCode().value());
         assertEquals(404, http.exchange(resumeUrl, HttpMethod.DELETE, bearer(tokenB), String.class)
                 .getStatusCode().value());
+        assertEquals(404, http.exchange(url("/api/v1/student/resumes/" + uploadedDto.getId() + "/file"),
+                HttpMethod.GET, bearer(tokenB), String.class).getStatusCode().value());
 
         Resume persistedResume = resumes.findById(uploadedDto.getId()).orElseThrow();
         Path storedFile = Path.of(persistedResume.getStoragePath());
@@ -169,6 +216,188 @@ class CampusflowApiApplicationTests {
         assertEquals(204, deleted.getStatusCode().value());
         assertTrue(resumes.findById(uploadedDto.getId()).isEmpty(), "Resume row should be deleted");
         assertFalse(Files.exists(storedFile), "After-commit listener should remove the stored PDF");
+    }
+
+    @Test
+    void studentProfileSkillsProjectsAndPasswordPersistThroughHttp() {
+        String suffix = UUID.randomUUID().toString();
+        String shortSuffix = suffix.replace("-", "").substring(0, 12);
+        AuthResponse student = registerStudent("profile-" + suffix + "@example.test", "PROF-" + shortSuffix, "Profile Student");
+        AuthResponse otherStudent = registerStudent("profile-other-" + suffix + "@example.test", "PROF2-" + shortSuffix, "Other Student");
+
+        String profileUrl = url("/api/v1/student/profile");
+        assertEquals(200, http.exchange(profileUrl, HttpMethod.GET, bearer(student.accessToken()), String.class)
+                .getStatusCode().value());
+        HttpHeaders studentJson = bearer(student.accessToken()).getHeaders();
+        studentJson.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> updatedProfile = http.exchange(profileUrl, HttpMethod.PUT,
+                new HttpEntity<>("""
+                        {"fullName":"Updated Student","department":"Computer Science","graduationYear":2031,
+                         "cgpa":8.75,"phone":"+15551234567"}
+                        """, studentJson), String.class);
+        assertEquals(200, updatedProfile.getStatusCode().value());
+        assertTrue(updatedProfile.getBody().contains("\"cgpa\":8.75"));
+        assertEquals(400, http.exchange(profileUrl, HttpMethod.PUT,
+                new HttpEntity<>("{\"fullName\":\" ", studentJson), String.class).getStatusCode().value());
+
+        Long skillId = jdbc.queryForObject("SELECT id FROM skills ORDER BY id LIMIT 1", Long.class);
+        String skillsUrl = url("/api/v1/student/skills");
+        String skillBody = "{\"skillId\":" + skillId + ",\"proficiencyLevel\":\"INTERMEDIATE\"}";
+        assertEquals(201, http.postForEntity(skillsUrl, new HttpEntity<>(skillBody, studentJson), String.class)
+                .getStatusCode().value());
+        assertEquals(409, http.postForEntity(skillsUrl, new HttpEntity<>(skillBody, studentJson), String.class)
+                .getStatusCode().value());
+        assertEquals(200, http.exchange(url("/api/v1/student/skills/" + skillId), HttpMethod.PUT,
+                new HttpEntity<>("{\"skillId\":" + skillId + ",\"proficiencyLevel\":\"ADVANCED\"}", studentJson),
+                String.class).getStatusCode().value());
+        ResponseEntity<String> studentSkills = http.exchange(skillsUrl, HttpMethod.GET, bearer(student.accessToken()), String.class);
+        assertEquals(200, studentSkills.getStatusCode().value());
+        assertTrue(studentSkills.getBody().contains("\"proficiencyLevel\":\"ADVANCED\""));
+        ResponseEntity<String> otherStudentSkills = http.exchange(skillsUrl, HttpMethod.GET,
+                bearer(otherStudent.accessToken()), String.class);
+        assertEquals(200, otherStudentSkills.getStatusCode().value());
+        assertEquals("[]", otherStudentSkills.getBody());
+        assertEquals(200, http.exchange(url("/api/v1/student/dashboard"), HttpMethod.GET,
+                bearer(student.accessToken()), String.class).getStatusCode().value());
+
+        String projectsUrl = url("/api/v1/student/projects");
+        String projectBody = """
+                {"title":"PostgreSQL Workflow Project","description":"Real database project",
+                 "githubUrl":"https://github.com/campusflow/test","liveDemoUrl":"",
+                 "startDate":"2025-01-01","endDate":"2025-12-31"}
+                """;
+        ResponseEntity<String> createdProject = http.postForEntity(projectsUrl,
+                new HttpEntity<>(projectBody, studentJson), String.class);
+        assertEquals(201, createdProject.getStatusCode().value());
+        Long projectId = jdbc.queryForObject("SELECT id FROM projects WHERE title=?", Long.class,
+                "PostgreSQL Workflow Project");
+        String projectSkillsUrl = url("/api/v1/student/projects/" + projectId + "/skills");
+        String projectSkillBody = "{\"skillId\":" + skillId + "}";
+        assertEquals(201, http.postForEntity(projectSkillsUrl, new HttpEntity<>(projectSkillBody, studentJson), String.class)
+                .getStatusCode().value());
+        assertEquals(409, http.postForEntity(projectSkillsUrl, new HttpEntity<>(projectSkillBody, studentJson), String.class)
+                .getStatusCode().value());
+        assertEquals(200, http.exchange(projectSkillsUrl, HttpMethod.GET, bearer(student.accessToken()), String.class)
+                .getStatusCode().value());
+        assertEquals(403, http.exchange(projectSkillsUrl, HttpMethod.GET, bearer(otherStudent.accessToken()), String.class)
+                .getStatusCode().value());
+        assertEquals(200, http.exchange(url("/api/v1/student/projects/" + projectId), HttpMethod.PUT,
+                new HttpEntity<>(projectBody.replace("PostgreSQL Workflow Project", "Updated Workflow Project"), studentJson),
+                String.class).getStatusCode().value());
+        ResponseEntity<String> projectList = http.exchange(projectsUrl, HttpMethod.GET, bearer(student.accessToken()), String.class);
+        assertEquals(200, projectList.getStatusCode().value());
+        assertTrue(projectList.getBody().contains("Updated Workflow Project"));
+
+        assertEquals(204, http.exchange(url("/api/v1/account/password"), HttpMethod.PUT,
+                new HttpEntity<>("{\"currentPassword\":\"correct-horse-1\",\"newPassword\":\"correct-horse-2\"}", studentJson),
+                Void.class).getStatusCode().value());
+        assertEquals(401, http.postForEntity(url("/api/v1/auth/login"),
+                new com.campusflow.dto.auth.LoginRequest("profile-" + suffix + "@example.test", "correct-horse-1"),
+                String.class).getStatusCode().value());
+        assertEquals(200, http.postForEntity(url("/api/v1/auth/login"),
+                new com.campusflow.dto.auth.LoginRequest("profile-" + suffix + "@example.test", "correct-horse-2"),
+                String.class).getStatusCode().value());
+
+        assertEquals(204, http.exchange(url("/api/v1/student/projects/" + projectId), HttpMethod.DELETE,
+                bearer(student.accessToken()), Void.class).getStatusCode().value());
+        assertEquals(204, http.exchange(url("/api/v1/student/skills/" + skillId), HttpMethod.DELETE,
+                bearer(student.accessToken()), Void.class).getStatusCode().value());
+    }
+
+    @Test
+    void adminDashboardOfficerManagementAndRoleAuthorizationRunThroughHttp() {
+        String suffix = UUID.randomUUID().toString();
+        String shortSuffix = suffix.replace("-", "").substring(0, 12);
+        AuthResponse student = registerStudent("matrix-student-" + suffix + "@example.test", "MATRIX-" + shortSuffix,
+                "Matrix Student");
+        Long officerUserId = addPlacementOfficer("matrix-officer-" + suffix + "@example.test", "MATRIX-OF-" + shortSuffix);
+        String officerToken = token(officerUserId, "PLACEMENT_OFFICER");
+        Long adminUserId = jdbc.queryForObject(
+                "INSERT INTO users(email, password_hash, role) VALUES (?, ?, 'ADMIN') RETURNING id",
+                Long.class, "matrix-admin-" + suffix + "@example.test", passwordEncoder.encode("admin-pass-123"));
+        String adminToken = token(adminUserId, "ADMIN");
+
+        for (String path : List.of("/api/v1/officer/dashboard", "/api/v1/officer/jobs", "/api/v1/officer/students",
+                "/api/v1/officer/applications", "/api/v1/officer/interviews", "/api/v1/officer/analytics/overview",
+                "/api/v1/officer/notifications", "/api/v1/admin/dashboard", "/api/v1/admin/officers")) {
+            assertEquals(403, http.exchange(url(path), HttpMethod.GET, bearer(student.accessToken()), String.class)
+                    .getStatusCode().value(), "Student must be rejected from " + path);
+        }
+        assertEquals(401, http.exchange(url("/api/v1/admin/dashboard"), HttpMethod.GET, null, String.class)
+                .getStatusCode().value());
+        assertEquals(200, http.exchange(url("/api/v1/officer/dashboard"), HttpMethod.GET, bearer(officerToken), String.class)
+                .getStatusCode().value());
+        assertEquals(200, http.exchange(url("/api/v1/officer/students?page=0&size=5"), HttpMethod.GET,
+                bearer(officerToken), String.class).getStatusCode().value());
+        Long studentId = students.findByUserId(student.userId()).orElseThrow().getId();
+        assertEquals(200, http.exchange(url("/api/v1/officer/students/" + studentId), HttpMethod.GET,
+                bearer(officerToken), String.class).getStatusCode().value());
+        for (String path : List.of("/api/v1/officer/analytics/overview", "/api/v1/officer/analytics/placements",
+                "/api/v1/officer/analytics/placement-trends", "/api/v1/officer/analytics/top-departments")) {
+            assertEquals(200, http.exchange(url(path), HttpMethod.GET, bearer(officerToken), String.class)
+                    .getStatusCode().value(), "Officer analytics endpoint should return live data: " + path);
+        }
+        for (String path : List.of("/api/v1/admin/dashboard", "/api/v1/admin/officers")) {
+            assertEquals(403, http.exchange(url(path), HttpMethod.GET, bearer(officerToken), String.class)
+                    .getStatusCode().value(), "Officer must be rejected from " + path);
+        }
+        HttpHeaders officerJson = bearer(officerToken).getHeaders();
+        officerJson.setContentType(MediaType.APPLICATION_JSON);
+        assertEquals(403, http.exchange(url("/api/v1/student/profile"), HttpMethod.PUT,
+                new HttpEntity<>("{\"fullName\":\"Tampered\",\"department\":\"CS\",\"graduationYear\":2030}", officerJson),
+                String.class).getStatusCode().value());
+        assertEquals(403, http.exchange(url("/api/v1/student/resumes"), HttpMethod.GET, bearer(adminToken), String.class)
+                .getStatusCode().value());
+        assertEquals(403, http.exchange(url("/api/v1/officer/dashboard"), HttpMethod.GET, bearer(adminToken), String.class)
+                .getStatusCode().value());
+
+        ResponseEntity<String> metrics = http.exchange(url("/api/v1/admin/dashboard"), HttpMethod.GET,
+                bearer(adminToken), String.class);
+        assertEquals(200, metrics.getStatusCode().value());
+        assertTrue(metrics.getBody().contains("\"totalUsers\":"));
+        String createBody = """
+                {"email":"created-%s@example.test","password":"officer-pass-123","employeeId":"NEW-%s",
+                 "fullName":"Created Officer","department":"Engineering"}
+                """.formatted(suffix, shortSuffix);
+        HttpHeaders adminJson = bearer(adminToken).getHeaders();
+        adminJson.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> created = http.postForEntity(url("/api/v1/admin/officers"),
+                new HttpEntity<>(createBody, adminJson), String.class);
+        assertEquals(201, created.getStatusCode().value());
+        assertNotNull(created.getBody());
+        assertFalse(created.getBody().toLowerCase(java.util.Locale.ROOT).contains("password"));
+        String createdOfficerEmail = "created-" + suffix + "@example.test";
+        assertEquals(200, http.postForEntity(url("/api/v1/auth/login"),
+                new com.campusflow.dto.auth.LoginRequest(createdOfficerEmail, "officer-pass-123"), String.class)
+                .getStatusCode().value());
+        Long createdOfficerId = jdbc.queryForObject("SELECT id FROM placement_officers WHERE employee_id=?",
+                Long.class, "NEW-" + shortSuffix);
+        assertEquals(409, http.postForEntity(url("/api/v1/admin/officers"),
+                new HttpEntity<>(createBody.replace("created-" + suffix + "@example.test", "another-" + suffix + "@example.test"),
+                        adminJson), String.class).getStatusCode().value());
+        assertEquals(200, http.exchange(url("/api/v1/admin/officers?search=Created&page=0&size=5"), HttpMethod.GET,
+                bearer(adminToken), String.class).getStatusCode().value());
+        String officerUserIdText = jdbc.queryForObject("SELECT user_id FROM placement_officers WHERE id=?", String.class,
+                createdOfficerId);
+        assertEquals(200, http.exchange(url("/api/v1/admin/officers/" + createdOfficerId + "/deactivate"), HttpMethod.PATCH,
+                new HttpEntity<>("{}", bearer(adminToken).getHeaders()), String.class).getStatusCode().value());
+        assertFalse(jdbc.queryForObject("SELECT is_active FROM users WHERE id=?", Boolean.class,
+                Long.valueOf(officerUserIdText)));
+        assertEquals(401, http.postForEntity(url("/api/v1/auth/login"),
+                new com.campusflow.dto.auth.LoginRequest(createdOfficerEmail, "officer-pass-123"), String.class)
+                .getStatusCode().value());
+        assertEquals(200, http.exchange(url("/api/v1/admin/officers/" + createdOfficerId + "/activate"), HttpMethod.PATCH,
+                new HttpEntity<>("{}", bearer(adminToken).getHeaders()), String.class).getStatusCode().value());
+        assertEquals(200, http.postForEntity(url("/api/v1/auth/login"),
+                new com.campusflow.dto.auth.LoginRequest(createdOfficerEmail, "officer-pass-123"), String.class)
+                .getStatusCode().value());
+
+        assertEquals(204, http.exchange(url("/api/v1/account/password"), HttpMethod.PUT,
+                new HttpEntity<>("{\"currentPassword\":\"admin-pass-123\",\"newPassword\":\"admin-pass-456\"}",
+                        adminJson), Void.class).getStatusCode().value());
+        assertEquals(200, http.postForEntity(url("/api/v1/auth/login"),
+                new com.campusflow.dto.auth.LoginRequest("matrix-admin-" + suffix + "@example.test", "admin-pass-456"),
+                String.class).getStatusCode().value());
     }
 
     @Test
@@ -232,9 +461,14 @@ class CampusflowApiApplicationTests {
         assertEquals(403, http.exchange(url("/api/v1/officer/jobs/" + job.getId()), HttpMethod.PUT,
                 new HttpEntity<>(updateRequest, secondOfficerHeaders), String.class).getStatusCode().value());
 
-        String studentPath = "/api/v1/student/jobs/" + job.getId();
-        assertEquals(404, http.exchange(url(studentPath), HttpMethod.GET, bearer(student.accessToken()), String.class)
-                .getStatusCode().value());
+       String studentPath = "/api/v1/student/jobs/" + job.getId();
+
+        assertEquals(404, http.exchange(
+                url(studentPath),
+                HttpMethod.GET,
+                bearer(student.accessToken()),
+                String.class
+        ).getStatusCode().value());
         ResponseEntity<JobResponseDto> published = http.exchange(url("/api/v1/officer/jobs/" + job.getId() + "/publish"),
                 HttpMethod.PATCH, bearer(officerToken), JobResponseDto.class);
         assertEquals(200, published.getStatusCode().value());
@@ -256,11 +490,15 @@ class CampusflowApiApplicationTests {
         assertEquals(201, restrictedDraft.getStatusCode().value());
         assertEquals(200, http.exchange(url("/api/v1/officer/jobs/" + restrictedDraft.getBody().getId() + "/publish"),
                 HttpMethod.PATCH, bearer(officerToken), JobResponseDto.class).getStatusCode().value());
-        assertEquals(404, http.exchange(url("/api/v1/student/jobs/" + restrictedDraft.getBody().getId()),
-                HttpMethod.GET, bearer(student.accessToken()), String.class).getStatusCode().value());
+        assertEquals(200, http.exchange(
+        url("/api/v1/student/jobs/" + restrictedDraft.getBody().getId()),
+        HttpMethod.GET,
+        bearer(student.accessToken()),
+        String.class
+).getStatusCode().value());
         ResponseEntity<String> eligibleListings = http.exchange(url("/api/v1/student/jobs?page=0&size=20"),
                 HttpMethod.GET, bearer(student.accessToken()), String.class);
-        assertFalse(eligibleListings.getBody().contains("CGPA Restricted Role"));
+       assertTrue(eligibleListings.getBody().contains("CGPA Restricted Role"));
 
         ResponseEntity<JobResponseDto> closed = http.exchange(url("/api/v1/officer/jobs/" + job.getId() + "/close"),
                 HttpMethod.PATCH, bearer(officerToken), JobResponseDto.class);
@@ -278,6 +516,86 @@ class CampusflowApiApplicationTests {
                 bearer(officerToken), String.class).getStatusCode().value());
         assertEquals(403, http.exchange(url("/api/v1/officer/jobs"), HttpMethod.GET,
                 bearer(student.accessToken()), String.class).getStatusCode().value());
+    }
+
+    @Test
+    void jobSearchAcceptsAllOptionalFiltersAsNull() {
+        String suffix = UUID.randomUUID().toString();
+        Long eligibleId = addSearchJob(suffix + "-eligible", "Nullable Filters Eligible", null,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long cgpaRestrictedId = addSearchJob(suffix + "-cgpa", "Nullable Filters Restricted", null,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, new BigDecimal("7.00"), "PUBLISHED");
+        Long draftId = addSearchJob(suffix + "-draft", "Nullable Filters Draft", null,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "DRAFT");
+
+        var results = jobService.searchPublishedJobs(null, null, null, null, PageRequest.of(0, 100));
+
+        assertTrue(results.getContent().stream().anyMatch(job -> job.getId().equals(eligibleId)));
+        assertTrue(results.getContent().stream()
+        .anyMatch(job -> job.getId().equals(cgpaRestrictedId)));
+        assertFalse(results.getContent().stream().anyMatch(job -> job.getId().equals(draftId)));
+    }
+
+    @Test
+    void jobSearchAppliesLocationFilter() {
+        String suffix = UUID.randomUUID().toString();
+        String location = "New York " + suffix;
+        Long matchingId = addSearchJob(suffix + "-match", "Location Match " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long nonMatchingId = addSearchJob(suffix + "-other", "Location Other " + suffix, "Seattle " + suffix,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+
+        var results = jobService.searchPublishedJobs(location.toLowerCase(java.util.Locale.ROOT), null, null, null,
+                PageRequest.of(0, 100));
+
+        assertTrue(results.getContent().stream().anyMatch(job -> job.getId().equals(matchingId)));
+        assertFalse(results.getContent().stream().anyMatch(job -> job.getId().equals(nonMatchingId)));
+    }
+
+    @Test
+    void jobSearchAppliesNonLocationFiltersWhenLocationIsNull() {
+        String suffix = UUID.randomUUID().toString();
+        Long matchingId = addSearchJob(suffix + "-match", "Other Filters Match " + suffix, "Remote",
+                EmploymentType.INTERNSHIP, WorkMode.REMOTE, new BigDecimal("7.50"), "PUBLISHED");
+        Long employmentMismatchId = addSearchJob(suffix + "-employment", "Other Filters Employment " + suffix, "Remote",
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, new BigDecimal("7.00"), "PUBLISHED");
+        Long modeMismatchId = addSearchJob(suffix + "-mode", "Other Filters Mode " + suffix, "Remote",
+                EmploymentType.INTERNSHIP, WorkMode.HYBRID, new BigDecimal("7.00"), "PUBLISHED");
+        Long cgpaMismatchId = addSearchJob(suffix + "-cgpa", "Other Filters CGPA " + suffix, "Remote",
+                EmploymentType.INTERNSHIP, WorkMode.REMOTE, new BigDecimal("8.50"), "PUBLISHED");
+
+        var results = jobService.searchPublishedJobs(null, EmploymentType.INTERNSHIP, WorkMode.REMOTE,
+                new BigDecimal("8.00"), PageRequest.of(0, 100));
+
+        List<Long> resultIds = results.getContent().stream().map(job -> job.getId()).toList();
+        assertTrue(resultIds.contains(matchingId));
+        assertFalse(resultIds.contains(employmentMismatchId));
+        assertFalse(resultIds.contains(modeMismatchId));
+        assertTrue(resultIds.contains(cgpaMismatchId));
+    }
+
+    @Test
+    void jobSearchPreservesPaginationAndSorting() {
+        String suffix = UUID.randomUUID().toString();
+        String location = "Sort-" + suffix;
+        Long zuluId = addSearchJob(suffix + "-zulu", "Zulu " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long alphaId = addSearchJob(suffix + "-alpha", "Alpha " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+        Long mikeId = addSearchJob(suffix + "-mike", "Mike " + suffix, location,
+                EmploymentType.FULL_TIME, WorkMode.REMOTE, null, "PUBLISHED");
+
+        var firstPage = jobService.searchPublishedJobs(location, null, null, null,
+                PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "jobTitle")));
+        var secondPage = jobService.searchPublishedJobs(location, null, null, null,
+                PageRequest.of(1, 2, Sort.by(Sort.Direction.ASC, "jobTitle")));
+
+        assertEquals(List.of(alphaId, mikeId), firstPage.getContent().stream().map(job -> job.getId()).toList());
+        assertEquals(3, firstPage.getTotalElements());
+        assertEquals(2, firstPage.getSize());
+        assertTrue(firstPage.hasNext());
+        assertEquals(List.of(zuluId), secondPage.getContent().stream().map(job -> job.getId()).toList());
+        assertEquals(1, secondPage.getNumber());
     }
 
     @Test
@@ -299,6 +617,8 @@ class CampusflowApiApplicationTests {
         Long cgpaJobId = addJob(officerUserId, "CGPA Role", OffsetDateTime.now().plusDays(10), new java.math.BigDecimal("8.50"), "PUBLISHED");
         Long expiredJobId = addJob(officerUserId, "Expired Role", OffsetDateTime.now().minusDays(1), null, "PUBLISHED");
         Long ownershipJobId = addJob(officerUserId, "Resume Ownership Role", OffsetDateTime.now().plusDays(10), null, "PUBLISHED");
+        ResponseEntity<ResumeResponseDto> resumeA = uploadResume(studentA.accessToken(), "app-a.pdf", "%PDF-1.7\nA\n");
+        ResponseEntity<ResumeResponseDto> resumeB = uploadResume(studentB.accessToken(), "app-b.pdf", "%PDF-1.7\nB\n");
 
         HttpHeaders studentAHeaders = bearer(studentA.accessToken()).getHeaders();
         studentAHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -307,12 +627,10 @@ class CampusflowApiApplicationTests {
                 .getStatusCode().value());
         assertEquals(400, http.postForEntity(url("/api/v1/student/applications"),
                 new HttpEntity<>("{}", studentAHeaders), String.class).getStatusCode().value());
-        assertEquals(409, postApplication(draftJobId, null, studentAHeaders).getStatusCode().value());
-        assertEquals(403, postApplication(cgpaJobId, null, studentAHeaders).getStatusCode().value());
-        assertEquals(409, postApplication(expiredJobId, null, studentAHeaders).getStatusCode().value());
+        assertEquals(409, postApplication(draftJobId, resumeA.getBody().getId(), studentAHeaders).getStatusCode().value());
+        assertEquals(403, postApplication(cgpaJobId, resumeA.getBody().getId(), studentAHeaders).getStatusCode().value());
+        assertEquals(409, postApplication(expiredJobId, resumeA.getBody().getId(), studentAHeaders).getStatusCode().value());
 
-        ResponseEntity<ResumeResponseDto> resumeA = uploadResume(studentA.accessToken(), "app-a.pdf", "%PDF-1.7\nA\n");
-        ResponseEntity<ResumeResponseDto> resumeB = uploadResume(studentB.accessToken(), "app-b.pdf", "%PDF-1.7\nB\n");
         assertEquals(404, postApplication(ownershipJobId, resumeB.getBody().getId(), studentAHeaders).getStatusCode().value());
 
         ResponseEntity<String> submitted = postApplication(
@@ -327,7 +645,8 @@ class CampusflowApiApplicationTests {
                 Long.class, mainApplicationId));
         assertEquals(409, postApplication(openJobId, resumeA.getBody().getId(), studentAHeaders).getStatusCode().value());
 
-        ResponseEntity<String> withdrawApplication = postApplication(withdrawJobId, null, studentAHeaders);
+        ResponseEntity<String> withdrawApplication = postApplication(
+                withdrawJobId, resumeA.getBody().getId(), studentAHeaders);
         assertEquals(201, withdrawApplication.getStatusCode().value());
         long applicationId = mainApplicationId;
         long withdrawalId = jdbc.queryForObject("SELECT id FROM applications WHERE student_id=? AND job_id=?",
@@ -348,6 +667,14 @@ class CampusflowApiApplicationTests {
         assertEquals(200, reviewedList.getStatusCode().value());
         assertTrue(reviewedList.getBody().contains("Open Application Role"));
         assertTrue(reviewedList.getBody().contains("\"content\":["));
+        ResponseEntity<byte[]> authorizedResume = http.exchange(url("/api/v1/officer/applications/" + applicationId + "/resume"),
+                HttpMethod.GET, bearer(officerToken), byte[].class);
+        assertEquals(200, authorizedResume.getStatusCode().value());
+        assertEquals(MediaType.APPLICATION_PDF, authorizedResume.getHeaders().getContentType());
+        assertEquals("private, no-store", authorizedResume.getHeaders().getCacheControl());
+        assertArrayEquals("%PDF-1.7\nA\n".getBytes(java.nio.charset.StandardCharsets.US_ASCII), authorizedResume.getBody());
+        assertEquals(404, http.exchange(url("/api/v1/officer/applications/" + applicationId + "/resume"),
+                HttpMethod.GET, bearer(otherOfficerToken), String.class).getStatusCode().value());
         assertEquals(403, http.exchange(url(officerList), HttpMethod.GET, bearer(studentA.accessToken()), String.class)
                 .getStatusCode().value());
         assertEquals(404, http.exchange(url("/api/v1/officer/applications/" + applicationId), HttpMethod.GET,
@@ -393,9 +720,11 @@ class CampusflowApiApplicationTests {
         String officerToken = token(officerUserId, "PLACEMENT_OFFICER");
         String otherOfficerToken = token(otherOfficerUserId, "PLACEMENT_OFFICER");
         Long jobId = addJob(officerUserId, "Interview Job", OffsetDateTime.now().plusDays(20), null, "PUBLISHED");
+        ResumeResponseDto resume = uploadResume(studentA.accessToken(), "interview-a.pdf", "%PDF-1.7\nA\n").getBody();
+        assertNotNull(resume);
         Long applicationId = jdbc.queryForObject(
-                "INSERT INTO applications(student_id, job_id, status) VALUES (?, ?, 'SHORTLISTED') RETURNING id",
-                Long.class, students.findByUserId(studentA.userId()).orElseThrow().getId(), jobId);
+                "INSERT INTO applications(student_id, job_id, resume_id, status) VALUES (?, ?, ?, 'SHORTLISTED') RETURNING id",
+                Long.class, students.findByUserId(studentA.userId()).orElseThrow().getId(), jobId, resume.getId());
 
         HttpHeaders officerHeaders = bearer(officerToken).getHeaders();
         officerHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -570,6 +899,7 @@ class CampusflowApiApplicationTests {
                 });
             }
         }
+        if (!USE_EXTERNAL_POSTGRES && POSTGRES.isRunning()) POSTGRES.stop();
     }
 
     private AuthResponse registerStudent(String email, String registerNumber, String fullName) {
@@ -652,6 +982,24 @@ class CampusflowApiApplicationTests {
                 VALUES (?, 'Integration Employer', ?, 'Application integration job', 'FULL_TIME', 'REMOTE', ?, ?, ?)
                 RETURNING id
                 """, Long.class, officerId, title, minimumCgpa, deadline, status);
+    }
+
+    private Long addSearchJob(String suffix, String title, String location, EmploymentType employmentType,
+                              WorkMode workMode, BigDecimal minimumCgpa, String status) {
+        Long officerUserId = jdbc.queryForObject(
+                "INSERT INTO users(email, password_hash, role) VALUES (?, ?, 'PLACEMENT_OFFICER') RETURNING id",
+                Long.class, "job-search-" + suffix + "@example.test", "test-only-hash");
+        Long officerId = jdbc.queryForObject(
+                "INSERT INTO placement_officers(user_id, employee_id, full_name) VALUES (?, ?, ?) RETURNING id",
+                Long.class, officerUserId, "JS-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20),
+                "Search Test Officer");
+        return jdbc.queryForObject("""
+                INSERT INTO jobs(created_by, company_name, job_title, job_description, location, employment_type,
+                                 work_mode, minimum_cgpa, application_deadline, status)
+                VALUES (?, 'Search Test Co', ?, 'Search test job', ?, ?, ?, ?, ?, ?)
+                RETURNING id
+                """, Long.class, officerId, title, location, employmentType.name(), workMode.name(),
+                minimumCgpa, OffsetDateTime.now().plusDays(30), status);
     }
 
     private ResponseEntity<String> postApplication(

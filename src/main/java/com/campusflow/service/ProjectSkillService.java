@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional
@@ -33,20 +36,18 @@ public class ProjectSkillService {
             Long studentId) {
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
 
         if (!project.getStudent().getId().equals(studentId)) {
-            throw new RuntimeException(
-                    "You cannot modify another student's project");
+            throw new AccessDeniedException("You cannot modify another student's project");
         }
 
         Skill skill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new RuntimeException("Skill not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Skill not found"));
 
         if (projectSkillRepository.existsByProjectIdAndSkillId(
                 projectId, skillId)) {
-            throw new RuntimeException(
-                    "This skill is already assigned to the project");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This skill is already assigned to the project");
         }
 
         ProjectSkill projectSkill = new ProjectSkill(project, skill);
@@ -56,10 +57,12 @@ public class ProjectSkillService {
 
     // Get all skills associated with a project
     @Transactional(readOnly = true)
-    public List<ProjectSkill> getProjectSkills(Long projectId) {
+    public List<ProjectSkill> getProjectSkills(Long projectId, Long studentId) {
 
-        if (!projectRepository.existsById(projectId)) {
-            throw new RuntimeException("Project not found");
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+        if (!project.getStudent().getId().equals(studentId)) {
+            throw new AccessDeniedException("You cannot view another student's project technologies");
         }
 
         return projectSkillRepository.findByProjectId(projectId);
@@ -84,12 +87,11 @@ public class ProjectSkillService {
 
         ProjectSkill projectSkill = projectSkillRepository
                 .findById(new ProjectSkillId(projectId, skillId))
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Project skill relationship not found"));
 
         if (!projectSkill.getProject().getStudent().getId().equals(studentId)) {
-            throw new RuntimeException(
-                    "You cannot modify another student's project");
+            throw new AccessDeniedException("You cannot modify another student's project");
         }
 
         projectSkillRepository.delete(projectSkill);

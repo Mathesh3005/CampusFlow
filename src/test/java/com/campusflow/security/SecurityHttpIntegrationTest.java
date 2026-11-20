@@ -36,14 +36,19 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = {AuthController.class, HealthController.class, SecurityTestEndpoints.class})
 @Import({SecurityConfig.class, AuthenticatedStudentService.class})
 @ImportAutoConfiguration(ServletWebSecurityAutoConfiguration.class)
-@TestPropertySource(properties = "app.jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=")
+@TestPropertySource(properties = {
+        "app.jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+        "app.cors.allowed-origins=https://frontend.campusflowapp.workers.dev"
+})
 class SecurityHttpIntegrationTest {
     private static final Instant NOW = Instant.now();
 
@@ -66,6 +71,34 @@ class SecurityHttpIntegrationTest {
         when(jdbcTemplate.queryForObject(eq("SELECT 1"), eq(Integer.class))).thenReturn(1);
         mvc.perform(get("/api/v1/health")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("UP")));
+    }
+
+    @Test
+    void deployedFrontendOriginCanPreflightApiRequests() throws Exception {
+        mvc.perform(options("/api/v1/auth/login")
+                        .header("Origin", "https://frontend.campusflowapp.workers.dev")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "authorization,content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://frontend.campusflowapp.workers.dev"))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("GET")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("POST")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PUT")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PATCH")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("DELETE")))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("OPTIONS")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("authorization")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsString("content-type")));
+    }
+
+    @Test
+    void unconfiguredFrontendOriginCannotUseApiCors() throws Exception {
+        mvc.perform(options("/api/v1/student/jobs")
+                        .header("Origin", "https://untrusted.example")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "authorization"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 
     @Test

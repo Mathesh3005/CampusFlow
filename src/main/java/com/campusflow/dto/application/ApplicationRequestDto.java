@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 public class ApplicationRequestDto {
     @NotNull @Positive
     private Long jobId;
-    @Positive
+    @NotNull @Positive
     private Long resumeId;
     private String coverLetter;
 

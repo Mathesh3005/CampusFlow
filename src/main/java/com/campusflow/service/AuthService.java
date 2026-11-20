@@ -41,11 +41,29 @@ public class AuthService {
     public AuthResponse register(RegisterStudentRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
         if (users.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
+        String registerNumber = request.registerNumber().trim();
+        if (students.existsByRegisterNumber(registerNumber)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Registration number is already registered");
+        }
         User user = users.save(new User(email, passwords.encode(request.password()), Role.STUDENT));
-        Student student = new Student(user, request.registerNumber().trim(), request.fullName().trim(),
+        Student student = new Student(user, registerNumber, request.fullName().trim(),
                 request.department().trim(), request.graduationYear());
         students.save(student);
         return response(CustomUserPrincipal.from(user));
+    }
+
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated account not found"));
+        if (!passwords.matches(currentPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        if (passwords.matches(newPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from the current password");
+        }
+        user.setPasswordHash(passwords.encode(newPassword));
+        users.save(user);
     }
 
     public AuthResponse login(LoginRequest request) {

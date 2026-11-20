@@ -106,27 +106,7 @@ public class ResumeFileStorageService {
         }
 
         try {
-            Path filePath = Path.of(storagePath)
-                    .toAbsolutePath()
-                    .normalize();
-
-            // Allow deletion only of direct children of storage directory.
-            if (!storageDirectory.equals(filePath.getParent())) {
-                throw new IllegalArgumentException(
-                        "Invalid resume storage path"
-                );
-            }
-
-            // Only allow UUID-based PDF filenames.
-            String fileName = filePath.getFileName().toString();
-
-            if (!fileName.matches(
-                    "^[0-9a-fA-F-]{36}\\.pdf$")) {
-
-                throw new IllegalArgumentException(
-                        "Invalid resume filename"
-                );
-            }
+            Path filePath = resolveStorageFile(storagePath);
 
             Files.deleteIfExists(filePath);
 
@@ -137,5 +117,25 @@ public class ResumeFileStorageService {
                     exception
             );
         }
+    }
+
+    public byte[] read(String storagePath) {
+        try {
+            return Files.readAllBytes(resolveStorageFile(storagePath));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not read resume file", exception);
+        }
+    }
+
+    private Path resolveStorageFile(String storagePath) {
+        Path filePath = Path.of(storagePath).toAbsolutePath().normalize();
+        if (!storageDirectory.equals(filePath.getParent())) {
+            throw new IllegalArgumentException("Invalid resume storage path");
+        }
+        String fileName = filePath.getFileName().toString();
+        if (!fileName.matches("^[0-9a-fA-F-]{36}\\.pdf$")) {
+            throw new IllegalArgumentException("Invalid resume filename");
+        }
+        return filePath;
     }
 }

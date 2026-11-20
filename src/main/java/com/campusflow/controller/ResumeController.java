@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -68,6 +69,19 @@ public class ResumeController {
     public ResumeResponseDto get(Authentication authentication, @PathVariable Long id) {
         Long studentId = currentStudent(authentication).getId();
         return ResumeMapper.toResponseDto(resumeService.getResumeByIdAndStudent(id, studentId));
+    }
+
+    @GetMapping("/{id}/file")
+    public ResponseEntity<byte[]> file(Authentication authentication, @PathVariable Long id) {
+        Long studentId = currentStudent(authentication).getId();
+        Resume resume = resumeService.getResumeByIdAndStudent(id, studentId);
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(org.springframework.http.ContentDisposition.inline()
+                .filename(resume.getFileName(), StandardCharsets.UTF_8)
+                .build());
+        headers.setCacheControl("private, no-store");
+        return ResponseEntity.ok().headers(headers).body(resumeService.readResumeFile(id, studentId));
     }
 
     @PatchMapping("/{id}/activate")

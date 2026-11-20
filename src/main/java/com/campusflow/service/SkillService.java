@@ -5,6 +5,8 @@ import com.campusflow.repository.*;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class SkillService {
         String normalizedName = name.trim();
 
         if (skillRepository.existsByNameIgnoreCase(normalizedName)) {
-            throw new RuntimeException("Skill already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Skill already exists");
         }
 
         Skill skill = new Skill(normalizedName);
@@ -54,7 +56,7 @@ public class SkillService {
     @Transactional(readOnly = true)
     public Skill getSkillById(Long skillId) {
         return skillRepository.findById(skillId)
-                .orElseThrow(() -> new RuntimeException("Skill not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Skill not found"));
     }
 
     // Find skill by name
@@ -66,7 +68,7 @@ public class SkillService {
         }
 
         return skillRepository.findByNameIgnoreCase(name.trim())
-                .orElseThrow(() -> new RuntimeException("Skill not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Skill not found"));
     }
 
     // Add skill to student profile
@@ -76,13 +78,13 @@ public class SkillService {
             ProficiencyLevel proficiencyLevel) {
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
 
         Skill skill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new RuntimeException("Skill not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Skill not found"));
 
         if (studentSkillRepository.existsByStudentIdAndSkillId(studentId, skillId)) {
-            throw new RuntimeException("Student already has this skill");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Student already has this skill");
         }
 
         if (proficiencyLevel == null) {
@@ -103,7 +105,7 @@ public class SkillService {
     public List<StudentSkill> getStudentSkills(Long studentId) {
 
         if (!studentRepository.existsById(studentId)) {
-            throw new RuntimeException("Student not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found");
         }
 
         return studentSkillRepository.findByStudentId(studentId);
@@ -121,7 +123,7 @@ public class SkillService {
 
         StudentSkill studentSkill = studentSkillRepository
                 .findById(new StudentSkillId(studentId, skillId))
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Student skill not found"));
 
         studentSkill.setProficiencyLevel(proficiencyLevel);
@@ -134,7 +136,7 @@ public class SkillService {
 
         StudentSkill studentSkill = studentSkillRepository
                 .findById(new StudentSkillId(studentId, skillId))
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Student skill not found"));
 
         studentSkillRepository.delete(studentSkill);

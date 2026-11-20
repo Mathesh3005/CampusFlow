@@ -10,6 +10,8 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
     List<Resume> findByStudentId(Long studentId);
 
+    boolean existsByStudentIdAndIsActiveTrue(Long studentId);
+
     Optional<Resume> findByIdAndStudentId(Long resumeId, Long studentId);
 
     boolean existsByStudentId(Long studentId);

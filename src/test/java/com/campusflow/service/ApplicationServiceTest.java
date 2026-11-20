@@ -43,6 +43,7 @@ class ApplicationServiceTest {
         Job job = job(JobStatus.PUBLISHED, null, OffsetDateTime.now().plusDays(2));
         Resume resume = mock(Resume.class);
         when(resume.getStudent()).thenReturn(student);
+        when(resume.getIsActive()).thenReturn(true);
         when(studentRepository.findById(31L)).thenReturn(Optional.of(student));
         when(jobRepository.findById(41L)).thenReturn(Optional.of(job));
         when(applicationRepository.existsByStudentIdAndJobId(31L, 41L)).thenReturn(false);
@@ -96,6 +97,48 @@ class ApplicationServiceTest {
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
                 () -> service.applyForJob(31L, 41L, null, null));
         verify(applicationRepository, never()).saveAndFlush(any(Application.class));
+    }
+
+    @Test
+    void applicationRequiresAnActiveResumeOwnedByTheStudent() {
+        Student student = student(31L, null);
+        Job job = job(JobStatus.PUBLISHED, null, OffsetDateTime.now().plusDays(2));
+        when(studentRepository.findById(31L)).thenReturn(Optional.of(student));
+        when(jobRepository.findById(41L)).thenReturn(Optional.of(job));
+        when(applicationRepository.existsByStudentIdAndJobId(31L, 41L)).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> service.applyForJob(31L, 41L, null, null));
+        verify(applicationRepository, never()).saveAndFlush(any(Application.class));
+
+        Resume inactive = mock(Resume.class);
+        when(resumeRepository.findByIdAndStudentId(51L, 31L)).thenReturn(Optional.of(inactive));
+        when(inactive.getIsActive()).thenReturn(false);
+        assertThrows(ApplicationConflictException.class, () -> service.applyForJob(31L, 41L, 51L, null));
+        verify(applicationRepository, never()).saveAndFlush(any(Application.class));
+    }
+
+    @Test
+    void studentCanWithdrawAnApplicationBeforeAFinalDecision() {
+        Application application = new Application(null, null, null);
+        application.setStatus(ApplicationStatus.SHORTLISTED);
+        when(applicationRepository.findByIdAndStudentId(71L, 31L)).thenReturn(Optional.of(application));
+        when(applicationRepository.save(application)).thenReturn(application);
+
+        Application withdrawn = service.withdrawApplication(71L, 31L);
+
+        assertEquals(ApplicationStatus.WITHDRAWN, withdrawn.getStatus());
+        verify(applicationRepository).save(application);
+    }
+
+    @Test
+    void studentCannotWithdrawAfterASelectionDecision() {
+        Application application = new Application(null, null, null);
+        application.setStatus(ApplicationStatus.SELECTED);
+        when(applicationRepository.findByIdAndStudentId(71L, 31L)).thenReturn(Optional.of(application));
+
+        assertThrows(InvalidApplicationTransitionException.class,
+                () -> service.withdrawApplication(71L, 31L));
+        verify(applicationRepository, never()).save(any(Application.class));
     }
 
     private static Job job(JobStatus status, BigDecimal minimumCgpa, OffsetDateTime deadline) {

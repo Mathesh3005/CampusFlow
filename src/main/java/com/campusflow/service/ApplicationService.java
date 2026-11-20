@@ -79,16 +79,20 @@ public class ApplicationService {
             throw new AccessDeniedException("You do not meet the minimum CGPA requirement");
         }
 
-        Application application = new Application(student, job, coverLetter);
-
-        if (resumeId != null) {
-            Resume resume = resumeRepository
-                    .findByIdAndStudentId(resumeId, studentId)
-                    .orElseThrow(() -> new ResumeNotFoundException(
-                            "Resume not found or does not belong to this student"));
-
-            application.setResume(resume);
+        if (resumeId == null) {
+            throw new IllegalArgumentException("An active resume is required to apply");
         }
+
+        Resume resume = resumeRepository
+                .findByIdAndStudentId(resumeId, studentId)
+                .orElseThrow(() -> new ResumeNotFoundException(
+                        "Resume not found or does not belong to this student"));
+        if (!Boolean.TRUE.equals(resume.getIsActive())) {
+            throw new ApplicationConflictException("The selected resume is inactive");
+        }
+
+        Application application = new Application(student, job, coverLetter);
+        application.setResume(resume);
 
         try {
             Application saved = applicationRepository.saveAndFlush(application);
@@ -124,7 +128,16 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public Page<Application> getApplicationsForOfficer(Long officerUserId, Pageable pageable) {
-        return applicationRepository.findByJob_CreatedBy_User_Id(officerUserId, pageable);
+        return getApplicationsForOfficer(officerUserId, null, null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Application> getApplicationsForOfficer(Long officerUserId, Long jobId, ApplicationStatus status,
+                                                       Long studentId, Pageable pageable) {
+        return applicationRepository.findAll(
+                com.campusflow.repository.ApplicationSpecifications.forOfficer(
+                        officerUserId, jobId, status, studentId),
+                pageable);
     }
 
     @Transactional(readOnly = true)

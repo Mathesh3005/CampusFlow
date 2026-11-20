@@ -1,6 +1,7 @@
 package com.campusflow.controller;
 
 import com.campusflow.dto.notification.NotificationResponseDto;
+import com.campusflow.dto.notification.UnreadNotificationCountDto;
 import com.campusflow.dto.common.PageResponseDto;
 import com.campusflow.mapper.NotificationMapper;
 import com.campusflow.service.NotificationService;
@@ -29,6 +30,11 @@ public class OfficerNotificationController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return PageResponseDto.from(notifications.getNotificationsByUser(userId(authentication), pageable)
                 .map(NotificationMapper::toResponseDto));
+    }
+
+    @GetMapping("/unread-count")
+    public UnreadNotificationCountDto unreadCount(Authentication authentication) {
+        return new UnreadNotificationCountDto(notifications.countUnreadNotifications(userId(authentication)));
     }
 
     @GetMapping("/{id}")

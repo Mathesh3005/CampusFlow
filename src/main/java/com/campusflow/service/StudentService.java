@@ -2,6 +2,7 @@ package com.campusflow.service;
 
 import com.campusflow.entity.Student;
 import com.campusflow.entity.User;
+import com.campusflow.dto.student.StudentProfileUpdateRequest;
 import com.campusflow.repository.StudentRepository;
 import com.campusflow.repository.UserRepository;
 
@@ -93,6 +94,21 @@ public class StudentService {
         existingStudent.setPhone(updatedStudent.getPhone());
 
         return studentRepository.save(existingStudent);
+    }
+
+    public Student updateProfile(Student student, StudentProfileUpdateRequest request) {
+        if (student == null || request == null) {
+            throw new IllegalArgumentException("Student profile and update request are required");
+        }
+        student.setFullName(request.fullName().trim());
+        student.setDepartment(request.department().trim());
+        student.setGraduationYear(request.graduationYear());
+        student.setCgpa(request.cgpa());
+        student.setPhone(request.phone() == null || request.phone().isBlank() ? null : request.phone().trim());
+        Long userId = student.getUser().getId();
+        studentRepository.save(student);
+        return studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Student profile not found after update"));
     }
 
     public void deleteStudent(Long studentId) {

@@ -1,24 +1,25 @@
 package com.campusflow.service;
 
-import com.campusflow.entity.Job;
-import com.campusflow.entity.JobStatus;
-import com.campusflow.entity.PlacementOfficer;
-import com.campusflow.repository.JobRepository;
-import com.campusflow.repository.PlacementOfficerRepository;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.math.BigDecimal;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.campusflow.entity.EmploymentType;
+import com.campusflow.entity.Job;
+import com.campusflow.entity.JobStatus;
+import com.campusflow.entity.PlacementOfficer;
 import com.campusflow.entity.WorkMode;
 import com.campusflow.exception.JobNotFoundException;
-import org.springframework.security.access.AccessDeniedException;
+import com.campusflow.repository.JobRepository;
+import com.campusflow.repository.JobSpecifications;
+import com.campusflow.repository.PlacementOfficerRepository;
 
 @Service
 @Transactional
@@ -92,18 +93,19 @@ public class JobService {
     @Transactional(readOnly = true)
     public Page<Job> searchPublishedJobs(String location, EmploymentType employmentType,
                                          WorkMode workMode, BigDecimal studentCgpa, Pageable pageable) {
-        return jobRepository.search(JobStatus.PUBLISHED, normalizeFilter(location), employmentType,
-                workMode, studentCgpa, pageable);
+        return jobRepository.findAll(JobSpecifications.publishedForStudent(
+                normalizeFilter(location), employmentType, workMode, studentCgpa), pageable);
     }
 
     @Transactional(readOnly = true)
     public Job getPublishedJob(Long jobId, BigDecimal studentCgpa) {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new JobNotFoundException(jobId));
-        if (job.getStatus() != JobStatus.PUBLISHED
-                || (job.getMinimumCgpa() != null
-                && (studentCgpa == null || studentCgpa.compareTo(job.getMinimumCgpa()) < 0))) {
-            throw new JobNotFoundException(jobId);
-        }
+    Job job = jobRepository.findById(jobId)
+            .orElseThrow(() -> new JobNotFoundException(jobId));
+
+    if (job.getStatus() != JobStatus.PUBLISHED) {
+        throw new JobNotFoundException(jobId);
+    }
+
         return job;
     }
 
