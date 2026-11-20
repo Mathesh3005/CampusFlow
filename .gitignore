@@ -34,3 +34,23 @@ build/
 
 ### Uploaded Resume Files ###
 /uploads/
+
+# Build output
+target/
+*.class
+
+# Logs
+*.log
+
+# Local environment
+classpath.txt
+build-errors.txt
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
